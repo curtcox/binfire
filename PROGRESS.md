@@ -10,8 +10,8 @@ Legend: `[x]` done and verified · `[~]` partly done (see note) · `[ ]` not sta
 
 | # | Milestone | iOS | Android | Flutter | RN | Shared |
 | --- | --- | --- | --- | --- | --- | --- |
-| M0 | Spec and scaffolding | [~] | [~] | [~] | [~] | [x] |
-| M1 | Browser core | [x] | [x] | [x] | [ ] | [x] |
+| M0 | Spec and scaffolding | [x] | [x] | [x] | [x] | [x] |
+| M1 | Browser core | [x] | [x] | [x] | [x] | [x] |
 | M2 | Links in | [ ] | [ ] | [ ] | [ ] | [ ] |
 | M3 | HashBin | [ ] | [ ] | [ ] | [ ] | [ ] |
 | M4 | QR and camera | [ ] | [ ] | [ ] | [ ] | [ ] |
@@ -21,10 +21,35 @@ Legend: `[x]` done and verified · `[~]` partly done (see note) · `[ ]` not sta
 | M8 | Host bridge | [ ] | [ ] | [ ] | [ ] | [ ] |
 | M9 | Release | [ ] | [ ] | [ ] | [ ] | [ ] |
 
+## Latest verification
+
+Run on a quiet machine on 2026-11-14 (after M1):
+
+- `node tools/check.mjs`: shared, iOS, Android, Flutter, RN unit tests all pass.
+- Maestro m1 suite (4 flows, all passing):
+
+| Port | iOS simulator | Android emulator (Pixel_8_API_34) |
+| --- | --- | --- |
+| iOS | 4/4 (iPhone 17 Pro, 59 s) | – |
+| Android | – | 4/4 (1 m 15 s) |
+| Flutter | 4/4 (iPhone Air, 1 m 5 s) | 4/4 (1 m 22 s) |
+| React Native | 4/4 (iPhone 17, Release, 55 s) | 4/4 (Release, after fix b11fc4c) |
+
 ## Log
 
 Newest first. One line per meaningful step, with what was verified.
 
+- 2026-11-14: **M0 and M1 done in all four ports**, verified on a quiet
+  machine (table above). The earlier suite-only failures were host load. The
+  first React Native Android run found a real bug: the keyboard covered the
+  save sheet (edge-to-edge window), fixed in b11fc4c. CI: Flutter pinned to
+  3.41.7, because the runner's newer stable deprecates `material.dart`. RN
+  `npm audit fix` applied. Two remaining Dependabot alerts (deepmerge,
+  minimatch/glob) are dev-only Jest tooling, and their only fix is a breaking
+  `--force`.
+- 2026-11-14: RN M1 done: 724 tests, Maestro m1 4/4 (iPhone 17, Release
+  build). Navigation is a state-based overlay (not Expo Router), so WebViews
+  stay mounted. On iOS, Publish uses the redirect fallback.
 - 2026-11-14: Flutter M1 done: 723 tests; Maestro m1 4/4 on the iPhone Air
   simulator. The first full run failed at step 1 (about 14 s debug start-up
   under load); two clean reruns passed. The Xcode 27 simulator build needs an
@@ -68,8 +93,8 @@ Newest first. One line per meaningful step, with what was verified.
 
 ## Next up
 
-1. Finish M0: each port's core passes every fixture; `node tools/check.mjs` green.
-2. M1 browser core in all four ports (spec/ui.md).
+1. M2 (links in): Universal/App Links, custom scheme, share target, `/a /open /c /s` routing, `binfire.app` fallback hosting (needs owner input).
+2. Small carry-overs: iOS and Android tests should read the `links.json` `withoutRun` fixture.
 
 ## Open questions and owner inputs
 
