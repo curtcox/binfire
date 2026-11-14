@@ -63,6 +63,11 @@ Rules, in order:
      → `load-cid`.
    - `s`: the fragment must be a valid CID, else → `error: "invalid-cid"`.
      → `open-site`.
+   - `share` (custom scheme `S` only, as used by share extensions to hand
+     text to the app): the fragment parsed as a query string must have `t`,
+     else → `error: "bad-link"`. The result is `routeShared(t)`, which is not
+     recursive: if `t` is itself a `S://share` link it routes as
+     `unknown-link`. On `https://D/share` → `error: "unknown-link"`.
    - anything else → `error: "unknown-link"`.
 4. `https://<hashbin content host>/<CID>` (256t.us), with exactly one path
    segment that is a valid CID → `load-cid` with `app: null`.

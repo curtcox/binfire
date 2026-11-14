@@ -248,6 +248,45 @@
       }
     },
     {
+      "input": "binfire://share#t=Check%20this%20https%3A%2F%2Fbinfire.app%2Fa%2Fpython%23AAAAAAAFaGVsbG8%20thanks",
+      "expect": {
+        "action": "open-app",
+        "app": "python",
+        "url": "https://python.hashbin.page/#AAAAAAAFaGVsbG8",
+        "state": "cid",
+        "run": true,
+        "view": null
+      }
+    },
+    {
+      "input": "binfire://share#t=just%20words",
+      "expect": {
+        "action": "show-text",
+        "text": "just words"
+      }
+    },
+    {
+      "input": "binfire://share#x=1",
+      "expect": {
+        "action": "error",
+        "error": "bad-link"
+      }
+    },
+    {
+      "input": "binfire://share#t=binfire%3A%2F%2Fshare%23t%3DAAAAAAAFaGVsbG8",
+      "expect": {
+        "action": "error",
+        "error": "unknown-link"
+      }
+    },
+    {
+      "input": "https://binfire.app/share#t=AAAAAAAFaGVsbG8",
+      "expect": {
+        "action": "error",
+        "error": "unknown-link"
+      }
+    },
+    {
       "input": "https://www.binfire.app/a/python",
       "expect": {
         "action": "show-text",
