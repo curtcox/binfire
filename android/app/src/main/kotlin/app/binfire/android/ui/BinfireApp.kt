@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
@@ -28,7 +29,7 @@ fun BinfireApp(vm: BinfireViewModel) {
                     is Screen.Browser -> {
                         val tab = vm.tabs[s.slug]
                         if (tab == null) {
-                            vm.showLibrary()
+                            LaunchedEffect(s) { vm.showLibrary() }
                         } else {
                             BackHandler {
                                 if (tab.webView.canGoBack()) tab.webView.goBack() else vm.showLibrary()
