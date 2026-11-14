@@ -20,7 +20,9 @@ function Sheet({ testID, onClose, children }: { testID: string; onClose: () => v
   const insets = useSafeAreaInsets();
   return (
     <Modal transparent animationType="slide" onRequestClose={onClose} visible>
-      <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      {/* Android apps run edge-to-edge (RN 0.88), so the window does not resize for the
+          keyboard and the sheet must pad itself on both platforms. */}
+      <KeyboardAvoidingView style={styles.root} behavior="padding">
         <Pressable style={styles.scrim} onPress={onClose} accessible={false} />
         <View testID={testID} style={[styles.sheet, { paddingBottom: 16 + insets.bottom }]}>
           {children}
