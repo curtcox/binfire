@@ -28,6 +28,33 @@ class LibraryTest {
     }
 
     @Test
+    fun oversizedUrlIsNotAddedToRecent() {
+        val big = "https://a/#" + "x".repeat(Library.MAX_RECENT_URL_BYTES.toInt())
+        val lib = Library().addRecent("https://a/#1", "python", t0).addRecent(big, "python", t0)
+        assertEquals(listOf("https://a/#1"), lib.recent.map { it.url })
+        val atLimit = "https://a/#" + "x".repeat(Library.MAX_RECENT_URL_BYTES.toInt() - 11)
+        assertEquals(atLimit, Library().addRecent(atLimit, "python", t0).recent.single().url)
+        // Big URLs can still be saved by name.
+        assertEquals(big, Library().save("big", big, "python", t0).saved.single().url)
+    }
+
+    @Test
+    fun recentIsCappedAt16MiBDroppingOldest() {
+        val mib = 1024 * 1024
+        var lib = Library()
+        // 20 URLs of just under 1 MiB each: only the newest 16 fit in 16 MiB.
+        for (i in 0 until 20) {
+            val url = "https://a/#%02d".format(i) + "x".repeat(mib - 20)
+            lib = lib.addRecent(url, "python", t0.plusSeconds(i.toLong()))
+        }
+        assertEquals(16, lib.recent.size)
+        assertTrue(lib.recent.first().url.startsWith("https://a/#19"))
+        assertTrue(lib.recent.last().url.startsWith("https://a/#04"))
+        assertTrue(lib.recent.sumOf { Utf8.length(it.url) } <= Library.MAX_RECENT_BYTES)
+        assertEquals(lib, Library.fromJson(lib.toJson()))
+    }
+
+    @Test
     fun savedIsNewestFirstAndAllowsDuplicateUrls() {
         val lib = Library()
             .save("one", "https://a/#x", "python", t0, id = "1")

@@ -25,13 +25,18 @@ data class Library(
     val recent: List<RecentEntry> = emptyList(),
     val sites: List<SiteEntry> = emptyList(),
 ) {
-    /** Records a visit: moves or adds [url] to the front of [recent] and caps the list. */
+    /**
+     * Records a visit: moves or adds [url] to the front of [recent], then drops the
+     * oldest entries beyond [MAX_RECENT] or [MAX_RECENT_BYTES]. A URL over
+     * [MAX_RECENT_URL_BYTES] is not recorded (it can still be saved by name).
+     */
     fun addRecent(url: String, app: String, at: Instant = Instant.now()): Library {
+        if (Utf8.length(url) > MAX_RECENT_URL_BYTES) return this
         if (recent.firstOrNull()?.let { it.url == url && it.app == app } == true) {
             return copy(recent = listOf(recent[0].copy(visitedAt = timestamp(at))) + recent.drop(1))
         }
         val rest = recent.filter { it.url != url }
-        return copy(recent = (listOf(RecentEntry(url, app, timestamp(at))) + rest).take(MAX_RECENT))
+        return copy(recent = capRecent(listOf(RecentEntry(url, app, timestamp(at))) + rest))
     }
 
     /** Adds a named save at the front of [saved]. */
@@ -60,8 +65,27 @@ data class Library(
     )
 
     companion object {
-        /** Cap on [recent]. */
+        /** Cap on the number of [recent] entries. */
         const val MAX_RECENT = 100
+
+        /** Cap on the total UTF-8 bytes of all [recent] URLs (16 MiB). */
+        const val MAX_RECENT_BYTES: Long = 16L * 1024 * 1024
+
+        /** URLs larger than this (1 MiB) are not added to [recent]. */
+        const val MAX_RECENT_URL_BYTES: Long = 1024L * 1024
+
+        /** Keeps the newest entries that fit both recent caps. */
+        private fun capRecent(entries: List<RecentEntry>): List<RecentEntry> {
+            var bytes = 0L
+            val out = ArrayList<RecentEntry>(minOf(entries.size, MAX_RECENT))
+            for (e in entries) {
+                if (out.size == MAX_RECENT) break
+                bytes += Utf8.length(e.url)
+                if (bytes > MAX_RECENT_BYTES) break
+                out.add(e)
+            }
+            return out
+        }
 
         /** `2026-11-14T15:00:00Z`: UTC, whole seconds. */
         fun timestamp(at: Instant): String = DateTimeFormatter.ISO_INSTANT.format(at.truncatedTo(ChronoUnit.SECONDS))
@@ -69,7 +93,7 @@ data class Library(
         /**
          * Reads persisted JSON. Malformed entries are skipped, and unreadable or
          * unknown-version input gives an empty library, so a bad file never
-         * stops the app from starting. Recents are re-deduplicated and capped.
+         * stops the app from starting. Recents are re-deduplicated and re-capped.
          */
         fun fromJson(text: String): Library {
             val root = Json.parseObject(text) ?: return Library()
@@ -83,9 +107,9 @@ data class Library(
             val seen = HashSet<String>()
             val recent = list("recent").mapNotNull { o ->
                 val url = o.s("url") ?: return@mapNotNull null
-                if (!seen.add(url)) return@mapNotNull null
+                if (Utf8.length(url) > MAX_RECENT_URL_BYTES || !seen.add(url)) return@mapNotNull null
                 RecentEntry(url, o.s("app") ?: return@mapNotNull null, o.s("visitedAt") ?: "")
-            }.take(MAX_RECENT)
+            }.let { capRecent(it) }
             val sites = list("sites").mapNotNull { o ->
                 SiteEntry(o.s("cid") ?: return@mapNotNull null, o.s("name") ?: "", o.s("addedAt") ?: "")
             }
