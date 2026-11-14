@@ -40,6 +40,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.onLongClick
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -132,9 +137,10 @@ private fun SavedTab(vm: BinfireViewModel) {
                 title = s.name,
                 subtitle = "${vm.appName(s.app)} · ${s.savedAt}",
                 preview = s.url,
-                modifier = Modifier
-                    .testTag("saved.row.$i")
-                    .combinedClickable(onClick = { vm.open(s.url) }, onLongClick = { vm.deleteSaved(s.id) }, onLongClickLabel = "Delete"),
+                tag = "saved.row.$i",
+                onClick = { vm.open(s.url) },
+                onLongClick = { vm.deleteSaved(s.id) },
+                longClickLabel = "Delete",
             )
         }
     }
@@ -154,17 +160,36 @@ private fun RecentTab(vm: BinfireViewModel) {
                 title = (app?.let { vm.title(it, r.url) } ?: r.app),
                 subtitle = r.visitedAt,
                 preview = r.url,
-                modifier = Modifier.testTag("recent.row.$i").combinedClickableCompat { vm.open(r.url) },
+                tag = "recent.row.$i",
+                onClick = { vm.open(r.url) },
             )
         }
     }
 }
 
+/**
+ * A library row. Its children's semantics are replaced by one label (title and
+ * subtitle), so the row's ID carries its text for UI tests and screen readers.
+ */
 @OptIn(ExperimentalFoundationApi::class)
-private fun Modifier.combinedClickableCompat(onClick: () -> Unit): Modifier = combinedClickable(onClick = onClick)
-
 @Composable
-private fun Row2(title: String, subtitle: String, preview: String, modifier: Modifier) {
+private fun Row2(
+    title: String,
+    subtitle: String,
+    preview: String,
+    tag: String,
+    onClick: () -> Unit,
+    onLongClick: (() -> Unit)? = null,
+    longClickLabel: String? = null,
+) {
+    val modifier = Modifier
+        .combinedClickable(onClick = onClick, onLongClick = onLongClick, onLongClickLabel = longClickLabel)
+        .clearAndSetSemantics {
+            testTag = tag
+            contentDescription = "$title, $subtitle"
+            onClick { onClick(); true }
+            if (onLongClick != null) onLongClick(longClickLabel) { onLongClick(); true }
+        }
     Column(modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp)) {
         Text(title, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
         Text(subtitle, style = MaterialTheme.typography.bodySmall)
