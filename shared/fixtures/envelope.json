@@ -118,6 +118,14 @@
       "b64": "e_99",
       "documentType": null,
       "apps": []
+    },
+    {
+      "b64": "77u_eyJmb3JtYXQiOiJoYXNoYmluLWRpYWdyYW0iLCJ0eXBlIjoicHl0aG9uIn0",
+      "note": "leading BOM is stripped",
+      "documentType": "hashbin-diagram:python",
+      "apps": [
+        "python"
+      ]
     }
   ]
 }

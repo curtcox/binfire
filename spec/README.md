@@ -28,5 +28,9 @@ Conventions used everywhere:
   (`"b64"`). Exactly one of the two is used per value.
 - **Bounds** come from `config/binfire.config.json` `limits`. Untrusted input is
   always checked against its bound *before* it is decoded or allocated.
+- **Text limits** such as "at most 200 characters" count Unicode code points.
+- **UTF-8 JSON** (envelopes, manifests, bundle headers): decoding is strict
+  (invalid UTF-8 fails), and one leading byte-order mark (EF BB BF) is
+  stripped before parsing, as `TextDecoder` does.
 - Error codes are short kebab-case strings, listed in each spec. Fixtures name
   the expected code. Ports must not invent new codes for listed cases.

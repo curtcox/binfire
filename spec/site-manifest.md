@@ -69,7 +69,7 @@ default and are never treated as registered apps.
 
 ```json
 { "valid":   [{ "name", "text", "cid", "siteId", "entry", "files": n }],
-  "invalid": [{ "name", "text", "error" }],
+  "invalid": [{ "name", "text"|"b64", "error" }],
   "paths":   [{ "path", "ok": true|false }],
   "limits":  { … the limits these cases assume … } }
 ```

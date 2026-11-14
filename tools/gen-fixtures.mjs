@@ -176,6 +176,7 @@ envCases.push(
   { text: '{"src":"bare"}' },
   { text: '{"format":"hashbin-diagram","version":1,"type":"nosuchapp","src":""}' },
   { b64: R.b64url(Buffer.from([0x7b, 0xff, 0x7d])) },
+  { b64: R.b64url(Buffer.concat([Buffer.from([0xef, 0xbb, 0xbf]), text('{"format":"hashbin-diagram","type":"python"}')])), note: 'leading BOM is stripped' },
 );
 for (const e of envCases) {
   const bytes = e.text !== undefined ? text(e.text) : Buffer.from(e.b64, 'base64url');
@@ -293,6 +294,10 @@ const makeLink = [
   ['https://python.hashbin.page/', `https://${D}/a/python`],
   ['https://python.hashbin.page/index.html#x', `https://${D}/open#u=${enc('https://python.hashbin.page/index.html#x')}`],
   [pyRecovery, `https://${D}/open#u=${enc(pyRecovery)}`],
+  ["https://sheets.hashbin.page/?view=preview#a'()*!~$&=+,;:@/?%2Fx", "https://binfire.app/a/sheets?view=preview#a'()*!~$&=+,;:@/?%2Fx"],
+  ['https://sheets.hashbin.page/#100%', `https://${D}/open#u=${enc('https://sheets.hashbin.page/#100%')}`],
+  ['https://sheets.hashbin.page/#a%zz', `https://${D}/open#u=${enc('https://sheets.hashbin.page/#a%zz')}`],
+  ['https://sheets.hashbin.page/?q=[1]', `https://${D}/open#u=${enc('https://sheets.hashbin.page/?q=[1]')}`],
   ["https://sheets.hashbin.page/?view=preview#a b'()*!~é", `https://${D}/open#u=${enc("https://sheets.hashbin.page/?view=preview#a b'()*!~é")}`],
 ].map(([url, link]) => ({ url, link }));
 write('links.json', {
@@ -326,7 +331,9 @@ const valid = [
   { name: 'clock', text: JSON.stringify(goodManifest) },
   { name: 'no source, unknown field', text: JSON.stringify({ ...goodManifest, source: undefined, extra: true }) },
   { name: 'unicode path', text: m({ files: { 'ü/índex.html': file('x') }, entry: 'ü/índex.html' }) },
-].map(v => ({ ...v, cid: R.computeCID(text(v.text)), siteId: R.siteId(R.computeCID(text(v.text))), entry: JSON.parse(v.text).entry, files: Object.keys(JSON.parse(v.text).files).length }));
+  { name: 'leading BOM', text: '\ufeff' + JSON.stringify(goodManifest) },
+  { name: 'name of 200 code points (astral)', text: m({ name: '😀'.repeat(200) }) },
+].map(v => ({ ...v, cid: R.computeCID(text(v.text)), siteId: R.siteId(R.computeCID(text(v.text))), entry: JSON.parse(v.text.replace(/^\ufeff/, '')).entry, files: Object.keys(JSON.parse(v.text.replace(/^\ufeff/, '')).files).length }));
 const oneFile = (path, f = file('x')) => ({ files: { [path]: f }, entry: path });
 const invalid = [
   ['not json', '{', 'bad-manifest'],
@@ -335,6 +342,8 @@ const invalid = [
   ['wrong version', m({ version: 2 }), 'bad-manifest'],
   ['empty name', m({ name: '' }), 'bad-manifest'],
   ['long name', m({ name: 'n'.repeat(201) }), 'bad-manifest'],
+  ['long name in code points', m({ name: '😀'.repeat(201) }), 'bad-manifest'],
+  ['invalid utf-8', { b64: R.b64url(Buffer.concat([text('{"format":"binfire-site",'), Buffer.from([0xff]), text('}')])) }, 'bad-manifest'],
   ['no files', m({ files: {} }), 'too-many-files'],
   ['too many files', m({ files: Object.fromEntries(['a', 'b', 'c', 'd', 'e'].map(k => [k, file(k)])), entry: 'a' }), 'too-many-files'],
   ['dot-dot path', m(oneFile('../x')), 'bad-path'],
@@ -349,7 +358,7 @@ const invalid = [
   ['file too large', m(oneFile('x', file('z'.repeat(1001)))), 'too-large'],
   ['total too large', m({ files: { a: file('a'.repeat(800)), b: file('b'.repeat(800)) }, entry: 'a' }), 'too-large'],
   ['missing entry', m({ entry: 'nope.html' }), 'missing-entry'],
-].map(([name, t, error]) => ({ name, text: t, error }));
+].map(([name, t, error]) => (typeof t === 'string' ? { name, text: t, error } : { name, ...t, error }));
 const paths = [
   ['index.html', true], ['a/b/c.js', true], ['ü.txt', true], ['.well-known/x', true], ['a..b', true],
   ['', false], ['/a', false], ['a/', false], ['a//b', false], ['.', false], ['..', false], ['a/./b', false], ['a/../b', false],
@@ -373,6 +382,7 @@ const bundles = [
   { name: 'cid with hint', b64: R.b64url(cidBundle), expect: { kind: 'cid', cid: docCid, app: 'python', name: 'Loop', entries: [docCid] } },
   { name: 'inline cid', b64: R.b64url(tinyBundle), expect: { kind: 'cid', cid: R.computeCID(tinyBytes), entries: [R.computeCID(tinyBytes)] } },
   { name: 'site', b64: R.b64url(siteBundle), expect: { kind: 'site', cid: manifestCid, name: 'Clock', entries: siteEntries.map(([c]) => c) } },
+  { name: 'header with leading BOM', b64: R.b64url((() => { const h = Buffer.concat([Buffer.from([0xef, 0xbb, 0xbf]), text(JSON.stringify({ kind: 'url', url: 'https://x.example/', entries: [] }))]); const p = Buffer.alloc(8); p.write('BFB1', 0, 'ascii'); p.writeUInt32BE(h.length, 4); return Buffer.concat([p, h]); })()), expect: { kind: 'url', url: 'https://x.example/', entries: [] } },
   { name: 'unknown header fields ignored', b64: R.b64url(R.encodeBundle({ kind: 'url', url: 'https://x.example/', entries: [], future: { a: 1 } }, [])), expect: { kind: 'url', url: 'https://x.example/', entries: [] } },
 ];
 const tamper = (buf, at) => { const b = Buffer.from(buf); b[at] ^= 1; return b; };

@@ -52,6 +52,15 @@
       }
     },
     {
+      "name": "header with leading BOM",
+      "b64": "QkZCMQAAADnvu797ImtpbmQiOiJ1cmwiLCJ1cmwiOiJodHRwczovL3guZXhhbXBsZS8iLCJlbnRyaWVzIjpbXX0",
+      "expect": {
+        "kind": "url",
+        "url": "https://x.example/",
+        "entries": []
+      }
+    },
+    {
       "name": "unknown header fields ignored",
       "b64": "QkZCMQAAAEd7ImtpbmQiOiJ1cmwiLCJ1cmwiOiJodHRwczovL3guZXhhbXBsZS8iLCJlbnRyaWVzIjpbXSwiZnV0dXJlIjp7ImEiOjF9fQ",
       "expect": {

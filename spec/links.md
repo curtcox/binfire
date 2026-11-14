@@ -86,9 +86,13 @@ differ from this, so ports implement it themselves (fixture
 
 For a URL that matches app `A`:
 
-- If the URL's base is `A.canonicalOrigin` and its path is exactly the base
-  path → `https://D/a/<slug>` + raw query + raw fragment. (The `index.html`
-  form is not shortened.)
+- If the URL's base is `A.canonicalOrigin`, its path is exactly the base path,
+  **and** the raw query and raw fragment contain only RFC 3986 query/fragment
+  characters (`A–Z a–z 0–9 - . _ ~ ! $ & ' ( ) * + , ; = : @ / ?` and
+  `%` followed by two hex digits) → `https://D/a/<slug>` + raw query + raw
+  fragment. The `index.html` form is not shortened. A raw space, non-ASCII
+  character or stray `%` would break when the link is shared as text, so such
+  URLs use the next form.
 - Otherwise → `https://D/open#u=` + `encodeURIComponent(url)`.
 
 `makeCIDLink(cid, slug?)` → `https://D/c#<cid>`, or `https://D/c?app=<slug>#<cid>`.
