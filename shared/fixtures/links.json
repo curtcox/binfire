@@ -3,6 +3,7 @@
   "config": {
     "linkDomain": "binfire.app",
     "scheme": "binfire",
+    "ownScheme": "app.binfire.test",
     "content": "https://256t.us"
   },
   "route": [
@@ -245,6 +246,57 @@
       "expect": {
         "action": "error",
         "error": "unknown-link"
+      }
+    },
+    {
+      "input": "app.binfire.test://a/python#AAAAAAAFaGVsbG8",
+      "expect": {
+        "action": "open-app",
+        "app": "python",
+        "url": "https://python.hashbin.page/#AAAAAAAFaGVsbG8",
+        "state": "cid",
+        "run": true,
+        "view": null
+      }
+    },
+    {
+      "input": "APP.binfire.TEST:///c#AAAAAABBuDCGzYSU5VcIrX7Ngt-0vKG9ph7Lt8rwxolnkC5wk0Xl2DBet6wNWIr8bLt1FhqpyMfg6phr2DPa_l4czTc0Wg",
+      "expect": {
+        "action": "load-cid",
+        "cid": "AAAAAABBuDCGzYSU5VcIrX7Ngt-0vKG9ph7Lt8rwxolnkC5wk0Xl2DBet6wNWIr8bLt1FhqpyMfg6phr2DPa_l4czTc0Wg",
+        "app": null
+      }
+    },
+    {
+      "input": "app.binfire.test://share#t=see%20https%3A%2F%2Fpython.hashbin.page%2F%23v1.abc",
+      "expect": {
+        "action": "open-app",
+        "app": "python",
+        "url": "https://python.hashbin.page/#v1.abc",
+        "state": "v1",
+        "run": true,
+        "view": null
+      }
+    },
+    {
+      "input": "app.binfire.test://share#t=binfire%3A%2F%2Fshare%23t%3Dx",
+      "expect": {
+        "action": "error",
+        "error": "unknown-link"
+      }
+    },
+    {
+      "input": "app.binfire.test://oauth?code=x&state=y",
+      "expect": {
+        "action": "error",
+        "error": "unknown-link"
+      }
+    },
+    {
+      "input": "app.binfire.other://a/python",
+      "expect": {
+        "action": "show-text",
+        "text": "app.binfire.other://a/python"
       }
     },
     {

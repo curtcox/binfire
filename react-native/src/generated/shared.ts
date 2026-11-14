@@ -3,6 +3,7 @@ export const config = {
   "appName": "binfire",
   "linkDomain": "binfire.app",
   "scheme": "binfire",
+  "ownScheme": "app.binfire.rn",
   "hashbin": {
     "api": "https://hashbin.org",
     "content": "https://256t.us",
@@ -20,7 +21,7 @@ export const config = {
     "maxSiteFiles": 2000,
     "maxTransferBytes": 104857600
   },
-  "oauthRedirect": "binfire://oauth"
+  "oauthRedirect": "app.binfire.rn://oauth"
 } as const;
 
 export const registry = {

@@ -275,6 +275,12 @@ const route = [
   [`https://${D}`, { action: 'error', error: 'unknown-link' }],
   [`https://${D}/x/y`, { action: 'error', error: 'unknown-link' }],
   [`binfire://zzz`, { action: 'error', error: 'unknown-link' }],
+  [`app.binfire.test://a/python#${cidA}`, { action: 'open-app', app: 'python', url: `https://python.hashbin.page/#${cidA}`, state: 'cid', run: true, view: null }],
+  [`APP.binfire.TEST:///c#${cidB}`, { action: 'load-cid', cid: cidB, app: null }],
+  [`app.binfire.test://share#t=${enc('see https://python.hashbin.page/#v1.abc')}`, { action: 'open-app', app: 'python', url: 'https://python.hashbin.page/#v1.abc', state: 'v1', run: true, view: null }],
+  [`app.binfire.test://share#t=${enc('binfire://share#t=x')}`, { action: 'error', error: 'unknown-link' }],
+  [`app.binfire.test://oauth?code=x&state=y`, { action: 'error', error: 'unknown-link' }],
+  [`app.binfire.other://a/python`, { action: 'show-text', text: 'app.binfire.other://a/python' }],
   [`binfire://share#t=${enc(`Check this https://${D}/a/python#${cidA} thanks`)}`, { action: 'open-app', app: 'python', url: `https://python.hashbin.page/#${cidA}`, state: 'cid', run: true, view: null }],
   [`binfire://share#t=${enc('just words')}`, { action: 'show-text', text: 'just words' }],
   [`binfire://share#x=1`, { action: 'error', error: 'bad-link' }],
@@ -313,7 +319,7 @@ const makeLink = [
   ['https://python.hashbin.page/other.html#x', null],
 ].map(([url, link]) => ({ url, link }));
 write('links.json', {
-  config: { linkDomain: D, scheme: config.scheme, content: config.hashbin.content },
+  config: { linkDomain: D, scheme: config.scheme, ownScheme: 'app.binfire.test', content: config.hashbin.content },
   route, makeLink,
   withRunZero: [
     ['https://python.hashbin.page/#v1.abc', 'https://python.hashbin.page/?run=0#v1.abc'],

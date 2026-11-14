@@ -116,7 +116,10 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "scheme": "binfire",
+    "scheme": [
+      "binfire",
+      "app.binfire.rn"
+    ],
     "plugins": [
       [
         "expo-share-intent",

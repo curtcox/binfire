@@ -75,7 +75,7 @@
 			<key>CFBundleURLName</key>
 			<string>binfire</string>
 			<key>CFBundleURLSchemes</key>
-			<array><string>binfire</string></array>
+			<array><string>binfire</string><string>app.binfire.flutter</string></array>
 		</dict>
 	</array>
 	<key>CFBundleDocumentTypes</key>

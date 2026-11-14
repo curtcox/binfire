@@ -14,7 +14,26 @@ the link forms with `makeLink`.
 | `https://D/open#u=<percent-encoded URL>` | Any registered app URL. |
 | `https://D/c[?app=<slug>]#<CID>` | A HashBin document. The optional `app` is a hint. |
 | `https://D/s#<manifest CID>` | A packaged site. |
-| `S://a/<slug>…`, `S://open#u=…`, `S://c#…`, `S://s#…` | Same paths with the custom scheme. The first path segment is the URL host. `S:///a/…` (empty host) is also accepted. |
+| `S://a/<slug>…`, `S://open#u=…`, `S://c#…`, `S://s#…` (and the same with `O://`) | Same paths with the custom scheme. The first path segment is the URL host. `S:///a/…` (empty host) is also accepted. |
+
+**Schemes.** Each port registers two custom schemes:
+
+- the public scheme `S` (from config);
+- a private scheme `O` equal to that port's app ID (reverse-DNS, for example
+  `app.binfire.ios`). `O` comes from `ids` in the config, and
+  `tools/configure.mjs` writes it into each port's runtime config as
+  `ownScheme`.
+
+Several ports, or a fork, can be installed on one device, and then they all
+claim `S`. So binfire never relies on `S` to reach *itself*:
+
+- the OAuth redirect is `O://oauth`. HashBin also requires reverse-DNS native
+  schemes;
+- share extensions hand text over as `O://share#t=…`;
+- UI tests use `O://`.
+
+`route` treats `O://…` exactly like `S://…`. Schemes compare
+case-insensitively.
 
 The host `D` is matched case-insensitively. A `www.` prefix is not accepted. A
 trailing `/` after `a/<slug>`, `open`, `c` or `s` is accepted. Fragments are
@@ -48,7 +67,7 @@ Rules, in order:
 2. Text that does not parse as an absolute URL → `show-text`. Hosts are
    compared literally (case-insensitive ASCII). A percent-escaped or otherwise
    non-canonical host never matches a binfire, HashBin or registry host.
-3. **binfire links** (scheme `S`, or `https` with host `D`). The path is the
+3. **binfire links** (scheme `S` or `O`, or `https` with host `D`). The path is the
    URL path, or for scheme `S` the host followed by the path, with leading and
    trailing slashes removed:
    - `a/<slug>`: if the slug is not in the registry → `error: "unknown-app"`.
@@ -63,10 +82,10 @@ Rules, in order:
      → `load-cid`.
    - `s`: the fragment must be a valid CID, else → `error: "invalid-cid"`.
      → `open-site`.
-   - `share` (custom scheme `S` only, as used by share extensions to hand
+   - `share` (custom schemes `S` and `O` only, as used by share extensions to hand
      text to the app): the fragment parsed as a query string must have `t`,
      else → `error: "bad-link"`. The result is `routeShared(t)`, which is not
-     recursive: if `t` is itself a `S://share` link it routes as
+     recursive: if `t` is itself a `S://share` or `O://share` link it routes as
      `unknown-link`. On `https://D/share` → `error: "unknown-link"`.
    - anything else → `error: "unknown-link"`.
 4. `https://<hashbin content host>/<CID>` (256t.us), with exactly one path
@@ -160,7 +179,7 @@ are left, the `?` is dropped too. The fragment never changes.
 ## Fixture `links.json`
 
 ```json
-{ "config": { "linkDomain": "binfire.app", "scheme": "binfire", "content": "https://256t.us" },
+{ "config": { "linkDomain": "binfire.app", "scheme": "binfire", "ownScheme": "app.binfire.test", "content": "https://256t.us" },
   "route":    [{ "input": "…", "expect": { "action": "…", … } }],
   "makeLink": [{ "url": "…", "link": "…" }],
   "withRunZero": [{ "url": "…", "result": "…" }],

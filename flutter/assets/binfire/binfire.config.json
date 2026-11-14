@@ -2,6 +2,7 @@
   "appName": "binfire",
   "linkDomain": "binfire.app",
   "scheme": "binfire",
+  "ownScheme": "app.binfire.flutter",
   "hashbin": {
     "api": "https://hashbin.org",
     "content": "https://256t.us",
@@ -19,5 +20,5 @@
     "maxSiteFiles": 2000,
     "maxTransferBytes": 104857600
   },
-  "oauthRedirect": "binfire://oauth"
+  "oauthRedirect": "app.binfire.flutter://oauth"
 }

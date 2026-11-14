@@ -18,8 +18,11 @@ and Publish still works.
 This follows HashBin's own `examples/textpad-expo` and `textpad-flutter`
 clients.
 
-- **Redirect URI:** `<scheme>://oauth` (default `binfire://oauth`). The owner
-  registers this URI and `https://<linkDomain>/oauth` for the binfire client on
+- **Redirect URI:** `<ownScheme>://oauth`, for example
+  `app.binfire.ios://oauth`. This is the port's own reverse-DNS scheme
+  (links.md): HashBin only accepts reverse-DNS native schemes, and the shared
+  `binfire` scheme could reach a different port. The owner registers each
+  port's URI, plus `https://<linkDomain>/oauth`, for the binfire client on
   hashbin.org (PLAN §11).
 - **Authorize:** open
   `GET {api}/oauth/authorize?client_id&redirect_uri&response_type=code&scope=content:write balance:read&state&code_challenge&code_challenge_method=S256`

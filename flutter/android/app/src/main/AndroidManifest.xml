@@ -46,6 +46,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="binfire" />
+                <data android:scheme="app.binfire.flutter" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />

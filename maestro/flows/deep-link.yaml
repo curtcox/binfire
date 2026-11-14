@@ -3,11 +3,11 @@ tags: [m2]
 ---
 - launchApp:
     clearState: true
-# autoVerify answers Android's "Open with" chooser when several binfire ports
-# that share the scheme are installed on one device.
+# Use the port's own scheme (its app ID, spec/links.md "Schemes"): several
+# ports installed on one device all claim the public binfire:// scheme, and
+# Android would show an "Open with" chooser.
 - openLink:
-    link: "binfire://a/python#AAAAAAAFaGVsbG8"
-    autoVerify: true
+    link: "${APP_ID}://a/python#AAAAAAAFaGVsbG8"
 # iOS 26 asks "Open in “binfire”?" before delivering a custom-scheme link. The
 # library screen behind the alert has its own Open button, so tap the alert's
 # button by its position below the alert title.
