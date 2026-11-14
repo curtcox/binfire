@@ -1,15 +1,15 @@
 // Browser: one live WebView per opened app, kept mounted while hidden so each
 // app keeps its page state, storage and drafts (spec/ui.md "Browser").
-import { useCallback, useRef } from "react";
-import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { WebView, type WebViewNavigation } from "react-native-webview";
-import type { ShouldStartLoadRequest } from "react-native-webview/lib/WebViewTypes";
-import type { BinfireContext } from "../core/config";
-import { decideNavigation } from "../core/navigation";
-import { appForSlug } from "../core/registry";
-import { classifyState } from "../core/state";
-import { colors, common } from "./theme";
+import { useCallback, useRef } from 'react';
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { WebView, type WebViewNavigation } from 'react-native-webview';
+import type { ShouldStartLoadRequest } from 'react-native-webview/lib/WebViewTypes';
+import type { BinfireContext } from '../core/config';
+import { decideNavigation } from '../core/navigation';
+import { appForSlug } from '../core/registry';
+import { classifyState } from '../core/state';
+import { colors, common } from './theme';
 
 /** One app's browser. `source` is what the WebView was told to load; `current` tracks the main frame. */
 export interface BrowserState {
@@ -53,7 +53,7 @@ function AppWebView({
   const onShouldStart = useCallback(
     (req: ShouldStartLoadRequest): boolean => {
       // Policy applies to the main frame only. (Android only reports main-frame loads.)
-      if (Platform.OS === "ios" && req.isTopFrame === false) return true;
+      if (Platform.OS === 'ios' && req.isTopFrame === false) return true;
       const decision = decideNavigation(req.url, slug, ctx);
       if (!decision.allow) setTimeout(() => onBlocked(decision.url), 0);
       return decision.allow;
@@ -67,18 +67,15 @@ function AppWebView({
     [slug, onUrlChange],
   );
   return (
-    <View
-      style={[StyleSheet.absoluteFill, !active && styles.hidden]}
-      pointerEvents={active ? "auto" : "none"}
-    >
+    <View style={[StyleSheet.absoluteFill, !active && styles.hidden]} pointerEvents={active ? 'auto' : 'none'}>
       <WebView
         key={state.generation}
-        ref={(ref) => registerRef(slug, ref)}
-        testID={active ? "web.view" : undefined}
+        ref={ref => registerRef(slug, ref)}
+        testID={active ? 'web.view' : undefined}
         source={{ uri: state.source }}
         // Every URL reaches the policy; the library default would hand
         // non-http(s) schemes to the OS (an auto-navigation PLAN §10 forbids).
-        originWhitelist={["*"]}
+        originWhitelist={['*']}
         onShouldStartLoadWithRequest={onShouldStart}
         onNavigationStateChange={onNav}
         // HashBin Publish opens a popup. Android can keep the opener with
@@ -107,14 +104,14 @@ export function BrowserScreen(props: BrowserScreenProps) {
   const state = active ? browsers[active] : undefined;
   const app = active ? appForSlug(active, ctx.registry) : null;
   const info = state ? classifyState(state.current) : null;
-  const title = app && info ? `${app.name} · ${info.state}` : "";
+  const title = app && info ? `${app.name} · ${info.state}` : '';
 
   return (
     <View
       style={[styles.root, !visible && styles.hidden]}
-      pointerEvents={visible ? "auto" : "none"}
+      pointerEvents={visible ? 'auto' : 'none'}
       accessibilityElementsHidden={!visible}
-      importantForAccessibility={visible ? "auto" : "no-hide-descendants"}
+      importantForAccessibility={visible ? 'auto' : 'no-hide-descendants'}
     >
       {visible && (
         <View style={[styles.bar, { paddingTop: insets.top + 4 }]}>
@@ -137,35 +134,18 @@ export function BrowserScreen(props: BrowserScreenProps) {
           >
             <Text style={styles.barButtonText}>↻</Text>
           </Pressable>
-          <Pressable
-            testID="web.save"
-            style={styles.barButton}
-            onPress={props.onSave}
-            accessibilityLabel="Save"
-          >
+          <Pressable testID="web.save" style={styles.barButton} onPress={props.onSave} accessibilityLabel="Save">
             <Text style={styles.barButtonText}>Save</Text>
           </Pressable>
-          <Pressable
-            testID="web.send"
-            style={styles.barButton}
-            onPress={props.onSend}
-            accessibilityLabel="Send"
-          >
+          <Pressable testID="web.send" style={styles.barButton} onPress={props.onSend} accessibilityLabel="Send">
             <Text style={styles.barButtonText}>Send</Text>
           </Pressable>
         </View>
       )}
       {visible && info && !info.run && (
         <View testID="run.banner" style={styles.banner}>
-          <Text style={styles.bannerText}>
-            {"Code isn't running. Run it when you trust this state."}
-          </Text>
-          <Pressable
-            testID="run.go"
-            style={common.button}
-            onPress={props.onRun}
-            accessibilityLabel="Run"
-          >
+          <Text style={styles.bannerText}>{"Code isn't running. Run it when you trust this state."}</Text>
+          <Pressable testID="run.go" style={common.button} onPress={props.onRun} accessibilityLabel="Run">
             <Text style={common.buttonText}>Run</Text>
           </Pressable>
         </View>
@@ -192,8 +172,8 @@ const styles = StyleSheet.create({
   root: { ...StyleSheet.absoluteFill, backgroundColor: colors.bg },
   hidden: { opacity: 0, zIndex: -1 },
   bar: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 8,
     paddingBottom: 6,
     gap: 4,
@@ -202,17 +182,17 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bg,
   },
   barButton: { paddingHorizontal: 8, paddingVertical: 8 },
-  barButtonText: { color: colors.accent, fontSize: 15, fontWeight: "600" },
+  barButtonText: { color: colors.accent, fontSize: 15, fontWeight: '600' },
   title: {
     flex: 1,
-    textAlign: "center",
+    textAlign: 'center',
     fontSize: 15,
-    fontWeight: "600",
+    fontWeight: '600',
     color: colors.text,
   },
   banner: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 12,
     padding: 12,
     backgroundColor: colors.banner,

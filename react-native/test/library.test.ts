@@ -1,4 +1,14 @@
-import { addRecent, addSaved, emptyLibrary, MAX_RECENT, parseLibrary, removeSaved, serializeLibrary } from '../src/core/library';
+import {
+  addRecent,
+  addSaved,
+  emptyLibrary,
+  MAX_RECENT,
+  MAX_RECENT_BYTES,
+  MAX_RECENT_URL_BYTES,
+  parseLibrary,
+  removeSaved,
+  serializeLibrary,
+} from '../src/core/library';
 
 const t = (n: number) => new Date(Date.UTC(2026, 10, 14, 15, 0, n));
 
@@ -19,6 +29,23 @@ describe('library', () => {
     expect(lib.recent[MAX_RECENT - 1].url).toBe('https://a/#20');
   });
 
+  test('a URL over 1 MiB is not added to recent', () => {
+    const big = 'https://a/#' + 'x'.repeat(MAX_RECENT_URL_BYTES);
+    expect(addRecent(emptyLibrary, big, 'python', t(1)).recent).toEqual([]);
+    const fits = 'https://a/#' + 'x'.repeat(MAX_RECENT_URL_BYTES - 11);
+    expect(addRecent(emptyLibrary, fits, 'python', t(1)).recent).toHaveLength(1);
+  });
+
+  test('recent is capped at 16 MiB of URL bytes, dropping the oldest', () => {
+    let lib = emptyLibrary;
+    const pad = 'x'.repeat(1024 * 1024 - 20);
+    for (let i = 0; i < 20; i++) lib = addRecent(lib, `https://a/#${String(i).padStart(4, '0')}${pad}`, 'python', t(i));
+    const total = lib.recent.reduce((n, r) => n + r.url.length, 0);
+    expect(total).toBeLessThanOrEqual(MAX_RECENT_BYTES);
+    expect(lib.recent.length).toBe(Math.floor(MAX_RECENT_BYTES / lib.recent[0].url.length));
+    expect(lib.recent[0].url.startsWith('https://a/#0019')).toBe(true);
+  });
+
   test('saved is newest first, allows duplicate urls, removes by id', () => {
     let lib = addSaved(emptyLibrary, { id: '1', name: 'one', url: 'https://a/', app: 'python' }, t(1));
     lib = addSaved(lib, { id: '2', name: 'two', url: 'https://a/', app: 'python' }, t(2));
@@ -33,11 +60,13 @@ describe('library', () => {
     expect(parseLibrary(null)).toEqual(emptyLibrary);
     expect(parseLibrary('{')).toEqual(emptyLibrary);
     expect(parseLibrary('{"version":2}')).toEqual(emptyLibrary);
-    const messy = parseLibrary(JSON.stringify({
-      version: 1,
-      saved: [{ id: 'a' }, { id: 'b', name: 'B', url: 'u', app: 'p', savedAt: 's' }],
-      recent: [{ url: 'u', app: 'p', visitedAt: '1' }, { url: 'u', app: 'p', visitedAt: '2' }, 7],
-    }));
+    const messy = parseLibrary(
+      JSON.stringify({
+        version: 1,
+        saved: [{ id: 'a' }, { id: 'b', name: 'B', url: 'u', app: 'p', savedAt: 's' }],
+        recent: [{ url: 'u', app: 'p', visitedAt: '1' }, { url: 'u', app: 'p', visitedAt: '2' }, 7],
+      }),
+    );
     expect(messy.saved.map(s => s.id)).toEqual(['b']);
     expect(messy.recent).toHaveLength(1);
     expect(messy.sites).toEqual([]);

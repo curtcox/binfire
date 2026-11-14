@@ -1,47 +1,38 @@
 // Root UI: library and browsers, with every input going through route().
-import { randomUUID } from "expo-crypto";
-import { StatusBar } from "expo-status-bar";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { BackHandler, StyleSheet, View } from "react-native";
-import { SafeAreaProvider } from "react-native-safe-area-context";
-import { defaultContext, type RegistryApp } from "../core/config";
-import {
-  addRecent,
-  addSaved,
-  removeSaved,
-  type Library,
-} from "../core/library";
-import { makeLink, route, withoutRun, type Route } from "../core/links";
-import { appForUrl } from "../core/registry";
-import { classifyState } from "../core/state";
-import { BrowserScreen, type BrowserState } from "./BrowserScreen";
-import { LibraryScreen } from "./LibraryScreen";
-import { ErrorSheet, SaveSheet, SendSheet, TextSheet } from "./Sheets";
-import { loadLibrary, storeLibrary } from "./storage";
-import { colors } from "./theme";
+import { randomUUID } from 'expo-crypto';
+import { StatusBar } from 'expo-status-bar';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { BackHandler, StyleSheet, View } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { defaultContext, type RegistryApp } from '../core/config';
+import { addRecent, addSaved, removeSaved, type Library } from '../core/library';
+import { makeLink, route, withoutRun, type Route } from '../core/links';
+import { appForUrl } from '../core/registry';
+import { classifyState } from '../core/state';
+import { BrowserScreen, type BrowserState } from './BrowserScreen';
+import { LibraryScreen } from './LibraryScreen';
+import { ErrorSheet, SaveSheet, SendSheet, TextSheet } from './Sheets';
+import { loadLibrary, storeLibrary } from './storage';
+import { colors } from './theme';
 
 const ctx = defaultContext;
 
 type Sheet =
-  | { kind: "text"; text: string }
-  | { kind: "error"; message: string }
-  | { kind: "save" }
-  | { kind: "send" }
-  | null;
+  { kind: 'text'; text: string } | { kind: 'error'; message: string } | { kind: 'save' } | { kind: 'send' } | null;
 
 const ERROR_MESSAGES: Record<string, string> = {
-  "too-large": "That text is too large to open.",
-  "unknown-app": "That link is for an app binfire doesn't know.",
-  "bad-link": "That binfire link is malformed.",
-  "unknown-link": "That binfire link isn't one binfire understands.",
-  "invalid-cid": "That link's document ID (CID) isn't valid.",
+  'too-large': 'That text is too large to open.',
+  'unknown-app': "That link is for an app binfire doesn't know.",
+  'bad-link': 'That binfire link is malformed.',
+  'unknown-link': "That binfire link isn't one binfire understands.",
+  'invalid-cid': "That link's document ID (CID) isn't valid.",
 };
 
 export default function BinfireApp() {
   const [library, setLibrary] = useState<Library>(loadLibrary);
   const [browsers, setBrowsers] = useState<Record<string, BrowserState>>({});
   const [active, setActive] = useState<string | null>(null);
-  const [screen, setScreen] = useState<"library" | "browser">("library");
+  const [screen, setScreen] = useState<'library' | 'browser'>('library');
   const [sheet, setSheet] = useState<Sheet>(null);
 
   // Persist library changes, coalescing bursts (e.g. typing in an app).
@@ -56,20 +47,17 @@ export default function BinfireApp() {
   }, [library]);
 
   const recordVisit = useCallback((slug: string, url: string) => {
-    setLibrary((lib) =>
-      lib.recent[0]?.url === url ? lib : addRecent(lib, url, slug),
-    );
+    setLibrary(lib => (lib.recent[0]?.url === url ? lib : addRecent(lib, url, slug)));
   }, []);
 
   /** Opens (or reuses) the browser for `slug` at `url`. */
   const openApp = useCallback(
     (slug: string, url: string) => {
-      setBrowsers((prev) => {
+      setBrowsers(prev => {
         const existing = prev[slug];
         let next: BrowserState;
         if (!existing) next = { source: url, current: url, generation: 0 };
-        else if (existing.source !== url)
-          next = { ...existing, source: url, current: url };
+        else if (existing.source !== url) next = { ...existing, source: url, current: url };
         else if (existing.current !== url)
           next = {
             ...existing,
@@ -80,7 +68,7 @@ export default function BinfireApp() {
         return next === existing ? prev : { ...prev, [slug]: next };
       });
       setActive(slug);
-      setScreen("browser");
+      setScreen('browser');
       setSheet(null);
       recordVisit(slug, url);
     },
@@ -90,40 +78,37 @@ export default function BinfireApp() {
   const handleRoute = useCallback(
     (r: Route) => {
       switch (r.action) {
-        case "open-app":
+        case 'open-app':
           return openApp(r.app, r.url);
-        case "show-text":
-          return setSheet({ kind: "text", text: r.text });
-        case "error":
+        case 'show-text':
+          return setSheet({ kind: 'text', text: r.text });
+        case 'error':
           return setSheet({
-            kind: "error",
+            kind: 'error',
             message: ERROR_MESSAGES[r.error] ?? r.error,
           });
-        case "load-cid":
+        case 'load-cid':
           return setSheet({
-            kind: "error",
-            message: "Opening HashBin documents by CID is coming in M3.",
+            kind: 'error',
+            message: 'Opening HashBin documents by CID is coming in M3.',
           });
-        case "open-site":
+        case 'open-site':
           return setSheet({
-            kind: "error",
-            message: "Packaged sites are coming in M6.",
+            kind: 'error',
+            message: 'Packaged sites are coming in M6.',
           });
       }
     },
     [openApp],
   );
 
-  const openText = useCallback(
-    (text: string) => handleRoute(route(text, ctx)),
-    [handleRoute],
-  );
+  const openText = useCallback((text: string) => handleRoute(route(text, ctx)), [handleRoute]);
 
   const openTile = useCallback(
     (app: RegistryApp) => {
       if (browsers[app.slug]) {
         setActive(app.slug);
-        setScreen("browser");
+        setScreen('browser');
       } else openApp(app.slug, app.canonicalOrigin);
     },
     [browsers, openApp],
@@ -131,11 +116,9 @@ export default function BinfireApp() {
 
   const onUrlChange = useCallback(
     (slug: string, url: string) => {
-      setBrowsers((prev) => {
+      setBrowsers(prev => {
         const b = prev[slug];
-        return !b || b.current === url
-          ? prev
-          : { ...prev, [slug]: { ...b, current: url } };
+        return !b || b.current === url ? prev : { ...prev, [slug]: { ...b, current: url } };
       });
       // Only the app's own URLs are states; about:blank and HashBin pages are not.
       if (appForUrl(url, ctx.registry)?.slug === slug) recordVisit(slug, url);
@@ -147,8 +130,8 @@ export default function BinfireApp() {
     (url: string) => {
       const r = route(url, ctx);
       // Another registered app opens in its own browser; anything else is only shown.
-      if (r.action === "open-app") openApp(r.app, r.url);
-      else setSheet({ kind: "text", text: url });
+      if (r.action === 'open-app') openApp(r.app, r.url);
+      else setSheet({ kind: 'text', text: url });
     },
     [openApp],
   );
@@ -162,23 +145,20 @@ export default function BinfireApp() {
 
   const onSave = useCallback(
     (name: string) => {
-      if (active && current)
-        setLibrary((lib) =>
-          addSaved(lib, { id: randomUUID(), name, url: current, app: active }),
-        );
+      if (active && current) setLibrary(lib => addSaved(lib, { id: randomUUID(), name, url: current, app: active }));
       setSheet(null);
     },
     [active, current],
   );
 
   useEffect(() => {
-    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
       if (sheet) {
         setSheet(null);
         return true;
       }
-      if (screen === "browser") {
-        setScreen("library");
+      if (screen === 'browser') {
+        setScreen('library');
         return true;
       }
       return false;
@@ -188,8 +168,8 @@ export default function BinfireApp() {
 
   const fallbackName =
     active && current
-      ? `${ctx.registry.apps.find((a) => a.slug === active)?.name ?? active} · ${classifyState(current).state}`
-      : "";
+      ? `${ctx.registry.apps.find(a => a.slug === active)?.name ?? active} · ${classifyState(current).state}`
+      : '';
 
   return (
     <SafeAreaProvider>
@@ -200,39 +180,28 @@ export default function BinfireApp() {
           library={library}
           onOpenText={openText}
           onOpenApp={openTile}
-          onDeleteSaved={(id) => setLibrary((lib) => removeSaved(lib, id))}
+          onDeleteSaved={id => setLibrary(lib => removeSaved(lib, id))}
         />
         <BrowserScreen
           ctx={ctx}
           browsers={browsers}
           active={active}
-          visible={screen === "browser"}
+          visible={screen === 'browser'}
           onUrlChange={onUrlChange}
           onBlocked={onBlocked}
-          onLibrary={() => setScreen("library")}
-          onSave={() => setSheet({ kind: "save" })}
-          onSend={() => setSheet({ kind: "send" })}
+          onLibrary={() => setScreen('library')}
+          onSave={() => setSheet({ kind: 'save' })}
+          onSend={() => setSheet({ kind: 'send' })}
           onRun={onRun}
         />
       </View>
-      {sheet?.kind === "text" && (
-        <TextSheet text={sheet.text} onClose={() => setSheet(null)} />
+      {sheet?.kind === 'text' && <TextSheet text={sheet.text} onClose={() => setSheet(null)} />}
+      {sheet?.kind === 'error' && <ErrorSheet message={sheet.message} onClose={() => setSheet(null)} />}
+      {sheet?.kind === 'save' && (
+        <SaveSheet fallbackName={fallbackName} onSave={onSave} onClose={() => setSheet(null)} />
       )}
-      {sheet?.kind === "error" && (
-        <ErrorSheet message={sheet.message} onClose={() => setSheet(null)} />
-      )}
-      {sheet?.kind === "save" && (
-        <SaveSheet
-          fallbackName={fallbackName}
-          onSave={onSave}
-          onClose={() => setSheet(null)}
-        />
-      )}
-      {sheet?.kind === "send" && (
-        <SendSheet
-          link={current ? makeLink(current, ctx) : null}
-          onClose={() => setSheet(null)}
-        />
+      {sheet?.kind === 'send' && (
+        <SendSheet link={current ? makeLink(current, ctx) : null} onClose={() => setSheet(null)} />
       )}
     </SafeAreaProvider>
   );
