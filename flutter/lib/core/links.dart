@@ -126,13 +126,14 @@ class Links {
 
   /// Routes any input text (links.md, `route(text)`).
   Route route(String input) {
+    // Bound before anything else scans the input.
+    final bound = config.limits.maxStateBytes + 4096;
+    if (input.length > bound || utf8Length(input) > bound) return _error(ErrorCodes.tooLarge);
     final text = _trimAsciiWhitespace(input);
     for (var i = 0; i < text.length; i++) {
       final c = text.codeUnitAt(i);
       if (c < 0x20 || c == 0x7F) return Route._(RouteAction.showText, text: text);
     }
-    final bound = config.limits.maxStateBytes + 4096;
-    if (text.length > bound || utf8Length(text) > bound) return _error(ErrorCodes.tooLarge);
 
     // 1. A bare CID, optionally after '#'.
     final bare = text.startsWith('#') ? text.substring(1) : text;

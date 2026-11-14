@@ -63,6 +63,26 @@ void main() {
     expect(links.route(big).toJson(), {'action': 'error', 'error': 'too-large'});
   });
 
+  test('size is checked on the raw input before trimming and control chars', () {
+    final small = Links(
+      BinfireConfig(
+        linkDomain: cfg['linkDomain'] as String,
+        scheme: cfg['scheme'] as String,
+        hashbin: HashbinConfig(content: cfg['content'] as String),
+        limits: const BinfireLimits(maxStateBytes: 10),
+      ),
+      sharedRegistry(),
+    );
+    // 4106 bytes is the bound.
+    expect(small.route('x' * 4106).toJson()['action'], 'show-text');
+    expect(small.route('x' * 4107).toJson(), {'action': 'error', 'error': 'too-large'});
+    // Whitespace counts before trimming, and beats the control-char rule.
+    expect(small.route('${' ' * 4110}a\u0001b ').toJson(), {'action': 'error', 'error': 'too-large'});
+    expect(small.route('  a\u0001b ').toJson(), {'action': 'show-text', 'text': 'a\u0001b'});
+    // UTF-8 bytes, not code units: 2054 x 'é' = 4108 bytes.
+    expect(small.route('é' * 2054).toJson()['action'], 'error');
+  });
+
   test('makeLink returns null for unregistered URLs', () {
     expect(links.makeLink('https://example.com/'), isNull);
   });
