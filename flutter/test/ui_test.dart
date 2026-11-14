@@ -6,6 +6,7 @@ import 'package:binfire/ui/binfire_controller.dart';
 import 'package:binfire/ui/browser_view.dart';
 import 'package:binfire/ui/library_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/fixtures.dart';
@@ -92,6 +93,22 @@ void main() {
       final c = await pump(tester);
       await tester.enterText(find.byType(TextField), 'https://python.hashbin.page/#AAAAAAAFaGVsbG8');
       await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+      expect(c.current, 'python');
+    });
+
+    testWidgets('paste fills the field and opens it; empty clipboard does nothing', (tester) async {
+      String? clip = '';
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
+        if (call.method == 'Clipboard.getData') return {'text': clip};
+        return null;
+      });
+      final c = await pump(tester);
+      await tester.tap(find.byTooltip('Paste'));
+      await tester.pumpAndSettle();
+      expect(c.current, isNull);
+      clip = 'https://python.hashbin.page/#v1.abc';
+      await tester.tap(find.byTooltip('Paste'));
       await tester.pumpAndSettle();
       expect(c.current, 'python');
     });

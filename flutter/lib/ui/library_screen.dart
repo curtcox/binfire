@@ -57,8 +57,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
   Future<void> _paste() async {
     final data = await Clipboard.getData(Clipboard.kTextPlain);
     final text = data?.text;
-    if (text == null) return;
+    if (text == null || text.trim().isEmpty || !mounted) return;
     _input.text = text;
+    await _go();
   }
 
   String _appName(String slug) => _c.registry.bySlug(slug)?.name ?? slug;
@@ -163,6 +164,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
     );
   }
 
+  /// A tagged row whose one accessible node carries the identifier, the
+  /// title + subtitle label and the tap action (ui.md, Accessibility).
+  Widget _row(String id, Widget tile) => MergeSemantics(child: Semantics(identifier: id, child: tile));
+
   Widget _empty(String text) => Center(
         child: Padding(padding: const EdgeInsets.all(24), child: Text(text, textAlign: TextAlign.center)),
       );
@@ -174,7 +179,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
       itemCount: saved.length,
       itemBuilder: (context, i) {
         final s = saved[i];
-        return withId(
+        return _row(
           Ids.savedRow(i),
           ListTile(
             title: Text(s.name),
@@ -209,7 +214,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
       itemCount: recent.length,
       itemBuilder: (context, i) {
         final r = recent[i];
-        return withId(
+        return _row(
           Ids.recentRow(i),
           ListTile(
             title: Text('${_appName(r.app)} · ${classifyState(r.url).state.code}'),

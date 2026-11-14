@@ -4,8 +4,16 @@ library;
 
 import 'dart:math';
 
+import '../core/text.dart';
+
 /// Most recent visits kept.
 const maxRecent = 100;
+
+/// Most total URL bytes kept in Recent.
+const maxRecentTotalBytes = 16 * 1024 * 1024;
+
+/// Largest single URL added to Recent; larger states are saved by name.
+const maxRecentUrlBytes = 1024 * 1024;
 
 /// A named saved state.
 class SavedState {
@@ -44,7 +52,7 @@ class SavedState {
 /// A recently visited state.
 class RecentVisit {
   /// Creates a visit.
-  const RecentVisit({required this.url, required this.app, required this.visitedAt});
+  RecentVisit({required this.url, required this.app, required this.visitedAt});
 
   /// Parses one `recent` entry.
   factory RecentVisit.fromJson(Map<String, Object?> j) => RecentVisit(
@@ -61,6 +69,9 @@ class RecentVisit {
 
   /// When it was last visited (UTC).
   final DateTime visitedAt;
+
+  /// UTF-8 size of [url].
+  late final int bytes = utf8Length(url);
 
   /// The `recent` entry JSON.
   Map<String, Object?> toJson() => {'url': url, 'app': app, 'visitedAt': _iso(visitedAt)};
@@ -137,11 +148,28 @@ class Library {
   final Random _random;
 
   /// Records a visit to [url] in [app]: moves it to the front (deduplicated
-  /// by URL) and caps the list at [maxRecent].
-  void addRecent(String url, String app, DateTime now) {
+  /// by URL), then drops the oldest entries beyond [maxRecent] entries or
+  /// [maxRecentTotalBytes]. A URL over [maxRecentUrlBytes] is not added.
+  /// Returns whether it was added.
+  bool addRecent(String url, String app, DateTime now) {
+    final visit = RecentVisit(url: url, app: app, visitedAt: now.toUtc());
+    if (visit.bytes > maxRecentUrlBytes) return false;
     recent.removeWhere((r) => r.url == url);
-    recent.insert(0, RecentVisit(url: url, app: app, visitedAt: now.toUtc()));
+    recent.insert(0, visit);
+    _capRecent();
+    return true;
+  }
+
+  void _capRecent() {
     if (recent.length > maxRecent) recent.removeRange(maxRecent, recent.length);
+    var total = 0;
+    for (var i = 0; i < recent.length; i++) {
+      total += recent[i].bytes;
+      if (total > maxRecentTotalBytes) {
+        recent.removeRange(i, recent.length);
+        break;
+      }
+    }
   }
 
   /// Saves [url] under [name] at the front and returns the new entry.
@@ -161,8 +189,8 @@ class Library {
   void _normalizeRecent() {
     recent.sort((a, b) => b.visitedAt.compareTo(a.visitedAt));
     final seen = <String>{};
-    recent.retainWhere((r) => seen.add(r.url));
-    if (recent.length > maxRecent) recent.removeRange(maxRecent, recent.length);
+    recent.retainWhere((r) => seen.add(r.url) && r.bytes <= maxRecentUrlBytes);
+    _capRecent();
   }
 
   /// The library JSON.

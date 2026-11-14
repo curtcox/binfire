@@ -30,6 +30,28 @@ void main() {
     });
   });
 
+  group('recent byte limits', () {
+    test('a URL over 1 MiB is not added', () {
+      final lib = Library();
+      expect(lib.addRecent('https://x/#${'a' * maxRecentUrlBytes}', 'python', at(0)), isFalse);
+      expect(lib.recent, isEmpty);
+      expect(lib.addRecent('https://x/#ok', 'python', at(1)), isTrue);
+    });
+
+    test('total URL bytes are capped at 16 MiB, dropping the oldest', () {
+      final lib = Library();
+      final big = 'a' * (maxRecentUrlBytes - 100); // just under 1 MiB each
+      for (var i = 0; i < 20; i++) {
+        lib.addRecent('https://x/#$i$big', 'python', at(i));
+      }
+      final total = lib.recent.fold<int>(0, (n, r) => n + r.bytes);
+      expect(total, lessThanOrEqualTo(maxRecentTotalBytes));
+      expect(lib.recent.length, 16);
+      expect(lib.recent.first.url, startsWith('https://x/#19'));
+      expect(lib.recent.last.url, startsWith('https://x/#4'));
+    });
+  });
+
   group('saved', () {
     test('newest first, duplicates allowed, uuid ids, delete', () {
       final lib = Library(random: Random(1));
