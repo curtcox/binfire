@@ -93,7 +93,12 @@ final class BrowserController: NSObject, ObservableObject, WKNavigationDelegate,
         guard let frame = navigationAction.targetFrame, frame.isMainFrame else { return .allow }
         guard let url = navigationAction.request.url?.absoluteString, let model else { return .cancel }
         if belongsToApp(url) || BrowserController.isPopupAllowed(url, config: model.config) { return .allow }
-        model.present(.text(url))
+        if let other = model.registry.appForURL(url) {
+            // Another registered app: open it in that app's own browser.
+            model.openApp(slug: other.slug, url: url)
+        } else {
+            model.present(.text(url))
+        }
         return .cancel
     }
 

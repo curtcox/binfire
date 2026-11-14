@@ -64,6 +64,16 @@ final class AppModel: ObservableObject {
         handle(links.route(text))
     }
 
+    /// A URL handed to the app by the system: a tapped custom-scheme or
+    /// Universal Link (plain `route`), or a `.binfire` file.
+    func openIncoming(_ url: URL) {
+        if url.isFileURL {
+            present(.error("Opening .binfire files is coming in M5."))
+            return
+        }
+        open(url.absoluteString)
+    }
+
     /// Routes shared or pasted text, finding a link inside it (`routeShared`).
     func openShared(_ text: String) {
         handle(links.routeShared(text))
@@ -117,6 +127,9 @@ final class AppModel: ObservableObject {
 
     func openApp(slug: String, url: String) {
         guard let b = browser(for: slug) else { return }
+        // Any open sheet or popup gives way to the browser.
+        sheet = nil
+        if let current = currentApp, current != slug { browsers[current]?.popup = nil }
         b.load(url)
         currentApp = slug
     }

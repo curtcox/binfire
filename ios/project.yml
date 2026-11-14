@@ -26,6 +26,7 @@ targets:
         buildPhase: resources
     dependencies:
       - package: BinfireCore
+      - target: BinfireShare
     info:
       path: App/Info.plist
       properties:
@@ -64,6 +65,34 @@ targets:
         # <<< binfire:configure target-settings
         GENERATE_INFOPLIST_FILE: NO
         CODE_SIGN_STYLE: Automatic
+  BinfireShare:
+    # Share Extension: hands shared URLs/text to the app as S://share#t=<text>.
+    type: app-extension
+    platform: iOS
+    sources:
+      - ShareExtension
+      - path: App/Resources/binfire.config.json
+        buildPhase: resources
+    dependencies:
+      - package: BinfireCore
+    info:
+      path: ShareExtension/Info.plist
+      properties:
+        CFBundleDisplayName: binfire
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.share-services
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ShareViewController
+          NSExtensionAttributes:
+            NSExtensionActivationRule:
+              NSExtensionActivationSupportsWebURLWithMaxCount: 1
+              NSExtensionActivationSupportsText: true
+    settings:
+      base:
+        # <ios id>.share; keep in step with PRODUCT_BUNDLE_IDENTIFIER above.
+        PRODUCT_BUNDLE_IDENTIFIER: app.binfire.ios.share
+        GENERATE_INFOPLIST_FILE: NO
+        CODE_SIGN_STYLE: Automatic
+        APPLICATION_EXTENSION_API_ONLY: YES
 schemes:
   Binfire:
     build:

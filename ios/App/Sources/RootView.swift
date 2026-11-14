@@ -19,6 +19,11 @@ struct RootView: View {
             case .save(let request): SaveSheet(request: request)
             }
         }
-        .onOpenURL { url in model.open(url.absoluteString) }
+        // Custom scheme links, files (Open in…) and, on some paths, Universal Links.
+        .onOpenURL { url in model.openIncoming(url) }
+        // Universal Links (https://<linkDomain>/…).
+        .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { activity in
+            if let url = activity.webpageURL { model.openIncoming(url) }
+        }
     }
 }

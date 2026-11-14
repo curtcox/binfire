@@ -6,3 +6,4 @@ DerivedData/
 build/
 App/Info.plist
 App/Binfire.entitlements
+ShareExtension/Info.plist
