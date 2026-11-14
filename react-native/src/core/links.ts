@@ -120,17 +120,22 @@ export function route(input: string, ctx: BinfireContext = defaultContext): Rout
   return { action: 'show-text', text };
 }
 
+// RFC 3986 query/fragment characters, plus `%` followed by two hex digits.
+const URL_SAFE = /^(?:[A-Za-z0-9\-._~!$&'()*+,;=:@/?]|%[0-9A-Fa-f]{2})*$/;
+const isUrlSafe = (part: string | null): boolean => part === null || URL_SAFE.test(part);
+
 /**
  * The shareable https link for a registered app URL, or `null` when the URL
- * matches no app. Canonical-origin URLs with the exact base path shorten to
- * `/a/<slug>`; everything else uses `/open#u=`.
+ * matches no app. Canonical-origin URLs with the exact base path and a
+ * URL-safe raw query and fragment shorten to `/a/<slug>`; everything else
+ * uses `/open#u=`.
  */
 export function makeLink(url: string, ctx: BinfireContext = defaultContext): string | null {
   const match = matchApp(url, ctx.registry);
   if (!match) return null;
   const D = ctx.config.linkDomain;
-  if (match.canonical && match.exactPath) {
-    const parsed = parseUrl(url)!;
+  const parsed = parseUrl(url)!;
+  if (match.canonical && match.exactPath && isUrlSafe(parsed.query) && isUrlSafe(parsed.fragment)) {
     let link = `https://${D}/a/${match.app.slug}`;
     if (parsed.query !== null) link += '?' + parsed.query;
     if (parsed.fragment !== null) link += '#' + parsed.fragment;

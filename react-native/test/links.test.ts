@@ -20,17 +20,7 @@ describe('links.json', () => {
     expect(picked).toEqual(want);
   });
 
-  // KNOWN CONFLICT (reported, not worked around): spec/links.md says a
-  // canonical-origin URL with the exact base path shortens to /a/<slug> + raw
-  // query + raw fragment, but this fixture case expects the /open#u= form for
-  // a fragment containing a space and non-ASCII. We follow the spec; the case
-  // is marked `failing` so it flips to an error once spec or fixture changes.
-  const conflicts = new Set(["https://sheets.hashbin.page/?view=preview#a b'()*!~é"]);
-  const makeLinkCases = fx.makeLink as { url: string; link: string }[];
-  test.each(makeLinkCases.filter(c => !conflicts.has(c.url)))('makeLink $url', ({ url, link }) => {
-    expect(makeLink(url, ctx)).toBe(link);
-  });
-  test.failing.each(makeLinkCases.filter(c => conflicts.has(c.url)))('makeLink (spec/fixture conflict) $url', ({ url, link }) => {
+  test.each(fx.makeLink as { url: string; link: string }[])('makeLink $url', ({ url, link }) => {
     expect(makeLink(url, ctx)).toBe(link);
   });
 

@@ -51,7 +51,7 @@ const readU32 = (b: Uint8Array, at: number): number =>
 
 function parseHeader(bytes: Uint8Array): { header: BundleHeader; entryCids: string[] } {
   const bad = (why: string) => new BinfireError('bad-bundle', why);
-  const text = utf8Decode(bytes, { ignoreBOM: true });
+  const text = utf8Decode(bytes); // strict; strips one leading BOM
   if (text === null) throw bad('header not UTF-8');
   let raw: unknown;
   try {
