@@ -50,8 +50,8 @@ enum LinkKind {
 }
 
 /// The result of [Links.route]. Only the fields for [action] are set.
-class Route {
-  const Route._(
+class LinkRoute {
+  const LinkRoute._(
     this.action, {
     this.app,
     this.url,
@@ -107,7 +107,7 @@ class Route {
       };
 
   @override
-  String toString() => 'Route(${toJson()})';
+  String toString() => 'LinkRoute(${toJson()})';
 }
 
 /// Routes input text and builds binfire links for one config and registry.
@@ -125,23 +125,23 @@ class Links {
   final ParsedUrl? _content;
 
   /// Routes any input text (links.md, `route(text)`).
-  Route route(String input) {
+  LinkRoute route(String input) {
     // Bound before anything else scans the input.
     final bound = config.limits.maxStateBytes + 4096;
     if (input.length > bound || utf8Length(input) > bound) return _error(ErrorCodes.tooLarge);
     final text = _trimAsciiWhitespace(input);
     for (var i = 0; i < text.length; i++) {
       final c = text.codeUnitAt(i);
-      if (c < 0x20 || c == 0x7F) return Route._(RouteAction.showText, text: text);
+      if (c < 0x20 || c == 0x7F) return LinkRoute._(RouteAction.showText, text: text);
     }
 
     // 1. A bare CID, optionally after '#'.
     final bare = text.startsWith('#') ? text.substring(1) : text;
-    if (isCid(bare)) return Route._(RouteAction.loadCid, cid: bare);
+    if (isCid(bare)) return LinkRoute._(RouteAction.loadCid, cid: bare);
 
     // 2. Not an absolute URL.
     final u = ParsedUrl.parse(text);
-    if (u == null) return Route._(RouteAction.showText, text: text);
+    if (u == null) return LinkRoute._(RouteAction.showText, text: text);
 
     // 3. binfire links.
     final custom = u.scheme == config.scheme.toLowerCase();
@@ -154,7 +154,7 @@ class Links {
       final basePath = c.path.endsWith('/') ? c.path : '${c.path}/';
       if (u.path.startsWith(basePath)) {
         final rest = u.path.substring(basePath.length);
-        if (!rest.contains('/') && isCid(rest)) return Route._(RouteAction.loadCid, cid: rest);
+        if (!rest.contains('/') && isCid(rest)) return LinkRoute._(RouteAction.loadCid, cid: rest);
       }
     }
 
@@ -163,10 +163,10 @@ class Links {
     if (m != null) return _openApp(m.app.slug, text);
 
     // 6. Anything else.
-    return Route._(RouteAction.showText, text: text);
+    return LinkRoute._(RouteAction.showText, text: text);
   }
 
-  Route _routeLink(String rawPath, ParsedUrl u, bool custom) {
+  LinkRoute _routeLink(String rawPath, ParsedUrl u, bool custom) {
     var start = 0;
     var end = rawPath.length;
     while (start < end && rawPath[start] == '/') {
@@ -176,8 +176,8 @@ class Links {
       end--;
     }
     final segments = rawPath.substring(start, end).split('/');
-    Route err(String code, LinkKind? kind) =>
-        Route._(RouteAction.error, error: code, linkKind: kind, viaCustomScheme: custom);
+    LinkRoute err(String code, LinkKind? kind) =>
+        LinkRoute._(RouteAction.error, error: code, linkKind: kind, viaCustomScheme: custom);
 
     if (segments.length == 2 && segments[0] == 'a') {
       final app = registry.bySlug(segments[1]);
@@ -196,7 +196,7 @@ class Links {
         }
         final m = registry.match(target);
         if (m == null) {
-          return Route._(RouteAction.showText, text: target, linkKind: LinkKind.open, viaCustomScheme: custom);
+          return LinkRoute._(RouteAction.showText, text: target, linkKind: LinkKind.open, viaCustomScheme: custom);
         }
         return _openApp(m.app.slug, target, kind: LinkKind.open, custom: custom);
       case 'c':
@@ -204,17 +204,17 @@ class Links {
         if (cid == null || !isCid(cid)) return err(ErrorCodes.invalidCid, LinkKind.cid);
         final hint = QueryParams.parse(u.query).get('app');
         final app = hint != null && registry.bySlug(hint) != null ? hint : null;
-        return Route._(RouteAction.loadCid, cid: cid, app: app, linkKind: LinkKind.cid, viaCustomScheme: custom);
+        return LinkRoute._(RouteAction.loadCid, cid: cid, app: app, linkKind: LinkKind.cid, viaCustomScheme: custom);
       case 's':
         final cid = u.fragment;
         if (cid == null || !isCid(cid)) return err(ErrorCodes.invalidCid, LinkKind.site);
-        return Route._(RouteAction.openSite, cid: cid, linkKind: LinkKind.site, viaCustomScheme: custom);
+        return LinkRoute._(RouteAction.openSite, cid: cid, linkKind: LinkKind.site, viaCustomScheme: custom);
       default:
         return err(ErrorCodes.unknownLink, null);
     }
   }
 
-  Route _openApp(String slug, String url, {LinkKind? kind, bool custom = false}) => Route._(
+  LinkRoute _openApp(String slug, String url, {LinkKind? kind, bool custom = false}) => LinkRoute._(
         RouteAction.openApp,
         app: slug,
         url: url,
@@ -223,7 +223,7 @@ class Links {
         viaCustomScheme: custom,
       );
 
-  Route _error(String code) => Route._(RouteAction.error, error: code);
+  LinkRoute _error(String code) => LinkRoute._(RouteAction.error, error: code);
 
   /// The shareable `https` link for a registered app [url], or `null` when
   /// [url] matches no app (links.md, `makeLink`). The short `/a/<slug>` form
