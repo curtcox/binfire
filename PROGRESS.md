@@ -25,6 +25,12 @@ Legend: `[x]` done and verified · `[~]` partly done (see note) · `[ ]` not sta
 
 Newest first. One line per meaningful step, with what was verified.
 
+- 2026-11-14: Port cores: RN (667 jest tests), iOS (42 XCTest groups),
+  Android (42 JUnit classes) pass every fixture as of b807c62. Their reports
+  surfaced spec gaps, pinned in b807c62 and ff46d7a: makeLink URL-safety, BOM
+  and code-point rules, step-major manifest checks, frame `count` bound,
+  control characters in route, and lz-string's `__proto__` dictionary quirk.
+  Ports are updating to ff46d7a; RN, iOS and Android have started M1.
 - 2026-11-14: Shared M0 done: `spec/` (10 docs), registry seed (13 apps),
   fixture set v1 (`tools/gen-fixtures.mjs`, self-checked against FK corpus and
   256t.org reference CIDs), `tools/configure.mjs` (+ `--check`), bridge
