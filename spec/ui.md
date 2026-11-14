@@ -59,3 +59,24 @@ follow each platform's conventions.
 - A navigation to an unregistered URL inside a browser is cancelled, and the
   URL goes to the show-text sheet. The exceptions are popups that are part of
   the HashBin Publish flow (hashbin.org) and `about:blank`.
+
+## Library data
+
+Each port persists its library locally: in a JSON file in app-private storage,
+or in the platform's key-value store. All ports use the same logical model, so
+that a later export/import (M5) is the same everywhere:
+
+```json
+{ "version": 1,
+  "saved":  [{ "id": "<uuid>", "name": "…", "url": "…", "app": "slug", "savedAt": "2026-11-14T15:00:00Z" }],
+  "recent": [{ "url": "…", "app": "slug", "visitedAt": "…" }],
+  "sites":  [{ "cid": "<manifest CID>", "name": "…", "addedAt": "…" }] }
+```
+
+- `recent` is deduplicated by `url`, newest first, and capped at 100.
+- `saved` is newest first, has no cap, and allows duplicate URLs under
+  different names. Deleting a saved state is a swipe or long-press action.
+- Titles shown in lists: the saved `name`, or for recents, the app name plus
+  the state kind (`classifyState(url).state`) and the time.
+- URLs are stored as-is. They can be up to 5 MiB, so lists show only a
+  truncated preview.
