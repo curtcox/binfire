@@ -107,7 +107,7 @@ void main() {
       await tester.tap(find.byTooltip('Paste'));
       await tester.pumpAndSettle();
       expect(c.current, isNull);
-      clip = 'https://python.hashbin.page/#v1.abc';
+      clip = 'look: https://python.hashbin.page/#v1.abc!';
       await tester.tap(find.byTooltip('Paste'));
       await tester.pumpAndSettle();
       expect(c.current, 'python');

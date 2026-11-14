@@ -46,10 +46,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
     super.dispose();
   }
 
-  Future<void> _go() async {
+  Future<void> _go({bool shared = false}) async {
     _focus.unfocus();
     final text = _input.text;
-    final route = _c.route(text);
+    final route = shared ? _c.routeShared(text) : _c.route(text);
     if (route.action == RouteAction.openApp) _input.clear();
     await performRoute(context, _c, route);
   }
@@ -59,7 +59,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
     final text = data?.text;
     if (text == null || text.trim().isEmpty || !mounted) return;
     _input.text = text;
-    await _go();
+    await _go(shared: true);
   }
 
   String _appName(String slug) => _c.registry.bySlug(slug)?.name ?? slug;

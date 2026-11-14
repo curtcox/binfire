@@ -125,7 +125,28 @@ class Links {
   final ParsedUrl? _content;
 
   /// Routes any input text (links.md, `route(text)`).
-  LinkRoute route(String input) {
+  LinkRoute route(String input) => _route(input, allowShare: true);
+
+  /// Routes shared or pasted text, finding a link inside surrounding words
+  /// (links.md, `routeShared(text)`).
+  LinkRoute routeShared(String text) {
+    final whole = _route(text, allowShare: false);
+    if (whole.action != RouteAction.showText) return whole;
+    final scheme = '${config.scheme.toLowerCase()}://';
+    for (final raw in text.split(RegExp('[\t\n\f\r ]+'))) {
+      final token = _stripToken(raw);
+      if (token.isEmpty) continue;
+      final lower = token.toLowerCase();
+      final bare = token.startsWith('#') ? token.substring(1) : token;
+      if (lower.startsWith('https://') || lower.startsWith('http://') || lower.startsWith(scheme) || isCid(bare)) {
+        final r = _route(token, allowShare: false);
+        if (r.action != RouteAction.showText) return r;
+      }
+    }
+    return LinkRoute._(RouteAction.showText, text: _trimAsciiWhitespace(text));
+  }
+
+  LinkRoute _route(String input, {required bool allowShare}) {
     // Bound before anything else scans the input.
     final bound = config.limits.maxStateBytes + 4096;
     if (input.length > bound || utf8Length(input) > bound) return _error(ErrorCodes.tooLarge);
@@ -146,7 +167,7 @@ class Links {
     // 3. binfire links.
     final custom = u.scheme == config.scheme.toLowerCase();
     final https = u.scheme == 'https' && u.host == config.linkDomain.toLowerCase() && u.port == null;
-    if (custom || https) return _routeLink(custom ? '${u.host}${u.path}' : u.path, u, custom);
+    if (custom || https) return _routeLink(custom ? '${u.host}${u.path}' : u.path, u, custom, allowShare);
 
     // 4. https://<content host>/<CID>.
     final c = _content;
@@ -166,7 +187,7 @@ class Links {
     return LinkRoute._(RouteAction.showText, text: text);
   }
 
-  LinkRoute _routeLink(String rawPath, ParsedUrl u, bool custom) {
+  LinkRoute _routeLink(String rawPath, ParsedUrl u, bool custom, bool allowShare) {
     var start = 0;
     var end = rawPath.length;
     while (start < end && rawPath[start] == '/') {
@@ -205,6 +226,12 @@ class Links {
         final hint = QueryParams.parse(u.query).get('app');
         final app = hint != null && registry.bySlug(hint) != null ? hint : null;
         return LinkRoute._(RouteAction.loadCid, cid: cid, app: app, linkKind: LinkKind.cid, viaCustomScheme: custom);
+      case 'share':
+        // Only the custom scheme, and never nested inside shared text.
+        if (!custom || !allowShare) return err(ErrorCodes.unknownLink, null);
+        final t = QueryParams.parse(u.fragment ?? '').get('t');
+        if (u.fragment == null || t == null) return err(ErrorCodes.badLink, null);
+        return routeShared(t);
       case 's':
         final cid = u.fragment;
         if (cid == null || !isCid(cid)) return err(ErrorCodes.invalidCid, LinkKind.site);
@@ -273,6 +300,37 @@ bool _isUrlSafe(String? s) {
 }
 
 bool _isHex(int c) => (c >= 0x30 && c <= 0x39) || (c >= 0x41 && c <= 0x46) || (c >= 0x61 && c <= 0x66);
+
+const _leadingStrip = '<([{"\'';
+const _trailingStrip = '>.,;:!?"\'';
+const _closers = {')': '(', ']': '[', '}': '{'};
+
+/// Strips wrapping punctuation from a shared-text token (links.md,
+/// `routeShared` step 2).
+String _stripToken(String token) {
+  var start = 0;
+  while (start < token.length && _leadingStrip.contains(token[start])) {
+    start++;
+  }
+  var t = token.substring(start);
+  while (true) {
+    final before = t;
+    var end = t.length;
+    while (end > 0 && _trailingStrip.contains(t[end - 1])) {
+      end--;
+    }
+    t = t.substring(0, end);
+    while (t.isNotEmpty && _closers.containsKey(t[t.length - 1])) {
+      final close = t[t.length - 1];
+      final open = _closers[close]!;
+      final closes = close.allMatches(t).length;
+      final opens = open.allMatches(t).length;
+      if (closes <= opens) break;
+      t = t.substring(0, t.length - 1);
+    }
+    if (t == before) return t;
+  }
+}
 
 bool _isAsciiWhitespace(int c) => c == 0x09 || c == 0x0A || c == 0x0C || c == 0x0D || c == 0x20;
 

@@ -85,6 +85,9 @@ class BinfireController extends ChangeNotifier {
   /// Routes [text] (links.md).
   LinkRoute route(String text) => links.route(text);
 
+  /// Routes shared or pasted text (links.md, `routeShared`).
+  LinkRoute routeShared(String text) => links.routeShared(text);
+
   /// Opens (or reuses) the browser for [slug] at [url] and shows it.
   void openApp(String slug, String url) {
     final app = registry.bySlug(slug);
