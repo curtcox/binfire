@@ -12,3 +12,5 @@ export * from './links';
 export * from './sites';
 export * from './ble';
 export * from './audio';
+export * from './library';
+export * from './navigation';
