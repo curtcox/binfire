@@ -87,6 +87,7 @@ object Frames {
         if (!Cid.isCid(cid)) bad(BinfireError.BAD_FRAME, "invalid cid")
         val data = bytes.copyOfRange(HEADER_BYTES + cidLen, bytes.size)
         if (index >= count) bad(BinfireError.BAD_FRAME, "index >= count")
+        if (count > maxOf(1L, total)) bad(BinfireError.BAD_FRAME, "count > max(1, total)")
         if (offset + data.size > total) bad(BinfireError.BAD_FRAME, "chunk past total")
         if (total != Cid.cidLength(cid)) bad(BinfireError.BAD_FRAME, "total disagrees with cid")
         return Frame(id, index, count, offset, total, cid, data)

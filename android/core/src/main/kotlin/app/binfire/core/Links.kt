@@ -52,6 +52,7 @@ class Links(val registry: Registry, val config: BinfireConfig) {
     /** Routes [text] from paste, share, a tapped link, a scan, audio or a `url` transfer. */
     fun route(text: String): Route {
         val t = trimAsciiWhitespace(text)
+        if (t.any { it.code <= 0x1f || it.code == 0x7f }) return Route.ShowText(t)
         if (Utf8.length(t) > config.limits.maxStateBytes + 4096) return Route.Error(BinfireError.TOO_LARGE)
 
         val bare = t.removePrefix("#")

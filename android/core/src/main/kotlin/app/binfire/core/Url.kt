@@ -17,7 +17,7 @@ class ParsedUrl internal constructor(
     val hasAuthority: Boolean,
     /** The userinfo before `@`, or `null` when there is none. */
     val userinfo: String?,
-    /** Host: lower-cased and percent-decoded for special schemes, as written otherwise. Empty when absent. */
+    /** Host: ASCII lower-cased for special schemes (never percent-decoded), as written otherwise. Empty when absent. */
     val host: String,
     /** Port, or `null` when absent or the scheme's default. */
     val port: Int?,
@@ -127,9 +127,11 @@ class ParsedUrl internal constructor(
             if (port != null && port == defaultPort) port = null
             val host = if (special) {
                 if (hostRaw.startsWith("[")) hostRaw.lowercase() else {
-                    val decoded = percentDecodeUtf8(hostRaw).lowercase()
-                    if (decoded.any { isForbiddenDomainChar(it) }) return null
-                    decoded
+                    // Hosts are kept as written (ASCII lower-cased), not percent-decoded or
+                    // IDNA-mapped: spec/links.md says an escaped or non-canonical host never
+                    // matches a binfire, HashBin or registry host.
+                    if (hostRaw.any { isForbiddenHostChar(it) || it < ' ' || it == '\u007f' }) return null
+                    asciiLowercase(hostRaw)
                 }
             } else {
                 if (hostRaw.any { isForbiddenHostChar(it) }) return null
@@ -142,8 +144,8 @@ class ParsedUrl internal constructor(
             c == '\u0000' || c == '\t' || c == '\n' || c == '\r' || c == ' ' || c == '#' || c == '/' || c == ':' ||
                 c == '<' || c == '>' || c == '?' || c == '@' || c == '[' || c == '\\' || c == ']' || c == '^' || c == '|'
 
-        private fun isForbiddenDomainChar(c: Char): Boolean =
-            isForbiddenHostChar(c) || c < ' ' || c == '%' || c == '\u007f'
+        private fun asciiLowercase(s: String): String =
+            buildString(s.length) { for (c in s) append(if (c in 'A'..'Z') c + 32 else c) }
 
         private fun isSingleDot(s: String) = s == "." || s.equals("%2e", ignoreCase = true)
         private fun isDoubleDot(s: String) = s == ".." || s.equals(".%2e", true) || s.equals("%2e.", true) || s.equals("%2e%2e", true)

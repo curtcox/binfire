@@ -32,7 +32,7 @@ class LinksFixtureTest {
 
     @Test
     fun makeLink() {
-        for (c in fixture.objects("makeLink")) assertEquals(c.label(), c.str("link"), links.makeLink(c.str("url")))
+        for (c in fixture.objects("makeLink")) assertEquals(c.label(), c["link"] as String?, links.makeLink(c.str("url")))
         assertNull(links.makeLink("https://example.com/"))
     }
 

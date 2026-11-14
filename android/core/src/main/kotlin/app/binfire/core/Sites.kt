@@ -41,27 +41,35 @@ object Sites {
         // 3. Name.
         val name = root["name"] as? String
         if (name.isNullOrEmpty() || name.codePointCount(0, name.length) > MAX_NAME) fail(BinfireError.BAD_MANIFEST, "name")
-        // 4. Files object.
+        // 4. Files object and count.
         val filesObj = root["files"].asJsonObject() ?: fail(BinfireError.BAD_MANIFEST, "files must be an object")
         if (filesObj.isEmpty() || filesObj.size > limits.maxSiteFiles) fail(BinfireError.TOO_MANY_FILES)
         // 5. Paths.
         for (path in filesObj.keys) if (!isValidPath(path)) fail(BinfireError.BAD_PATH, path)
         val lowered = HashSet<String>()
         for (path in filesObj.keys) if (!lowered.add(asciiLowercase(path))) fail(BinfireError.DUPLICATE_PATH, path)
-        // 6. Each file.
-        val files = LinkedHashMap<String, SiteFile>()
-        var total = 0L
-        for ((path, value) in filesObj) {
-            val f = value.asJsonObject() ?: fail(BinfireError.BAD_MANIFEST, "file entry for $path")
+        // 6. Per-file checks, each over all files before the next (independent of key order).
+        val entries = filesObj.mapValues { (path, v) -> v.asJsonObject() ?: fail(BinfireError.BAD_MANIFEST, "file entry for $path") }
+        for ((path, f) in entries) {
             val cid = f["cid"] as? String
             if (cid == null || !Cid.isCid(cid)) fail(BinfireError.INVALID_CID, path)
+        }
+        for ((path, f) in entries) {
             val type = f["type"] as? String
             if (type == null || !isValidType(type)) fail(BinfireError.BAD_MANIFEST, "type for $path")
-            val size = f["size"].asJsonInteger()
-            if (size == null || size != Cid.cidLength(cid)) fail(BinfireError.SIZE_MISMATCH, path)
-            if (size > limits.maxSiteFileBytes) fail(BinfireError.TOO_LARGE, path)
+        }
+        for ((path, f) in entries) {
+            if (f["size"].asJsonInteger() != Cid.cidLength(f["cid"] as String)) fail(BinfireError.SIZE_MISMATCH, path)
+        }
+        for ((path, f) in entries) {
+            if (f["size"].asJsonInteger()!! > limits.maxSiteFileBytes) fail(BinfireError.TOO_LARGE, path)
+        }
+        val files = LinkedHashMap<String, SiteFile>()
+        var total = 0L
+        for ((path, f) in entries) {
+            val size = f["size"].asJsonInteger()!!
             total += size
-            files[path] = SiteFile(cid, type, size)
+            files[path] = SiteFile(f["cid"] as String, f["type"] as String, size)
         }
         // 7. Total size.
         if (total > limits.maxSiteTotalBytes) fail(BinfireError.TOO_LARGE, "total")
@@ -69,7 +77,7 @@ object Sites {
         val entry = root["entry"] as? String
         if (entry == null || entry !in files) fail(BinfireError.MISSING_ENTRY)
         // 9. Source.
-        val source = if (root.containsKey("source")) {
+        val source = if (root.containsKey("source")) { // null counts as present → bad-manifest
             root["source"].asJsonObject() ?: fail(BinfireError.BAD_MANIFEST, "source must be an object")
         } else {
             null
