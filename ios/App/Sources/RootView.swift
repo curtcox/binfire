@@ -8,6 +8,7 @@ struct RootView: View {
         Group {
             if let slug = model.currentApp, let browser = model.browsers[slug] {
                 BrowserView(controller: browser)
+                    .id(slug) // a fresh view per app, so state never leaks across apps
             } else {
                 LibraryView()
             }

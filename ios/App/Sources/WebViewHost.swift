@@ -17,6 +17,8 @@ struct WebViewHost: UIViewRepresentable {
     }
 
     private func attach(to container: UIView) {
+        // A reused container may still hold another app's web view.
+        for v in container.subviews where v !== webView { v.removeFromSuperview() }
         webView.removeFromSuperview()
         webView.frame = container.bounds
         webView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
