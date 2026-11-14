@@ -102,7 +102,8 @@ export function decodeBundle(bytes: Uint8Array, limits: BundleLimits): Bundle {
   // 2. Header.
   const { header, entryCids } = parseHeader(bytes.subarray(8, 8 + hlen));
 
-  // 3. Entry CIDs, sizes, container length.
+  // 3. Header and entry CIDs, sizes, container length.
+  if (header.cid !== undefined && !isCid(header.cid)) throw new BinfireError('invalid-cid', header.cid);
   let sum = 0;
   const sizes: number[] = [];
   for (const cid of entryCids) {

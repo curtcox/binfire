@@ -71,13 +71,14 @@ export function encodeFrames(
 }
 
 /**
- * Parses one frame. Throws `bad-magic`, `bad-version` (version != 1 or
- * flags != 0) or `bad-frame` (truncated, index >= count, chunk past total,
- * invalid CID, or total != cidLength(cid)).
+ * Parses one frame. Throws `bad-magic` (also for under 2 bytes),
+ * `bad-version` (version != 1 or flags != 0) or `bad-frame` (truncated,
+ * index >= count, count > max(1, total), chunk past total, invalid CID, or
+ * total != cidLength(cid)).
  */
 export function decodeFrame(bytes: Uint8Array): Frame {
   const bad = (why: string) => new BinfireError('bad-frame', why);
-  if (bytes.length < 2) throw bad('truncated');
+  if (bytes.length < 2) throw new BinfireError('bad-magic');
   if (bytes[0] !== 0x42 || bytes[1] !== 0x46) throw new BinfireError('bad-magic');
   if (bytes.length < 4) throw bad('truncated');
   if (bytes[2] !== FRAME_VERSION || bytes[3] !== 0) throw new BinfireError('bad-version');
@@ -93,6 +94,7 @@ export function decodeFrame(bytes: Uint8Array): Frame {
   const total = readU32(bytes, 24);
   const data = bytes.subarray(FRAME_HEADER_BYTES + cidLen);
   if (index >= count) throw bad('index >= count');
+  if (count > Math.max(1, total)) throw bad('count > max(1, total)');
   if (offset + data.length > total) throw bad('chunk past total');
   if (total !== cidLength(cid)) throw bad('total disagrees with cid');
   return { id: bytes.slice(4, 12), index, count, offset, total, cid, data };

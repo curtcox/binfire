@@ -73,7 +73,7 @@ export function validateManifest(bytes: Uint8Array, limits: SiteLimits): SiteMan
   if (typeof name !== 'string' || name.length === 0 || codePointLength(name) > 200)
     throw new BinfireError('bad-manifest', 'name');
 
-  // 4. Files object.
+  // 4. Files object, then key count.
   const files = doc.files;
   if (!isObject(files)) throw new BinfireError('bad-manifest', 'files');
   const paths = Object.keys(files);
@@ -88,21 +88,24 @@ export function validateManifest(bytes: Uint8Array, limits: SiteLimits): SiteMan
     lowered.add(key);
   }
 
-  // 6. Each file.
-  const out: Record<string, SiteFile> = Object.create(null);
-  let total = 0;
-  for (const p of paths) {
-    const f = files[p];
-    if (!isObject(f)) throw new BinfireError('bad-manifest', `file ${p}`);
-    const { cid, type, size } = f;
-    if (typeof cid !== 'string' || !isCid(cid)) throw new BinfireError('invalid-cid', p);
+  // 6. Per-file checks, each over all files before the next (step-major), so
+  // the error does not depend on JSON key order.
+  const entries = paths.map(p => [p, files[p]] as const);
+  for (const [p, f] of entries) if (!isObject(f)) throw new BinfireError('bad-manifest', `file ${p}`);
+  const objs = entries as unknown as (readonly [string, Record<string, unknown>])[];
+  for (const [p, f] of objs) if (typeof f.cid !== 'string' || !isCid(f.cid)) throw new BinfireError('invalid-cid', p);
+  for (const [p, { type }] of objs)
     if (typeof type !== 'string' || type.length === 0 || codePointLength(type) > 100 || hasControl(type) || type.includes(' '))
       throw new BinfireError('bad-manifest', `type of ${p}`);
-    if (typeof size !== 'number' || !Number.isInteger(size) || size !== cidLength(cid))
+  for (const [p, { cid, size }] of objs)
+    if (typeof size !== 'number' || !Number.isInteger(size) || size !== cidLength(cid as string))
       throw new BinfireError('size-mismatch', p);
-    if (size > limits.maxSiteFileBytes) throw new BinfireError('too-large', p);
-    total += size;
-    out[p] = { cid, type, size };
+  const out: Record<string, SiteFile> = Object.create(null);
+  let total = 0;
+  for (const [p, { cid, type, size }] of objs) {
+    if ((size as number) > limits.maxSiteFileBytes) throw new BinfireError('too-large', p);
+    total += size as number;
+    out[p] = { cid: cid as string, type: type as string, size: size as number };
   }
 
   // 7. Total.

@@ -1,5 +1,5 @@
 import { defaultContext, type BinfireContext } from '../src/core/config';
-import { encodeUriComponent, makeCidLink, makeLink, makeSiteLink, route } from '../src/core/links';
+import { encodeUriComponent, makeCidLink, makeLink, makeSiteLink, route, withoutRun, withRunZero } from '../src/core/links';
 import { loadFixture } from './fixtures';
 
 const fx = loadFixture('links.json');
@@ -24,6 +24,10 @@ describe('links.json', () => {
     expect(makeLink(url, ctx)).toBe(link);
   });
 
+  test.each(fx.withRunZero as { url: string; result: string }[])('withRunZero $url', ({ url, result }) => {
+    expect(withRunZero(url)).toBe(result);
+  });
+
   test.each(fx.makeCIDLink as { cid: string; app?: string; link: string }[])('makeCidLink $link', ({ cid, app, link }) => {
     expect(makeCidLink(cid, app, ctx)).toBe(link);
   });
@@ -46,5 +50,25 @@ describe('route', () => {
 
   test('makeLink of an unregistered URL is null', () => {
     expect(makeLink('https://example.com/', ctx)).toBeNull();
+  });
+});
+
+describe('withoutRun', () => {
+  test.each([
+    ['https://python.hashbin.page/?run=0#x', 'https://python.hashbin.page/#x'],
+    ['https://python.hashbin.page/?run=0', 'https://python.hashbin.page/'],
+    ['https://python.hashbin.page/?view=a%20b&run=0&x#y?run=0', 'https://python.hashbin.page/?view=a%20b&x#y?run=0'],
+    ['https://python.hashbin.page/?r%75n=0&run&xrun=1', 'https://python.hashbin.page/?xrun=1'],
+    ['https://python.hashbin.page/?view=code#run=0', 'https://python.hashbin.page/?view=code#run=0'],
+    ['https://python.hashbin.page/#a?run=0', 'https://python.hashbin.page/#a?run=0'],
+    ['https://python.hashbin.page/?#x', 'https://python.hashbin.page/?#x'],
+  ])('%s', (url, want) => {
+    expect(withoutRun(url)).toBe(want);
+  });
+
+  test('inverts withRunZero', () => {
+    for (const { url } of fx.withRunZero as { url: string }[]) {
+      if (!/[?&]run=/.test(url)) expect(withoutRun(withRunZero(url))).toBe(url);
+    }
   });
 });

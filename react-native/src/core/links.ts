@@ -4,7 +4,7 @@ import { isCid } from './cid';
 import { defaultContext, type BinfireContext } from './config';
 import { appForSlug, appForUrl, matchApp } from './registry';
 import { classifyState, type StateKind } from './state';
-import { parseQuery, parseUrl, queryGet, type ParsedUrl } from './url';
+import { parseQuery, parseUrl, percentDecode, queryGet, queryHas, rawQuery, type ParsedUrl } from './url';
 
 /** The result of `route`. Fields that don't apply to an action are absent. */
 export type Route =
@@ -94,6 +94,8 @@ function contentHostCid(url: ParsedUrl, ctx: BinfireContext): string | null {
 export function route(input: string, ctx: BinfireContext = defaultContext): Route {
   const limit = ctx.config.limits.maxStateBytes + 4096;
   const text = trimAsciiWhitespace(input);
+  // Control characters (C0, DEL) inside: never a link, only text.
+  if (/[\u0000-\u001f\u007f]/.test(text)) return { action: 'show-text', text };
   if (text.length > limit || utf8Length(text) > limit) return { action: 'error', error: 'too-large' };
 
   // 1. A bare CID, optionally after `#`.
@@ -153,4 +155,40 @@ export function makeCidLink(cid: string, slug?: string | null, ctx: BinfireConte
 /** `https://D/s#<cid>`. */
 export function makeSiteLink(cid: string, ctx: BinfireContext = defaultContext): string {
   return `https://${ctx.config.linkDomain}/s#${cid}`;
+}
+
+/** Splits `url` around its raw query: `[beforeQuestionMark, query | null, '#fragment' | '']`. */
+function splitQuery(url: string): [string, string | null, string] {
+  const hash = url.indexOf('#');
+  const head = hash < 0 ? url : url.slice(0, hash);
+  const tail = hash < 0 ? '' : url.slice(hash);
+  const q = head.indexOf('?');
+  return q < 0 ? [head, null, tail] : [head.slice(0, q), head.slice(q + 1), tail];
+}
+
+/**
+ * For received content: adds `run=0` to the raw query unless the query
+ * already has a `run` key. Nothing else in the URL changes.
+ */
+export function withRunZero(url: string): string {
+  if (queryHas(parseQuery(rawQuery(url)), 'run')) return url;
+  const [base, query, tail] = splitQuery(url);
+  return query === null ? `${base}?run=0${tail}` : `${base}?${query}&run=0${tail}`;
+}
+
+/**
+ * The same URL without any `run` parameter (what **Run** reloads). Other
+ * query parts stay byte-for-byte; an emptied query loses its `?`.
+ */
+export function withoutRun(url: string): string {
+  const [base, query, tail] = splitQuery(url);
+  if (query === null) return url;
+  const parts = query.split('&');
+  const kept = parts.filter(part => {
+    const eq = part.indexOf('=');
+    const name = eq < 0 ? part : part.slice(0, eq);
+    return percentDecode(name.replace(/\+/g, ' ')) !== 'run';
+  });
+  if (kept.length === parts.length) return url;
+  return kept.length === 0 ? base + tail : `${base}?${kept.join('&')}${tail}`;
 }
