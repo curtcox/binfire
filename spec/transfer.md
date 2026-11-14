@@ -37,7 +37,8 @@ Each entry's size is `cidLength(entry.cid)`. Decoding checks, in order:
    `8 + hlen` bytes long → `bad-bundle`.
 2. The header is UTF-8 JSON with a known `kind` and the fields that kind needs
    → `bad-bundle`. Unknown header fields are ignored.
-3. Every entry CID is valid → `invalid-cid`. The sum of entry sizes is at most
+3. Every entry CID, and the header `cid` when present, is valid →
+   `invalid-cid`. The sum of entry sizes is at most
    `limits.maxTransferBytes` → `too-large`. The container length is exactly
    `8 + hlen + sum` → `bad-bundle`.
 4. Each entry's bytes verify against its CID → `mismatch`.
@@ -91,10 +92,12 @@ offset  size     field
   `offset = i*chunkSize`.
 - An empty payload is one frame with no data.
 
-`decodeFrame(bytes)` returns the fields or fails with `bad-magic`,
+`decodeFrame(bytes)` returns the fields or fails with `bad-magic` (also
+for inputs shorter than 2 bytes),
 `bad-version` (version != 1 or flags != 0) or `bad-frame` (one of: truncated,
-`index >= count`, `offset + len(data) > total`, an invalid CID, or
-`total != cidLength(cid)`).
+`index >= count`, `count > max(1, total)`, `offset + len(data) > total`,
+an invalid CID, or `total != cidLength(cid)`). The `count` bound stops a
+hostile frame from making a receiver track billions of indexes.
 
 Reassembly (`Reassembler`) accepts frames in any order:
 

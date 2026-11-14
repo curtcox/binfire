@@ -22,7 +22,9 @@ never sent to the server.
 
 ## `route(text)` → Route
 
-The input is trimmed of ASCII whitespace. Inputs larger than
+The input is trimmed of ASCII whitespace. If what remains contains any C0
+control character (U+0000–U+001F) or DEL, the result is `show-text`. Spaces
+inside are allowed. Inputs larger than
 `limits.maxStateBytes` + 4096 bytes → `{ action: "error", error: "too-large" }`.
 
 A Route is a JSON object:
@@ -39,7 +41,9 @@ Rules, in order:
 
 1. Text that is a valid CID, optionally after a leading `#` → `load-cid` with
    `app: null`.
-2. Text that does not parse as an absolute URL → `show-text`.
+2. Text that does not parse as an absolute URL → `show-text`. Hosts are
+   compared literally (case-insensitive ASCII). A percent-escaped or otherwise
+   non-canonical host never matches a binfire, HashBin or registry host.
 3. **binfire links** (scheme `S`, or `https` with host `D`). The path is the
    URL path, or for scheme `S` the host followed by the path, with leading and
    trailing slashes removed:
@@ -94,6 +98,9 @@ For a URL that matches app `A`:
   character or stray `%` would break when the link is shared as text, so such
   URLs use the next form.
 - Otherwise → `https://D/open#u=` + `encodeURIComponent(url)`.
+
+For a URL that matches no app, `makeLink` returns null. binfire never makes
+links to unregistered URLs.
 
 `makeCIDLink(cid, slug?)` → `https://D/c#<cid>`, or `https://D/c?app=<slug>#<cid>`.
 `makeSiteLink(cid)` → `https://D/s#<cid>`.

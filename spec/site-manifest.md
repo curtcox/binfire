@@ -19,18 +19,22 @@ Validation (`validateManifest(bytes, limits)`), in order:
 1. The bytes are at most 1 MiB, valid UTF-8 and a JSON object → `bad-manifest`.
 2. `format == "binfire-site"` and `version == 1` → `bad-manifest`.
 3. `name` is a non-empty string of at most 200 characters → `bad-manifest`.
-4. `files` is a non-empty object with at most `limits.maxSiteFiles` keys →
-   `too-many-files`.
+4. `files` is an object → `bad-manifest`. It has between 1 and
+   `limits.maxSiteFiles` keys → `too-many-files`.
 5. Every path is a valid path (below) → `bad-path`. No two paths are equal
    after ASCII lower-casing → `duplicate-path`.
-6. Every file has a valid `cid` (`invalid-cid`) and a `type` that is a
-   non-empty string of at most 100 characters with no control characters or
-   spaces (`bad-manifest`). `size` is an integer equal to `cidLength(cid)`
-   (`size-mismatch`) and at most `limits.maxSiteFileBytes` (`too-large`).
+6. Each of these checks runs over **all** files before the next one starts,
+   so the error doesn't depend on JSON key order:
+   1. Every file entry is an object → `bad-manifest`.
+   2. Every file has a valid `cid` → `invalid-cid`.
+   3. Every `type` is a non-empty string of at most 100 characters with no
+      control characters or spaces → `bad-manifest`.
+   4. Every `size` is an integer equal to `cidLength(cid)` → `size-mismatch`.
+   5. Every `size` is at most `limits.maxSiteFileBytes` → `too-large`.
 7. The sum of sizes is at most `limits.maxSiteTotalBytes` → `too-large`.
 8. `entry` is a key of `files` → `missing-entry`.
-9. `source` is optional. If present, it is an object, and binfire only displays
-   it.
+9. `source` is optional. If the key is present, its value must be an object
+   (`null` → `bad-manifest`). binfire only displays it.
 
 Unknown top-level fields are ignored.
 

@@ -94,6 +94,36 @@
       "error": "too-many-files"
     },
     {
+      "name": "files missing",
+      "text": "{\"format\":\"binfire-site\",\"version\":1,\"name\":\"Clock\",\"entry\":\"index.html\",\"source\":{\"app\":\"pages\",\"origin\":\"https://pages.hashbin.page/\"}}",
+      "error": "bad-manifest"
+    },
+    {
+      "name": "files is an array",
+      "text": "{\"format\":\"binfire-site\",\"version\":1,\"name\":\"Clock\",\"entry\":\"index.html\",\"files\":[],\"source\":{\"app\":\"pages\",\"origin\":\"https://pages.hashbin.page/\"}}",
+      "error": "bad-manifest"
+    },
+    {
+      "name": "source is null",
+      "text": "{\"format\":\"binfire-site\",\"version\":1,\"name\":\"Clock\",\"entry\":\"index.html\",\"files\":{\"index.html\":{\"cid\":\"AAAAAABEM5NbTKMRLKS5pQDT2C8qZ-Ofd812dgtZS-nGN2ZoDm8fv6HfhS9OjbB0P1265BqLBQK6uNmBt9AKarSGgmNpTA\",\"type\":\"text/html\",\"size\":68},\"js/app.js\":{\"cid\":\"AAAAAAB-mOG6MBwVxOB1arAX9mEEgjhAdL-KyYceyKkBKEl3VJEXQKWQgsSkyC14Ig-lpOTf1JjsHnTL1NHS4oKeM1Kw-Q\",\"type\":\"text/javascript\",\"size\":126}},\"source\":null}",
+      "error": "bad-manifest"
+    },
+    {
+      "name": "errors are step-major: bad type in one file, bad cid in another",
+      "text": "{\"format\":\"binfire-site\",\"version\":1,\"name\":\"Clock\",\"entry\":\"a.html\",\"files\":{\"a.html\":{\"cid\":\"AAAAAAABYQ\",\"type\":\"bad type\",\"size\":1},\"b.html\":{\"cid\":\"nope\",\"type\":\"text/html\",\"size\":1}},\"source\":{\"app\":\"pages\",\"origin\":\"https://pages.hashbin.page/\"}}",
+      "error": "invalid-cid"
+    },
+    {
+      "name": "errors are step-major: too large in one file, size mismatch in another",
+      "text": "{\"format\":\"binfire-site\",\"version\":1,\"name\":\"Clock\",\"entry\":\"a.html\",\"files\":{\"a.html\":{\"cid\":\"AAAAAAPp0q1XeO2Ghwo9eqJj4BRRslAirYWVVcRIBHHau4BBCqgYZBbVM1ya9gmhq5DyWRXIT6D__x3wqqxpSok_HFvzmA\",\"type\":\"text/html\",\"size\":1001},\"b.html\":{\"cid\":\"AAAAAAABYg\",\"type\":\"text/html\",\"size\":9}},\"source\":{\"app\":\"pages\",\"origin\":\"https://pages.hashbin.page/\"}}",
+      "error": "size-mismatch"
+    },
+    {
+      "name": "file entry not an object",
+      "text": "{\"format\":\"binfire-site\",\"version\":1,\"name\":\"Clock\",\"entry\":\"x\",\"files\":{\"x\":\"nope\"},\"source\":{\"app\":\"pages\",\"origin\":\"https://pages.hashbin.page/\"}}",
+      "error": "bad-manifest"
+    },
+    {
       "name": "too many files",
       "text": "{\"format\":\"binfire-site\",\"version\":1,\"name\":\"Clock\",\"entry\":\"a\",\"files\":{\"a\":{\"cid\":\"AAAAAAABYQ\",\"type\":\"text/html\",\"size\":1},\"b\":{\"cid\":\"AAAAAAABYg\",\"type\":\"text/html\",\"size\":1},\"c\":{\"cid\":\"AAAAAAABYw\",\"type\":\"text/html\",\"size\":1},\"d\":{\"cid\":\"AAAAAAABZA\",\"type\":\"text/html\",\"size\":1},\"e\":{\"cid\":\"AAAAAAABZQ\",\"type\":\"text/html\",\"size\":1}},\"source\":{\"app\":\"pages\",\"origin\":\"https://pages.hashbin.page/\"}}",
       "error": "too-many-files"

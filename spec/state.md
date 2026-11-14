@@ -58,6 +58,13 @@ It includes every case in FK's `tests/corpus/*.json`, plus generated `v1` cases.
 5. Fail with `too-large` if the UTF-8 encoding of the output exceeds
    `limitBytes`.
 
+**`__proto__` quirk.** lz-string 1.5.0 keeps its dictionary in a plain JS
+object and tests membership with `hasOwnProperty`. Assigning the key
+`"__proto__"` changes the object's prototype instead of adding an entry, so the
+phrase `__proto__` is never added to the dictionary. Ports must reproduce this
+exactly in `compress`, or strict canonicality fails for real FK URLs whose
+source contains `__proto__`. The `lz.json` round-trip cases include such text.
+
 The text is a JavaScript string, a sequence of UTF-16 code units. Ports must
 keep lone surrogates intact during decode and re-compress. (Swift and Dart use
 code-unit arrays, not `String` characters.)

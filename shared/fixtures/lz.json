@@ -2,6 +2,26 @@
   "generatedBy": "tools/gen-fixtures.mjs",
   "roundtrip": [
     {
+      "text": "__proto__",
+      "compressed": "PrAOCcHsBdJI"
+    },
+    {
+      "text": "x.__proto__ = y; z.__proto__.__proto__",
+      "compressed": "B4Og+mAOBOD2AusIAIC8yCeBuZAvcUciEBMCSYQA"
+    },
+    {
+      "text": "a__proto__b__proto__c__proto__",
+      "compressed": "IYfRAcCcHsBdrAIzFOCQGMU3mIA"
+    },
+    {
+      "text": "__proto",
+      "compressed": "PrAOCcHsBdKA"
+    },
+    {
+      "text": "constructor toString hasOwnProperty valueOf",
+      "compressed": "MYewdgzgLgTgrsKIYAIkGVYEswHMUAWAhhAPIDuYACjCAA4CmMUAnigG5EA2cDpAZkA"
+    },
+    {
       "text": "",
       "compressed": "Q"
     },

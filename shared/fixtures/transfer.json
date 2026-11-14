@@ -117,6 +117,11 @@
       "error": "bad-bundle"
     },
     {
+      "name": "invalid header cid",
+      "b64": "QkZCMQAAAD17ImtpbmQiOiJjaWQiLCJjaWQiOiJub3BlIiwiZW50cmllcyI6W3siY2lkIjoiQUFBQUFBQUNhR2sifV19aGk",
+      "error": "invalid-cid"
+    },
+    {
       "name": "invalid entry cid",
       "b64": "QkZCMQAAADZ7ImtpbmQiOiJjaWQiLCJjaWQiOiJub3BlIiwiZW50cmllcyI6W3siY2lkIjoibm9wZSJ9XX0",
       "error": "invalid-cid"
@@ -275,6 +280,21 @@
       "name": "count zero",
       "b64": "QkYBABERERERERERAAAAAAAAAAAAAAAAAAAAChZBQUFBQUFBS01ERXlNelExTmpjNE9RMDEyMw",
       "error": "bad-frame"
+    },
+    {
+      "name": "count larger than total",
+      "b64": "QkYBABERERERERERAAAAAAAAAAsAAAAAAAAAChZBQUFBQUFBS01ERXlNelExTmpjNE9RMDEyMw",
+      "error": "bad-frame"
+    },
+    {
+      "name": "one byte",
+      "b64": "Qg",
+      "error": "bad-magic"
+    },
+    {
+      "name": "empty",
+      "b64": "",
+      "error": "bad-magic"
     },
     {
       "name": "chunk past total",

@@ -343,6 +343,45 @@
         "action": "show-text",
         "text": ""
       }
+    },
+    {
+      "input": "https://python.hashbin.page/#a\tb",
+      "expect": {
+        "action": "show-text",
+        "text": "https://python.hashbin.page/#a\tb"
+      }
+    },
+    {
+      "input": "https://python.hashbin.page/\n#x",
+      "expect": {
+        "action": "show-text",
+        "text": "https://python.hashbin.page/\n#x"
+      }
+    },
+    {
+      "input": "https://python.hashbin.page/#a b",
+      "expect": {
+        "action": "open-app",
+        "app": "python",
+        "url": "https://python.hashbin.page/#a b",
+        "state": "fragment",
+        "run": true,
+        "view": null
+      }
+    },
+    {
+      "input": "https://python%2Ehashbin.page/#x",
+      "expect": {
+        "action": "show-text",
+        "text": "https://python%2Ehashbin.page/#x"
+      }
+    },
+    {
+      "input": "https://binfire%2Eapp/a/python",
+      "expect": {
+        "action": "show-text",
+        "text": "https://binfire%2Eapp/a/python"
+      }
     }
   ],
   "makeLink": [
@@ -385,6 +424,14 @@
     {
       "url": "https://sheets.hashbin.page/?view=preview#a b'()*!~é",
       "link": "https://binfire.app/open#u=https%3A%2F%2Fsheets.hashbin.page%2F%3Fview%3Dpreview%23a%20b'()*!~%C3%A9"
+    },
+    {
+      "url": "https://example.com/#x",
+      "link": null
+    },
+    {
+      "url": "https://python.hashbin.page/other.html#x",
+      "link": null
     }
   ],
   "withRunZero": [

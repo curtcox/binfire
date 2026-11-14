@@ -141,7 +141,7 @@ if (existsSync(corpusDir)) {
 assert(corpus, 'no FK corpus available');
 
 // ---------------------------------------------------------------- lz
-const lzTexts = ['', 'a', 'hello', 'hello hello hello hello', 'é 😀 中文', 'x'.repeat(1000), '{"format":"hashbin-diagram","version":1,"type":"python","src":"print(1)"}'];
+const lzTexts = ['__proto__', 'x.__proto__ = y; z.__proto__.__proto__', 'a__proto__b__proto__c__proto__', '__proto', 'constructor toString hasOwnProperty valueOf', '', 'a', 'hello', 'hello hello hello hello', 'é 😀 中文', 'x'.repeat(1000), '{"format":"hashbin-diagram","version":1,"type":"python","src":"print(1)"}'];
 for (const c of corpus) if (c.raw) lzTexts.push(c.raw);
 const roundtrip = lzTexts.map(t => ({ text: t, compressed: compress(t) }));
 for (const r of roundtrip) assert(decompress(r.compressed) === r.text, 'lz roundtrip');
@@ -287,6 +287,11 @@ const route = [
   ['javascript:alert(1)', { action: 'show-text', text: 'javascript:alert(1)' }],
   ['hello world', { action: 'show-text', text: 'hello world' }],
   ['', { action: 'show-text', text: '' }],
+  ['https://python.hashbin.page/#a\tb', { action: 'show-text', text: 'https://python.hashbin.page/#a\tb' }],
+  ['https://python.hashbin.page/\n#x', { action: 'show-text', text: 'https://python.hashbin.page/\n#x' }],
+  ['https://python.hashbin.page/#a b', { action: 'open-app', app: 'python', url: 'https://python.hashbin.page/#a b', state: 'fragment', run: true, view: null }],
+  ['https://python%2Ehashbin.page/#x', { action: 'show-text', text: 'https://python%2Ehashbin.page/#x' }],
+  [`https://binfire%2Eapp/a/python`, { action: 'show-text', text: 'https://binfire%2Eapp/a/python' }],
 ].map(([input, expect]) => ({ input, expect }));
 const makeLink = [
   ['https://python.hashbin.page/#v1.abc', `https://${D}/a/python#v1.abc`],
@@ -299,6 +304,8 @@ const makeLink = [
   ['https://sheets.hashbin.page/#a%zz', `https://${D}/open#u=${enc('https://sheets.hashbin.page/#a%zz')}`],
   ['https://sheets.hashbin.page/?q=[1]', `https://${D}/open#u=${enc('https://sheets.hashbin.page/?q=[1]')}`],
   ["https://sheets.hashbin.page/?view=preview#a b'()*!~é", `https://${D}/open#u=${enc("https://sheets.hashbin.page/?view=preview#a b'()*!~é")}`],
+  ['https://example.com/#x', null],
+  ['https://python.hashbin.page/other.html#x', null],
 ].map(([url, link]) => ({ url, link }));
 write('links.json', {
   config: { linkDomain: D, scheme: config.scheme, content: config.hashbin.content },
@@ -345,6 +352,12 @@ const invalid = [
   ['long name in code points', m({ name: '😀'.repeat(201) }), 'bad-manifest'],
   ['invalid utf-8', { b64: R.b64url(Buffer.concat([text('{"format":"binfire-site",'), Buffer.from([0xff]), text('}')])) }, 'bad-manifest'],
   ['no files', m({ files: {} }), 'too-many-files'],
+  ['files missing', JSON.stringify({ ...goodManifest, files: undefined }), 'bad-manifest'],
+  ['files is an array', m({ files: [] }), 'bad-manifest'],
+  ['source is null', m({ source: null }), 'bad-manifest'],
+  ['errors are step-major: bad type in one file, bad cid in another', m({ files: { 'a.html': { ...file('a'), type: 'bad type' }, 'b.html': { cid: 'nope', type: 'text/html', size: 1 } }, entry: 'a.html' }), 'invalid-cid'],
+  ['errors are step-major: too large in one file, size mismatch in another', m({ files: { 'a.html': file('z'.repeat(1001)), 'b.html': { ...file('b'), size: 9 } }, entry: 'a.html' }), 'size-mismatch'],
+  ['file entry not an object', m(oneFile('x', 'nope')), 'bad-manifest'],
   ['too many files', m({ files: Object.fromEntries(['a', 'b', 'c', 'd', 'e'].map(k => [k, file(k)])), entry: 'a' }), 'too-many-files'],
   ['dot-dot path', m(oneFile('../x')), 'bad-path'],
   ['absolute path', m(oneFile('/x')), 'bad-path'],
@@ -397,6 +410,7 @@ const bundleErrors = [
   ['url kind without url', hdr({ kind: 'url', entries: [] }), 'bad-bundle'],
   ['entries not array', hdr({ kind: 'url', url: 'https://x.example/', entries: 5 }), 'bad-bundle'],
   ['url kind with entries', R.encodeBundle({ kind: 'url', url: 'https://x.example/', entries: [{ cid: R.computeCID(tinyBytes) }] }, [tinyBytes]), 'bad-bundle'],
+  ['invalid header cid', R.encodeBundle({ kind: 'cid', cid: 'nope', entries: [{ cid: R.computeCID(tinyBytes) }] }, [tinyBytes]), 'invalid-cid'],
   ['invalid entry cid', R.encodeBundle({ kind: 'cid', cid: 'nope', entries: [{ cid: 'nope' }] }, []), 'invalid-cid'],
   ['entry too large', R.encodeBundle({ kind: 'cid', cid: 'BAAAAAAA' + 'A'.repeat(86), entries: [{ cid: 'BAAAAAAA' + 'A'.repeat(86) }] }, []), 'too-large'],
   ['trailing bytes', Buffer.concat([cidBundle, text('x')]), 'bad-bundle'],
@@ -428,6 +442,9 @@ const frameErrors = [
   ['truncated cid', R.encodeFrame(base).subarray(0, 35), 'bad-frame'],
   ['index >= count', R.encodeFrame({ ...base, index: 3 }), 'bad-frame'],
   ['count zero', R.encodeFrame({ ...base, count: 0 }), 'bad-frame'],
+  ['count larger than total', R.encodeFrame({ ...base, count: 11, index: 0 }), 'bad-frame'],
+  ['one byte', Buffer.from([0x42]), 'bad-magic'],
+  ['empty', Buffer.alloc(0), 'bad-magic'],
   ['chunk past total', R.encodeFrame({ ...base, offset: 8 }), 'bad-frame'],
   ['invalid cid', R.encodeFrame({ ...base, cid: 'AAAAAAAK!!!!!!!!' }), 'bad-frame'],
   ['total disagrees with cid', R.encodeFrame({ ...base, total: 11 }), 'bad-frame'],
