@@ -37,6 +37,25 @@ class LinksFixtureTest {
     }
 
     @Test
+    fun routeShared() {
+        val cases = fixture.objects("routeShared")
+        assertTrue(cases.isNotEmpty())
+        for (c in cases) {
+            @Suppress("UNCHECKED_CAST")
+            val expect = c["expect"] as Map<String, Any?>
+            val got = links.routeShared(c.str("input")).toJson()
+            for ((k, v) in expect) assertEquals("${c.label()} [$k]", v, got[k])
+        }
+    }
+
+    @Test
+    fun withoutRun() {
+        val cases = fixture.objects("withoutRun")
+        assertTrue(cases.isNotEmpty())
+        for (c in cases) assertEquals(c.label(), c.str("result"), UrlState.withoutRun(c.str("url")))
+    }
+
+    @Test
     fun withRunZero() {
         for (c in fixture.objects("withRunZero")) assertEquals(c.label(), c.str("result"), UrlState.withRunZero(c.str("url")))
     }

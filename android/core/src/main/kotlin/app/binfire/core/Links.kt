@@ -50,7 +50,34 @@ class Links(val registry: Registry, val config: BinfireConfig) {
     private val content = ParsedUrl.parse(config.hashbin.content)
 
     /** Routes [text] from paste, share, a tapped link, a scan, audio or a `url` transfer. */
-    fun route(text: String): Route {
+    fun route(text: String): Route = route(text, allowShare = true)
+
+    /**
+     * `routeShared(text)`: for shared and pasted text, which often wraps a link in
+     * words. Returns `route(text)` unless that is `show-text`; then the first
+     * link-like token (after stripping surrounding punctuation) whose route is
+     * not `show-text` wins. Otherwise `show-text` with the whole trimmed text.
+     */
+    fun routeShared(text: String): Route = routeShared(text, allowShare = true)
+
+    private fun routeShared(text: String, allowShare: Boolean): Route {
+        val whole = route(text, allowShare)
+        if (whole !is Route.ShowText) return whole
+        for (raw in text.split(' ', '\t', '\n', '\u000C', '\r')) {
+            if (raw.isEmpty()) continue
+            val token = cleanSharedToken(raw)
+            if (!isLinkToken(token)) continue
+            val r = route(token, allowShare)
+            if (r !is Route.ShowText) return r
+        }
+        return Route.ShowText(trimAsciiWhitespace(text))
+    }
+
+    private fun isLinkToken(token: String): Boolean =
+        token.startsWith("https://", ignoreCase = true) || token.startsWith("http://", ignoreCase = true) ||
+            token.startsWith("$scheme://", ignoreCase = true) || Cid.isCid(token.removePrefix("#"))
+
+    private fun route(text: String, allowShare: Boolean): Route {
         val t = trimAsciiWhitespace(text)
         if (t.any { it.code <= 0x1f || it.code == 0x7f }) return Route.ShowText(t)
         if (Utf8.length(t) > config.limits.maxStateBytes + 4096) return Route.Error(BinfireError.TOO_LARGE)
@@ -59,7 +86,7 @@ class Links(val registry: Registry, val config: BinfireConfig) {
         if (Cid.isCid(bare)) return Route.LoadCid(bare, null)
 
         val u = ParsedUrl.parse(t) ?: return Route.ShowText(t)
-        if (isBinfireLink(u)) return routeBinfireLink(u)
+        if (isBinfireLink(u)) return routeBinfireLink(u, allowShare)
 
         contentCid(u)?.let { return Route.LoadCid(it, null) }
 
@@ -122,7 +149,7 @@ class Links(val registry: Registry, val config: BinfireConfig) {
     private fun linkPath(u: ParsedUrl): String =
         (if (u.scheme == scheme) u.host + u.path else u.path).trim('/')
 
-    private fun routeBinfireLink(u: ParsedUrl): Route {
+    private fun routeBinfireLink(u: ParsedUrl, allowShare: Boolean): Route {
         val path = linkPath(u)
         val segments = path.split('/')
         return when {
@@ -149,6 +176,13 @@ class Links(val registry: Registry, val config: BinfireConfig) {
                 val cid = u.rawFragment?.takeIf { Cid.isCid(it) } ?: return Route.Error(BinfireError.INVALID_CID)
                 Route.OpenSite(cid)
             }
+            // Custom scheme only: how share extensions hand text to the app. Not recursive.
+            path == "share" && u.scheme == scheme && allowShare -> {
+                val fragment = u.rawFragment ?: return Route.Error(BinfireError.BAD_LINK)
+                val text = QueryParams.parse(fragment, stripLeadingQuestionMark = true)["t"]
+                    ?: return Route.Error(BinfireError.BAD_LINK)
+                routeShared(text, allowShare = false)
+            }
             else -> Route.Error(BinfireError.UNKNOWN_LINK)
         }
     }
@@ -169,6 +203,25 @@ class Links(val registry: Registry, val config: BinfireConfig) {
     }
 
     companion object {
+        private val BRACKETS = listOf('(' to ')', '[' to ']', '{' to '}')
+
+        /**
+         * Strips punctuation around a shared token: leading `< ( [ { " '`, trailing
+         * `> . , ; : ! ? " '`, and a trailing `)`/`]`/`}` only while the token has
+         * more closing than opening brackets of that kind (so `#print(1)` survives).
+         */
+        fun cleanSharedToken(token: String): String {
+            var s = token.trimStart('<', '(', '[', '{', '"', '\'')
+            while (true) {
+                val before = s
+                s = s.trimEnd('>', '.', ',', ';', ':', '!', '?', '"', '\'')
+                for ((open, close) in BRACKETS) {
+                    while (s.endsWith(close) && s.count { it == close } > s.count { it == open }) s = s.dropLast(1)
+                }
+                if (s == before) return s
+            }
+        }
+
         /** JavaScript's `encodeURIComponent` (see the top-level [app.binfire.core.encodeURIComponent]). */
         fun encodeURIComponent(s: String): String = app.binfire.core.encodeURIComponent(s)
 
