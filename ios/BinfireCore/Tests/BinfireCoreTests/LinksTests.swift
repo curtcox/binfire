@@ -57,7 +57,9 @@ final class LinksTests: XCTestCase {
 
     func testMakeLink() throws {
         for c in try Fixtures.list(fixture, "makeLink") {
-            XCTAssertEqual(links.makeLink(c["url"] as! String), c["link"] as? String)
+            let url = c["url"] as! String
+            if c["link"] is NSNull { XCTAssertNil(links.makeLink(url), url) }
+            else { XCTAssertEqual(links.makeLink(url), c["link"] as? String, url) }
         }
         XCTAssertNil(links.makeLink("https://example.com/"))
     }
@@ -89,7 +91,7 @@ final class LinksTests: XCTestCase {
     }
 
     func testMadeLinksRouteBack() throws {
-        for c in try Fixtures.list(fixture, "makeLink") {
+        for c in try Fixtures.list(fixture, "makeLink") where !(c["link"] is NSNull) {
             let url = c["url"] as! String
             guard case let .openApp(_, target, _, _, _) = links.route(links.makeLink(url)!) else {
                 return XCTFail("did not route back: \(url)")

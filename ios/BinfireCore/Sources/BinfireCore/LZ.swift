@@ -46,6 +46,12 @@ public enum LZ {
         var wCode = 0
         var wIsSingle = false
         var wChar: UInt16 = 0
+        // lz-string keeps its dictionary in a plain JS object, so the phrase
+        // "__proto__" is never stored (assigning it sets the prototype) yet
+        // still consumes a code. Track whether w is exactly "__proto_".
+        let protoPrefix: [UInt16] = Array("__proto_".utf16)
+        var wTail: [UInt16] = []   // the first 9 units of w (enough to compare)
+        var wLength = 0
 
         func decrementEnlarge() {
             enlargeIn -= 1
@@ -82,20 +88,27 @@ public enum LZ {
                 wCode = singles[c]!
                 wIsSingle = true
                 wChar = c
+                wTail = [c]
+                wLength = 1
                 continue
             }
+            let isProto = c == 0x5F && wLength == 8 && wTail == protoPrefix
             let key = wCode << 16 | Int(c)
-            if let code = pairs[key] {
+            if !isProto, let code = pairs[key] {
                 wCode = code
                 wIsSingle = false
+                wLength += 1
+                if wTail.count < 9 { wTail.append(c) }
                 continue
             }
             emitW()
-            pairs[key] = dictSize
+            if !isProto { pairs[key] = dictSize }
             dictSize += 1
             wCode = singles[c]!
             wIsSingle = true
             wChar = c
+            wTail = [c]
+            wLength = 1
         }
         if hasW { emitW() }
         writeBits(2, numBits)

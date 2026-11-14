@@ -41,25 +41,37 @@ public enum Sites {
         // 3.
         guard case .string(let name)? = o["name"], !name.isEmpty, name.unicodeScalars.count <= 200 else { throw BinfireError.badManifest }
         // 4.
-        guard case .object(let filesObject)? = o["files"], filesObject.count > 0,
-              filesObject.count <= limits.maxSiteFiles else { throw BinfireError.tooManyFiles }
+        guard case .object(let filesObject)? = o["files"] else { throw BinfireError.badManifest }
+        guard filesObject.count > 0, filesObject.count <= limits.maxSiteFiles else { throw BinfireError.tooManyFiles }
         let paths = filesObject.keys
         // 5.
         for p in paths where !isValidPath(p) { throw BinfireError.badPath }
         var lowered = Set<String>()
         for p in paths where !lowered.insert(asciiLowercased(p)).inserted { throw BinfireError.duplicatePath }
-        // 6.
-        var files: [String: SiteFile] = [:]
-        var total = 0
-        for p in paths {
-            guard case .object(let f)? = filesObject[p], case .string(let cid)? = f["cid"], CID.isCID(cid),
-                  let declared = CID.cidLength(cid) else { throw BinfireError.invalidCID }
-            guard case .string(let type)? = f["type"], isValidType(type) else { throw BinfireError.badManifest }
-            guard let size = f["size"]?.integerValue, size == declared else { throw BinfireError.sizeMismatch }
-            guard size <= limits.maxSiteFileBytes else { throw BinfireError.tooLarge }
-            files[p] = SiteFile(cid: cid, type: type, size: size)
-            total += size
+        // 6. Each check runs over all files before the next one starts.
+        let entries: [(path: String, object: JSONObject)] = try paths.map { p in
+            guard case .object(let f)? = filesObject[p] else { throw BinfireError.badManifest }
+            return (p, f)
         }
+        var cids: [String] = []
+        for e in entries {
+            guard case .string(let cid)? = e.object["cid"], CID.isCID(cid) else { throw BinfireError.invalidCID }
+            cids.append(cid)
+        }
+        var types: [String] = []
+        for e in entries {
+            guard case .string(let type)? = e.object["type"], isValidType(type) else { throw BinfireError.badManifest }
+            types.append(type)
+        }
+        var sizes: [Int] = []
+        for (e, cid) in zip(entries, cids) {
+            guard let size = e.object["size"]?.integerValue, size == CID.cidLength(cid) else { throw BinfireError.sizeMismatch }
+            sizes.append(size)
+        }
+        for size in sizes where size > limits.maxSiteFileBytes { throw BinfireError.tooLarge }
+        var files: [String: SiteFile] = [:]
+        for (i, e) in entries.enumerated() { files[e.path] = SiteFile(cid: cids[i], type: types[i], size: sizes[i]) }
+        let total = sizes.reduce(0, +)
         // 7.
         guard total <= limits.maxSiteTotalBytes else { throw BinfireError.tooLarge }
         // 8.

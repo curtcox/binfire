@@ -54,6 +54,8 @@ public struct Links: Sendable {
     func routeWithSource(_ text: String) -> (route: Route, source: Source) {
         let input = Links.trimASCIIWhitespace(text)
         if input.utf8.count > config.limits.maxStateBytes + 4096 { return (.error(.tooLarge), .other) }
+        // Control characters (C0 or DEL) anywhere after trimming: never a link.
+        if input.utf8.contains(where: { $0 < 0x20 || $0 == 0x7F }) { return (.showText(input), .other) }
 
         // 1. A bare CID, optionally after a leading '#'.
         let bare = input.hasPrefix("#") ? String(input.dropFirst()) : input

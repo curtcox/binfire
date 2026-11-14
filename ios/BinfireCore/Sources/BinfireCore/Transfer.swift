@@ -184,6 +184,7 @@ public enum Transfer {
         }
         // 3.
         for c in entryCIDs where !CID.isCID(c) { throw BinfireError.invalidCID }
+        if let cid, !CID.isCID(cid) { throw BinfireError.invalidCID }
         let sizes = entryCIDs.map { CID.cidLength($0)! }
         var sum = 0
         for s in sizes {
@@ -260,7 +261,7 @@ public enum Transfer {
         guard cidBytes.allSatisfy({ $0 < 0x80 }), case let cid = String(decoding: cidBytes, as: UTF8.self),
               CID.isCID(cid), CID.cidLength(cid) == total else { throw BinfireError.badFrame }
         let data = b.subdata(in: (29 + cidLen)..<b.count)
-        guard index < count, offset + data.count <= total else { throw BinfireError.badFrame }
+        guard index < count, count <= max(1, total), offset + data.count <= total else { throw BinfireError.badFrame }
         return TransferFrame(id: b.subdata(in: 4..<12), index: index, count: count, offset: offset,
                              total: total, cid: cid, data: data)
     }
@@ -324,9 +325,9 @@ public struct Reassembler: Sendable {
             guard f.id == id, f.count == count, f.total == total, f.cid == cid else { throw BinfireError.inconsistent }
         } else {
             guard f.total <= limits.maxTransferBytes else { throw BinfireError.tooLarge }
-            // Every chunk but an empty payload's single frame carries data, so a
-            // count above max(1, total) can never tile; refuse it before tracking indexes.
-            guard f.count <= max(1, f.total) else { throw BinfireError.badFrame }
+            // decodeFrame already bounds count <= max(1, total); re-check for
+            // frames built by hand.
+            guard f.count >= 1, f.count <= max(1, f.total) else { throw BinfireError.badFrame }
             id = f.id
             count = f.count
             total = f.total
