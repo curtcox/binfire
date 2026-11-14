@@ -5,11 +5,11 @@ plugins {
 kotlin { jvmToolchain(17) }
 
 dependencies {
-    implementation(project(":core"))
-    implementation("org.json:json:20250517")
+    api(project(":core"))
     testImplementation("junit:junit:4.13.2")
 }
 
 tasks.test {
     systemProperty("binfire.fixtures", rootDir.resolve("../shared/fixtures").absolutePath)
+    systemProperty("binfire.config", rootDir.resolve("../config/binfire.config.json").absolutePath)
 }
