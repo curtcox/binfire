@@ -45,8 +45,9 @@ struct LibraryView: View {
             Button("Open", action: go)
                 .buttonStyle(.borderedProminent)
                 .accessibilityIdentifier("open.go")
+            // Paste puts the clipboard into the field and opens it; empty does nothing.
             PasteButton(payloadType: String.self) { strings in
-                guard let text = strings.first else { return }
+                guard let text = Links.pasteInput(strings.first) else { return }
                 Task { @MainActor in
                     input = text
                     go()
@@ -96,6 +97,9 @@ struct LibraryView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                     }
                     .buttonStyle(.plain)
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel("\(app.name), \(app.slug)")
+                    .accessibilityAddTraits(.isButton)
                     .accessibilityIdentifier("app.\(app.slug)")
                 }
             }
@@ -106,14 +110,17 @@ struct LibraryView: View {
     private var savedList: some View {
         List {
             ForEach(Array(model.library.saved.enumerated()), id: \.element.id) { index, item in
+                let subtitle = model.label(app: item.app, url: item.url) + " · " + item.savedAt.formatted(date: .abbreviated, time: .shortened)
                 Button { model.open(item.url) } label: {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(item.name).font(.headline)
-                        Text(model.label(app: item.app, url: item.url) + " · " + item.savedAt.formatted(date: .abbreviated, time: .shortened))
-                            .font(.caption).foregroundStyle(.secondary)
+                        Text(subtitle).font(.caption).foregroundStyle(.secondary)
                         Text(preview(item.url)).font(.caption2).foregroundStyle(.tertiary).lineLimit(1)
                     }
                 }
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("\(item.name), \(subtitle)")
+                .accessibilityAddTraits(.isButton)
                 .accessibilityIdentifier("saved.row.\(index)")
                 .swipeActions {
                     Button(role: .destructive) { model.deleteSaved(id: item.id) } label: { Label("Delete", systemImage: "trash") }
@@ -130,13 +137,17 @@ struct LibraryView: View {
     private var recentList: some View {
         List {
             ForEach(Array(model.library.recent.enumerated()), id: \.element.url) { index, item in
+                let title = model.label(app: item.app, url: item.url) + " · " + item.visitedAt.formatted(date: .omitted, time: .shortened)
+                let subtitle = preview(item.url, limit: 80)
                 Button { model.open(item.url) } label: {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(model.label(app: item.app, url: item.url) + " · " + item.visitedAt.formatted(date: .omitted, time: .shortened))
-                            .font(.subheadline)
+                        Text(title).font(.subheadline)
                         Text(preview(item.url)).font(.caption2).foregroundStyle(.tertiary).lineLimit(1)
                     }
                 }
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("\(title), \(subtitle)")
+                .accessibilityAddTraits(.isButton)
                 .accessibilityIdentifier("recent.row.\(index)")
             }
         }
@@ -148,8 +159,8 @@ struct LibraryView: View {
         Text(text).foregroundStyle(.secondary)
     }
 
-    private func preview(_ url: String) -> String {
-        url.count > 160 ? String(url.prefix(160)) + "…" : url
+    private func preview(_ url: String, limit: Int = 160) -> String {
+        url.count > limit ? String(url.prefix(limit)) + "…" : url
     }
 
     private func go() {

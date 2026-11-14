@@ -229,6 +229,14 @@ public struct Links: Sendable {
         return out
     }
 
+    /// What the Paste button puts into the open field and opens: the
+    /// clipboard text, or nil (do nothing) when it is missing or only ASCII
+    /// whitespace.
+    public static func pasteInput(_ clipboard: String?) -> String? {
+        guard let clipboard, !trimASCIIWhitespace(clipboard).isEmpty else { return nil }
+        return clipboard
+    }
+
     /// Trims ASCII whitespace (tab, LF, FF, CR, space) from both ends.
     public static func trimASCIIWhitespace(_ text: String) -> String {
         let ws: Set<UInt8> = [0x09, 0x0A, 0x0C, 0x0D, 0x20]

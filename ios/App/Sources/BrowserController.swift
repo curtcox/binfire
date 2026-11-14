@@ -12,7 +12,7 @@ final class BrowserController: NSObject, ObservableObject, WKNavigationDelegate,
 
     /// The latest main-frame URL that belongs to this app.
     @Published private(set) var currentURL: String = ""
-    /// The URL binfire last loaded; its `run` flag drives the run banner.
+    /// The URL binfire last loaded (used until the web view reports a URL).
     @Published private(set) var loadedURL: String = ""
     /// An open popup (FK Publish), shown as a sheet.
     @Published var popup: PopupController?
@@ -40,8 +40,10 @@ final class BrowserController: NSObject, ObservableObject, WKNavigationDelegate,
         "\(app.name) · \(URLState.classifyState(currentURL.isEmpty ? loadedURL : currentURL).state.rawValue)"
     }
 
+    /// Shown while the current main-frame URL (tracked by KVO) has `run=0`.
     var showRunBanner: Bool {
-        !loadedURL.isEmpty && !URLState.classifyState(loadedURL).run
+        let url = currentURL.isEmpty ? loadedURL : currentURL
+        return !url.isEmpty && !URLState.classifyState(url).run
     }
 
     /// Loads a URL of this app.

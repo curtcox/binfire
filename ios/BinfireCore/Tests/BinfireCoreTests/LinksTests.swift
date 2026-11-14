@@ -90,6 +90,13 @@ final class LinksTests: XCTestCase {
         }
     }
 
+    func testPasteInput() {
+        XCTAssertNil(Links.pasteInput(nil))
+        XCTAssertNil(Links.pasteInput(""))
+        XCTAssertNil(Links.pasteInput(" \n\t"))
+        XCTAssertEqual(Links.pasteInput(" https://x/ "), " https://x/ ")
+    }
+
     func testMadeLinksRouteBack() throws {
         for c in try Fixtures.list(fixture, "makeLink") where !(c["link"] is NSNull) {
             let url = c["url"] as! String

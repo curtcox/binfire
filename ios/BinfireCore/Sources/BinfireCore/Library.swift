@@ -49,21 +49,41 @@ public struct SiteEntry: Codable, Equatable, Sendable {
 public struct Library: Codable, Equatable, Sendable {
     /// Recent entries are capped at this many.
     public static let recentCap = 100
+    /// Recent entries are also capped at this many total URL bytes (UTF-8).
+    public static let recentMaxTotalBytes = 16 * 1024 * 1024
+    /// A URL longer than this (UTF-8 bytes) is never added to Recent.
+    public static let recentMaxURLBytes = 1024 * 1024
 
     public var version: Int = 1
     /// Newest first, no cap, duplicate URLs allowed.
     public private(set) var saved: [SavedState] = []
-    /// Newest first, deduplicated by URL, at most `recentCap`.
+    /// Newest first, deduplicated by URL, at most `recentCap` entries and
+    /// `recentMaxTotalBytes` of URLs.
     public private(set) var recent: [RecentEntry] = []
     public private(set) var sites: [SiteEntry] = []
 
     public init() {}
 
-    /// Records a visit: moves (or inserts) `url` to the front and trims to the cap.
-    public mutating func addRecent(url: String, app: String, at date: Date = Date()) {
+    /// Records a visit: moves (or inserts) `url` to the front, then drops the
+    /// oldest entries beyond the count and byte caps. A URL over
+    /// `recentMaxURLBytes` is ignored (save it by name instead).
+    /// Returns false when the URL was too large to add.
+    @discardableResult
+    public mutating func addRecent(url: String, app: String, at date: Date = Date()) -> Bool {
+        guard url.utf8.count <= Library.recentMaxURLBytes else { return false }
         recent.removeAll { $0.url == url }
         recent.insert(RecentEntry(url: url, app: app, visitedAt: date), at: 0)
+        trimRecent()
+        return true
+    }
+
+    private mutating func trimRecent() {
+        recent.removeAll { $0.url.utf8.count > Library.recentMaxURLBytes }
         if recent.count > Library.recentCap { recent.removeLast(recent.count - Library.recentCap) }
+        var total = recent.reduce(0) { $0 + $1.url.utf8.count }
+        while total > Library.recentMaxTotalBytes, let last = recent.popLast() {
+            total -= last.url.utf8.count
+        }
     }
 
     /// Saves a named state at the front and returns it.
@@ -97,7 +117,8 @@ public struct Library: Codable, Equatable, Sendable {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         version = try c.decodeIfPresent(Int.self, forKey: .version) ?? 1
         saved = try c.decodeIfPresent([SavedState].self, forKey: .saved) ?? []
-        recent = Array((try c.decodeIfPresent([RecentEntry].self, forKey: .recent) ?? []).prefix(Library.recentCap))
+        recent = try c.decodeIfPresent([RecentEntry].self, forKey: .recent) ?? []
+        trimRecent()
         sites = try c.decodeIfPresent([SiteEntry].self, forKey: .sites) ?? []
     }
 

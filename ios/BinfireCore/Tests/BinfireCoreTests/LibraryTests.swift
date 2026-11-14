@@ -21,6 +21,36 @@ final class LibraryTests: XCTestCase {
         XCTAssertEqual(lib.recent.last?.url, "https://a/#50")
     }
 
+    func testRecentSkipsURLsOverOneMiB() {
+        var lib = Library()
+        let big = "https://a/#" + String(repeating: "x", count: Library.recentMaxURLBytes)
+        XCTAssertFalse(lib.addRecent(url: big, app: "a", at: t0))
+        XCTAssertTrue(lib.recent.isEmpty)
+        let fits = "https://a/#" + String(repeating: "x", count: Library.recentMaxURLBytes - 11)
+        XCTAssertEqual(fits.utf8.count, Library.recentMaxURLBytes)
+        XCTAssertTrue(lib.addRecent(url: fits, app: "a", at: t0))
+        XCTAssertEqual(lib.recent.count, 1)
+    }
+
+    func testRecentCappedAt16MiBDroppingOldest() {
+        var lib = Library()
+        let pad = String(repeating: "x", count: 1024 * 1024 - 20)
+        for i in 0..<20 { lib.addRecent(url: "https://a/#\(String(format: "%02d", i))" + pad, app: "a", at: t0 + Double(i)) }
+        let total = lib.recent.reduce(0) { $0 + $1.url.utf8.count }
+        XCTAssertLessThanOrEqual(total, Library.recentMaxTotalBytes)
+        XCTAssertEqual(lib.recent.count, 16)
+        XCTAssertTrue(lib.recent.first!.url.hasPrefix("https://a/#19"))
+        XCTAssertTrue(lib.recent.last!.url.hasPrefix("https://a/#04"))
+    }
+
+    func testDecodingAppliesRecentCaps() throws {
+        var entries: [String] = []
+        for i in 0..<120 { entries.append(#"{"url":"https://a/#\#(i)","app":"a","visitedAt":"2026-11-14T15:00:00Z"}"#) }
+        let lib = try Library(data: Data(#"{"version":1,"saved":[],"recent":[\#(entries.joined(separator: ","))],"sites":[]}"#.utf8))
+        XCTAssertEqual(lib.recent.count, 100)
+        XCTAssertEqual(lib.recent.first?.url, "https://a/#0")
+    }
+
     func testSavedNewestFirstAllowsDuplicatesAndDeletes() {
         var lib = Library()
         let a = lib.save(name: "A", url: "https://a/#1", app: "a", at: t0)
