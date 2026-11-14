@@ -22,10 +22,14 @@ never sent to the server.
 
 ## `route(text)` → Route
 
-The input is trimmed of ASCII whitespace. If what remains contains any C0
-control character (U+0000–U+001F) or DEL, the result is `show-text`. Spaces
-inside are allowed. Inputs larger than
-`limits.maxStateBytes` + 4096 bytes → `{ action: "error", error: "too-large" }`.
+Before any rule below, in this order:
+
+1. Inputs larger than `limits.maxStateBytes` + 4096 UTF-8 bytes →
+   `{ action: "error", error: "too-large" }`. This is checked first, before
+   any scanning (bound before decode).
+2. Trim ASCII whitespace.
+3. If what remains contains any C0 control character (U+0000–U+001F) or DEL
+   → `show-text`. Spaces inside are allowed.
 
 A Route is a JSON object:
 
