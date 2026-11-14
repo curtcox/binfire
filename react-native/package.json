@@ -3,20 +3,40 @@
   "version": "1.0.0",
   "main": "index.ts",
   "dependencies": {
+    "@noble/hashes": "^2.4.0",
     "expo": "~58.0.25",
     "expo-status-bar": "~58.0.5",
+    "lz-string": "1.5.0",
     "react": "19.3.0",
     "react-native": "0.88.1"
   },
   "devDependencies": {
+    "@types/jest": "30.0.0",
     "@types/react": "~19.3.0",
+    "jest": "~30.5.2",
+    "jest-expo": "~58.0.14",
     "typescript": "~6.0.3"
   },
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "test": "jest",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p test"
   },
-  "private": true
+  "private": true,
+  "jest": {
+    "preset": "jest-expo",
+    "testEnvironment": "node",
+    "roots": [
+      "<rootDir>/test"
+    ],
+    "transformIgnorePatterns": [
+      "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@noble/.*)"
+    ],
+    "testMatch": [
+      "**/*.test.ts"
+    ]
+  }
 }
