@@ -12,7 +12,7 @@ Legend: `[x]` done and verified · `[~]` partly done (see note) · `[ ]` not sta
 | --- | --- | --- | --- | --- | --- | --- |
 | M0 | Spec and scaffolding | [x] | [x] | [x] | [x] | [x] |
 | M1 | Browser core | [x] | [x] | [x] | [x] | [x] |
-| M2 | Links in | [ ] | [ ] | [ ] | [ ] | [ ] |
+| M2 | Links in | [x] | [x] | [ ] | [ ] | [~] |
 | M3 | HashBin | [ ] | [ ] | [ ] | [ ] | [ ] |
 | M4 | QR and camera | [ ] | [ ] | [ ] | [ ] | [ ] |
 | M5 | Send and files | [ ] | [ ] | [ ] | [ ] | [ ] |
@@ -39,6 +39,22 @@ Run on a quiet machine on 2026-11-14 (after M1):
 
 Newest first. One line per meaningful step, with what was verified.
 
+- 2026-11-14: iOS and Android M2 done. `routeShared` and `binfire://share#t=`
+  are in core with fixtures. iOS: onOpenURL and Universal Links go through
+  route(); the Share Extension (`<ios id>.share`) hands text over via
+  `binfire://share`; `.binfire` shows "M5". I verified on iPhone 17 Pro:
+  Maestro deep-link passes; a warm `simctl openurl` opened Sheets showing
+  "Hi" (binfire tracked the app's own rewrite to `compressed`); a share-path
+  link with no binfire link showed the text sheet. The extension's system
+  share-sheet path is not exercised [d]. Android: VIEW uses route,
+  SEND/Paste use routeShared, cold and warm, checked with adb (screenshots in
+  the agent's scratchpad). Not checked: re-handling after rotation. Fixes from
+  their reports: exact `/open/ /c/ /s/` link paths in the generated filters
+  and AASA, the share-extension ID now comes from config, and deep-link.yaml
+  handles iOS 26's "Open in binfire?" alert and Android's chooser (several
+  ports share the scheme on one device). Universal/App Link verification
+  needs the owner's team ID and fingerprints; `binfire.app` hosting is still
+  open.
 - 2026-11-14: **M0 and M1 done in all four ports**, verified on a quiet
   machine (table above). The earlier suite-only failures were host load. The
   first React Native Android run found a real bug: the keyboard covered the
