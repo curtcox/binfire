@@ -1,0 +1,17 @@
+appId: ${APP_ID}
+tags: [m1, offline]
+---
+- launchApp:
+    clearState: true
+- tapOn:
+    id: open.input
+- inputText: "https://example.com/not-an-app"
+- tapOn:
+    id: open.go
+- assertVisible:
+    id: text.sheet
+- assertVisible:
+    id: text.value
+    text: "https://example.com/not-an-app"
+- assertNotVisible:
+    id: web.view

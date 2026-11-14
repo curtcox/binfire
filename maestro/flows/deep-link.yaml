@@ -1,0 +1,11 @@
+appId: ${APP_ID}
+tags: [m2]
+---
+- launchApp:
+    clearState: true
+- openLink: "binfire://a/python#AAAAAAAFaGVsbG8"
+- assertVisible:
+    id: web.view
+- assertVisible:
+    id: web.title
+    text: ".*Python.*"

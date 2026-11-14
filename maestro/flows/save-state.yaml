@@ -1,0 +1,26 @@
+appId: ${APP_ID}
+tags: [m1]
+---
+- launchApp:
+    clearState: true
+- tapOn:
+    id: open.input
+- inputText: "https://python.hashbin.page/#AAAAAAAFaGVsbG8"
+- tapOn:
+    id: open.go
+- assertVisible:
+    id: web.view
+- tapOn:
+    id: web.save
+- tapOn:
+    id: save.name
+- inputText: "Maestro save"
+- tapOn:
+    id: save.confirm
+- tapOn:
+    id: web.library
+- tapOn:
+    id: tab.saved
+- assertVisible:
+    id: saved.row.0
+    text: ".*Maestro save.*"

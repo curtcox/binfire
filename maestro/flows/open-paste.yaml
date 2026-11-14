@@ -1,0 +1,15 @@
+appId: ${APP_ID}
+tags: [m1]
+---
+- launchApp:
+    clearState: true
+- tapOn:
+    id: open.input
+- inputText: "https://python.hashbin.page/#AAAAAAAFaGVsbG8"
+- tapOn:
+    id: open.go
+- assertVisible:
+    id: web.view
+- assertVisible:
+    id: web.title
+    text: ".*Python.*"
