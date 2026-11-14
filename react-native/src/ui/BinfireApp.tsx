@@ -31,6 +31,11 @@ const ERROR_MESSAGES: Record<string, string> = {
   'invalid-cid': "That link's document ID (CID) isn't valid.",
 };
 
+/** expo-share-intent's iOS hand-off URL (`<scheme>://dataUrl=…`); its hook handles it. */
+function isShareHandoff(url: string): boolean {
+  return url.toLowerCase().startsWith(`${ctx.config.scheme.toLowerCase()}://dataurl=`);
+}
+
 export default function BinfireApp() {
   const [library, setLibrary] = useState<Library>(loadLibrary);
   const [browsers, setBrowsers] = useState<Record<string, BrowserState>>({});
@@ -114,7 +119,7 @@ export default function BinfireApp() {
       const parsed = parseUrl(url);
       const scheme = parsed?.scheme;
       // expo-share-intent's own hand-off from the iOS Share Extension; the hook below handles it.
-      if (url.toLowerCase().startsWith(`${ctx.config.scheme.toLowerCase()}://dataurl=`)) return;
+      if (isShareHandoff(url)) return;
       if (scheme === 'file' || scheme === 'content') {
         setSheet({ kind: 'error', message: 'Opening .binfire files is coming in M5.' });
         return;
@@ -129,12 +134,21 @@ export default function BinfireApp() {
   }, [openIncomingUrl]);
   useEffect(() => {
     let cancelled = false;
-    Linking.getInitialURL().then(
-      url => {
-        if (url && !cancelled) openIncomingRef.current(url);
-      },
-      () => undefined,
-    );
+    // A link that arrived before JS subscribed (cold start, or right after
+    // launch while the bundle loads) is dropped by the 'url' event, but
+    // expo-linking keeps the latest one natively: read it once, then clear it.
+    const pending = Linking.getLinkingURL();
+    if (pending) {
+      if (!isShareHandoff(pending)) Linking.clearInitialURL();
+      openIncomingRef.current(pending);
+    } else {
+      Linking.getInitialURL().then(
+        url => {
+          if (url && !cancelled) openIncomingRef.current(url);
+        },
+        () => undefined,
+      );
+    }
     const sub = Linking.addEventListener('url', ({ url }) => openIncomingRef.current(url));
     return () => {
       cancelled = true;
