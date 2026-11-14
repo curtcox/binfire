@@ -120,7 +120,8 @@ public enum LZ {
     /// Bounded strict decompression. Throws `BinfireError.tooLarge` or
     /// `BinfireError.invalid` exactly as `spec/state.md` steps 1-5 describe.
     public static func decompress(_ input: [UInt16], limitBytes: Int) throws -> [UInt16] {
-        if input.count > limitBytes * 4 + 64 { throw BinfireError.tooLarge }
+        let (scaled, overflow) = limitBytes.multipliedReportingOverflow(by: 4)
+        if !overflow, scaled <= Int.max - 64, input.count > scaled + 64 { throw BinfireError.tooLarge }
         let normalized = input.map { $0 == 0x20 ? 0x2B : $0 }
         guard let result = try decodeSource(normalized, limit: limitBytes),
               compress(result) == normalized else { throw BinfireError.invalid }

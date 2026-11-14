@@ -27,7 +27,7 @@ final class TransferTests: XCTestCase {
             XCTAssertEqual(b.entries.map(\.cid), expect["entries"] as? [String], name)
             XCTAssertEqual(b.manifest != nil, b.kind == .site, name)
             // Re-encoding a decoded bundle reproduces it (except ignored fields).
-            if name != "unknown header fields ignored" {
+            if !["unknown header fields ignored", "header with leading BOM"].contains(name) {
                 XCTAssertEqual(Transfer.encodeBundle(b), bytes, name)
             }
             XCTAssertEqual(try Transfer.decodeBundle(Transfer.encodeBundle(b), limits: limits).entries, b.entries)
@@ -95,6 +95,21 @@ final class TransferTests: XCTestCase {
             let code = Fixtures.errorCode { for f in frames { try r.add(f) } }
             XCTAssertEqual(code, c["error"] as? String, c["name"] as! String)
         }
+    }
+
+    func testBuildersAndSlices() throws {
+        let doc = Data(#"{"format":"hashbin-diagram","type":"python","src":""}"#.utf8)
+        var container = Data([9, 9, 9])
+        container.append(Transfer.encodeBundle(.document(doc, app: "python", name: "Doc")))
+        let slice = container.dropFirst(3) // non-zero startIndex
+        let b = try Transfer.decodeBundle(slice, limits: limits)
+        XCTAssertEqual(b.entries.first?.bytes, doc)
+        XCTAssertEqual(b.app, "python")
+        let frames = Transfer.encodeFrames(slice, id: Transfer.randomTransferID(), chunkSize: 7)
+        var r = Reassembler(limits: limits)
+        var out: Data?
+        for f in frames { out = try r.add((Data([0]) + f).dropFirst()) }
+        XCTAssertEqual(out, Data(slice))
     }
 
     func testQR() throws {

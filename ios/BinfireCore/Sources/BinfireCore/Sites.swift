@@ -39,7 +39,7 @@ public enum Sites {
         // 2.
         guard o["format"] == .string("binfire-site"), o["version"] == .number(1) else { throw BinfireError.badManifest }
         // 3.
-        guard case .string(let name)? = o["name"], !name.isEmpty, name.utf16.count <= 200 else { throw BinfireError.badManifest }
+        guard case .string(let name)? = o["name"], !name.isEmpty, name.unicodeScalars.count <= 200 else { throw BinfireError.badManifest }
         // 4.
         guard case .object(let filesObject)? = o["files"], filesObject.count > 0,
               filesObject.count <= limits.maxSiteFiles else { throw BinfireError.tooManyFiles }
@@ -115,7 +115,7 @@ public enum Sites {
     }
 
     private static func isValidType(_ type: String) -> Bool {
-        guard !type.isEmpty, type.utf16.count <= 100 else { return false }
+        guard !type.isEmpty, type.unicodeScalars.count <= 100 else { return false }
         return !type.unicodeScalars.contains { $0.value <= 0x20 || $0.value == 0x7F }
     }
 

@@ -18,6 +18,12 @@ enum Fixtures {
         return try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
     }
 
+    /// The fixture parsed with BinfireCore's own JSON parser, which (unlike
+    /// Foundation bridging) keeps a leading U+FEFF inside string values.
+    static func loadValue(_ name: String) throws -> JSONValue {
+        try JSONValue.parse(Data(contentsOf: repoRoot.appendingPathComponent("shared/fixtures/\(name)")))
+    }
+
     static func list(_ fixture: [String: Any], _ key: String) throws -> [[String: Any]] {
         try XCTUnwrap(fixture[key] as? [[String: Any]], "missing list \(key)")
     }

@@ -80,6 +80,14 @@ final class LinksTests: XCTestCase {
         }
     }
 
+    func testWithRunZero() throws {
+        let cases = try Fixtures.list(fixture, "withRunZero")
+        XCTAssertFalse(cases.isEmpty)
+        for c in cases {
+            XCTAssertEqual(Links.withRunZero(c["url"] as! String), c["result"] as? String)
+        }
+    }
+
     func testMadeLinksRouteBack() throws {
         for c in try Fixtures.list(fixture, "makeLink") {
             let url = c["url"] as! String

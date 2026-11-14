@@ -34,7 +34,7 @@ public struct TransferBundle: Equatable, Sendable {
     public var cid: String?
     /// Slug hint (`cid` kind).
     public var app: String?
-    /// Display name, at most 200 characters.
+    /// Display name, at most 200 code points.
     public var name: String?
     public var entries: [BundleEntry]
     /// The validated manifest (`site` kind, after decoding).
@@ -172,7 +172,7 @@ public enum Transfer {
         let cid = try optionalString("cid")
         let app = try optionalString("app")
         let name = try optionalString("name")
-        if let name, name.utf16.count > maxNameLength { throw BinfireError.badBundle }
+        if let name, name.unicodeScalars.count > maxNameLength { throw BinfireError.badBundle }
         switch kind {
         case .url: guard url != nil else { throw BinfireError.badBundle }
         case .cid, .site: guard cid != nil else { throw BinfireError.badBundle }

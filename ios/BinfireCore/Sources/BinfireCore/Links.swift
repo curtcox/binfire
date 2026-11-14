@@ -130,14 +130,12 @@ public struct Links: Sendable {
     /// when the URL is on the canonical origin at exactly the base path, else
     /// `https://D/open#u=<encodeURIComponent(url)>`. Nil if no app matches.
     ///
-    /// The short form is used only when the raw query and fragment are
-    /// already URL-safe (printable ASCII, no space or `"<>\``), so the link
-    /// is a valid URL as sent. This follows `links.json` (the `a b'()*!~é`
-    /// case expects the `/open` form); spec/links.md does not state it.
+    /// The short form is used only when the raw query and raw fragment hold
+    /// only RFC 3986 query/fragment characters (`isRFC3986QueryOrFragment`).
     public func makeLink(_ url: String) -> String? {
         guard let m = registry.match(url) else { return nil }
         let split = URLParts.splitQueryAndFragment(url)
-        if m.isCanonical && m.exactPath && Links.isURLSafe(split.query ?? "") && Links.isURLSafe(split.fragment ?? "") {
+        if m.isCanonical && m.exactPath && Links.isRFC3986QueryOrFragment(split.query ?? "") && Links.isRFC3986QueryOrFragment(split.fragment ?? "") {
             var link = "https://\(config.linkDomain)/a/\(m.slug)"
             if let q = split.query { link += "?" + q }
             if let f = split.fragment { link += "#" + f }
@@ -180,9 +178,36 @@ public struct Links: Sendable {
         return String(decoding: out, as: UTF8.self)
     }
 
-    /// True when every character is printable ASCII other than space and `"<>\``.
-    static func isURLSafe(_ text: String) -> Bool {
-        text.utf8.allSatisfy { $0 > 0x20 && $0 < 0x7F && $0 != 0x22 && $0 != 0x3C && $0 != 0x3E && $0 != 0x60 }
+    /// True when `text` holds only RFC 3986 query/fragment characters:
+    /// `A-Z a-z 0-9 - . _ ~ ! $ & ' ( ) * + , ; = : @ / ?` and `%` followed by
+    /// two hex digits.
+    public static func isRFC3986QueryOrFragment(_ text: String) -> Bool {
+        let u = Array(text.utf8)
+        let allowed = Set("-._~!$&'()*+,;=:@/?".utf8)
+        func isHex(_ c: UInt8) -> Bool { (0x30...0x39).contains(c) || (0x41...0x46).contains(c) || (0x61...0x66).contains(c) }
+        var i = 0
+        while i < u.count {
+            let c = u[i]
+            if (0x41...0x5A).contains(c) || (0x61...0x7A).contains(c) || (0x30...0x39).contains(c) || allowed.contains(c) {
+                i += 1
+            } else if c == UInt8(ascii: "%"), i + 2 < u.count, isHex(u[i + 1]), isHex(u[i + 2]) {
+                i += 3
+            } else {
+                return false
+            }
+        }
+        return true
+    }
+
+    /// Adds `run=0` to a received URL's raw query unless the query already has
+    /// a `run` key (`spec/links.md` "withRunZero"). Nothing else changes.
+    public static func withRunZero(_ url: String) -> String {
+        let split = URLParts.splitQueryAndFragment(url)
+        if QueryParams(split.query).has("run") { return url }
+        var out = split.beforeQuery
+        out += split.query.map { "?" + $0 + "&run=0" } ?? "?run=0"
+        if let f = split.fragment { out += "#" + f }
+        return out
     }
 
     /// Trims ASCII whitespace (tab, LF, FF, CR, space) from both ends.

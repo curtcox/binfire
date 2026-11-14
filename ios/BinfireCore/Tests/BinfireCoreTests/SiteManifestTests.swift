@@ -16,9 +16,13 @@ final class SiteManifestTests: XCTestCase {
     func testValid() throws {
         let cases = try Fixtures.list(fixture, "valid")
         XCTAssertFalse(cases.isEmpty)
-        for c in cases {
+        guard case .object(let root) = try Fixtures.loadValue("site-manifest.json"),
+              case .array(let rawValid)? = root["valid"] else { return XCTFail("no valid list") }
+        XCTAssertEqual(rawValid.count, cases.count)
+        for (c, raw) in zip(cases, rawValid) {
             let name = c["name"] as! String
-            let bytes = Data((c["text"] as! String).utf8)
+            guard case .object(let o) = raw, let text = o["text"]?.stringValue else { return XCTFail(name) }
+            let bytes = Data(text.utf8)
             let m = try Sites.validateManifest(bytes, limits: limits)
             let cid = CID.computeCID(bytes)
             XCTAssertEqual(cid, c["cid"] as? String, name)
@@ -30,7 +34,7 @@ final class SiteManifestTests: XCTestCase {
 
     func testInvalid() throws {
         for c in try Fixtures.list(fixture, "invalid") {
-            let bytes = Data((c["text"] as! String).utf8)
+            let bytes = try Fixtures.bytes(c)
             XCTAssertEqual(Fixtures.errorCode { try Sites.validateManifest(bytes, limits: limits) }, c["error"] as? String,
                            c["name"] as! String)
         }
