@@ -1,0 +1,20 @@
+{
+  "generatedBy": "tools/gen-fixtures.mjs",
+  "codes": [
+    {
+      "senderNonceHex": "00000000000000000000000000000000",
+      "receiverNonceHex": "00000000000000000000000000000000",
+      "code": "4967"
+    },
+    {
+      "senderNonceHex": "000102030405060708090a0b0c0d0e0f",
+      "receiverNonceHex": "f0e0d0c0b0a090807060504030201000",
+      "code": "8188"
+    },
+    {
+      "senderNonceHex": "ffffffffffffffffffffffffffffffff",
+      "receiverNonceHex": "0123456789abcdef0123456789abcdef",
+      "code": "4398"
+    }
+  ]
+}

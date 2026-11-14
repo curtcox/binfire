@@ -1,0 +1,232 @@
+{
+  "generatedBy": "tools/gen-fixtures.mjs",
+  "limits": {
+    "maxSiteFiles": 4,
+    "maxSiteFileBytes": 1000,
+    "maxSiteTotalBytes": 1500
+  },
+  "valid": [
+    {
+      "name": "clock",
+      "text": "{\"format\":\"binfire-site\",\"version\":1,\"name\":\"Clock\",\"entry\":\"index.html\",\"files\":{\"index.html\":{\"cid\":\"AAAAAABEM5NbTKMRLKS5pQDT2C8qZ-Ofd812dgtZS-nGN2ZoDm8fv6HfhS9OjbB0P1265BqLBQK6uNmBt9AKarSGgmNpTA\",\"type\":\"text/html\",\"size\":68},\"js/app.js\":{\"cid\":\"AAAAAAB-mOG6MBwVxOB1arAX9mEEgjhAdL-KyYceyKkBKEl3VJEXQKWQgsSkyC14Ig-lpOTf1JjsHnTL1NHS4oKeM1Kw-Q\",\"type\":\"text/javascript\",\"size\":126}},\"source\":{\"app\":\"pages\",\"origin\":\"https://pages.hashbin.page/\"}}",
+      "cid": "AAAAAAG_CUqqcE8Crnhk5OYJNpcr9ZIBNw73F7iOgxaSaa8gzp_Cwb7ayv7XG8mJgD4wbnJRcrFmWrEH82sOK64S9I97eQ",
+      "siteId": "ndiwas7lfezpjmx3uf6qmiwv722t4ktifbq4e5kclnoz6ftbkioa",
+      "entry": "index.html",
+      "files": 2
+    },
+    {
+      "name": "no source, unknown field",
+      "text": "{\"format\":\"binfire-site\",\"version\":1,\"name\":\"Clock\",\"entry\":\"index.html\",\"files\":{\"index.html\":{\"cid\":\"AAAAAABEM5NbTKMRLKS5pQDT2C8qZ-Ofd812dgtZS-nGN2ZoDm8fv6HfhS9OjbB0P1265BqLBQK6uNmBt9AKarSGgmNpTA\",\"type\":\"text/html\",\"size\":68},\"js/app.js\":{\"cid\":\"AAAAAAB-mOG6MBwVxOB1arAX9mEEgjhAdL-KyYceyKkBKEl3VJEXQKWQgsSkyC14Ig-lpOTf1JjsHnTL1NHS4oKeM1Kw-Q\",\"type\":\"text/javascript\",\"size\":126}},\"extra\":true}",
+      "cid": "AAAAAAGMSf48uhr_7JODVRz-PcMjveknAM69qYA6mPL03KwktR68HEmXM3wAFIZGPprymHi9i-5IVgTbIay60WVzbzHFUA",
+      "siteId": "ra73m57yn4kcdaxygtpjgm5du6tsquak7iw34tre2lu7bkzqz64q",
+      "entry": "index.html",
+      "files": 2
+    },
+    {
+      "name": "unicode path",
+      "text": "{\"format\":\"binfire-site\",\"version\":1,\"name\":\"Clock\",\"entry\":\"ü/índex.html\",\"files\":{\"ü/índex.html\":{\"cid\":\"AAAAAAABeA\",\"type\":\"text/html\",\"size\":1}},\"source\":{\"app\":\"pages\",\"origin\":\"https://pages.hashbin.page/\"}}",
+      "cid": "AAAAAADZCx4Q5-yHEYi9rElaVeuITXdBkK7md9Y7EiiTHjPVedd8qzIruUnYMz5h7KJnsXrGDUrcwF15sVtUKodALwNkNw",
+      "siteId": "5qi2nbhdhhxpmxucz25lckpogfjr5c5ead426gqqtevkkhtbhspq",
+      "entry": "ü/índex.html",
+      "files": 1
+    }
+  ],
+  "invalid": [
+    {
+      "name": "not json",
+      "text": "{",
+      "error": "bad-manifest"
+    },
+    {
+      "name": "array",
+      "text": "[]",
+      "error": "bad-manifest"
+    },
+    {
+      "name": "wrong format",
+      "text": "{\"format\":\"other\",\"version\":1,\"name\":\"Clock\",\"entry\":\"index.html\",\"files\":{\"index.html\":{\"cid\":\"AAAAAABEM5NbTKMRLKS5pQDT2C8qZ-Ofd812dgtZS-nGN2ZoDm8fv6HfhS9OjbB0P1265BqLBQK6uNmBt9AKarSGgmNpTA\",\"type\":\"text/html\",\"size\":68},\"js/app.js\":{\"cid\":\"AAAAAAB-mOG6MBwVxOB1arAX9mEEgjhAdL-KyYceyKkBKEl3VJEXQKWQgsSkyC14Ig-lpOTf1JjsHnTL1NHS4oKeM1Kw-Q\",\"type\":\"text/javascript\",\"size\":126}},\"source\":{\"app\":\"pages\",\"origin\":\"https://pages.hashbin.page/\"}}",
+      "error": "bad-manifest"
+    },
+    {
+      "name": "wrong version",
+      "text": "{\"format\":\"binfire-site\",\"version\":2,\"name\":\"Clock\",\"entry\":\"index.html\",\"files\":{\"index.html\":{\"cid\":\"AAAAAABEM5NbTKMRLKS5pQDT2C8qZ-Ofd812dgtZS-nGN2ZoDm8fv6HfhS9OjbB0P1265BqLBQK6uNmBt9AKarSGgmNpTA\",\"type\":\"text/html\",\"size\":68},\"js/app.js\":{\"cid\":\"AAAAAAB-mOG6MBwVxOB1arAX9mEEgjhAdL-KyYceyKkBKEl3VJEXQKWQgsSkyC14Ig-lpOTf1JjsHnTL1NHS4oKeM1Kw-Q\",\"type\":\"text/javascript\",\"size\":126}},\"source\":{\"app\":\"pages\",\"origin\":\"https://pages.hashbin.page/\"}}",
+      "error": "bad-manifest"
+    },
+    {
+      "name": "empty name",
+      "text": "{\"format\":\"binfire-site\",\"version\":1,\"name\":\"\",\"entry\":\"index.html\",\"files\":{\"index.html\":{\"cid\":\"AAAAAABEM5NbTKMRLKS5pQDT2C8qZ-Ofd812dgtZS-nGN2ZoDm8fv6HfhS9OjbB0P1265BqLBQK6uNmBt9AKarSGgmNpTA\",\"type\":\"text/html\",\"size\":68},\"js/app.js\":{\"cid\":\"AAAAAAB-mOG6MBwVxOB1arAX9mEEgjhAdL-KyYceyKkBKEl3VJEXQKWQgsSkyC14Ig-lpOTf1JjsHnTL1NHS4oKeM1Kw-Q\",\"type\":\"text/javascript\",\"size\":126}},\"source\":{\"app\":\"pages\",\"origin\":\"https://pages.hashbin.page/\"}}",
+      "error": "bad-manifest"
+    },
+    {
+      "name": "long name",
+      "text": "{\"format\":\"binfire-site\",\"version\":1,\"name\":\"nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn\",\"entry\":\"index.html\",\"files\":{\"index.html\":{\"cid\":\"AAAAAABEM5NbTKMRLKS5pQDT2C8qZ-Ofd812dgtZS-nGN2ZoDm8fv6HfhS9OjbB0P1265BqLBQK6uNmBt9AKarSGgmNpTA\",\"type\":\"text/html\",\"size\":68},\"js/app.js\":{\"cid\":\"AAAAAAB-mOG6MBwVxOB1arAX9mEEgjhAdL-KyYceyKkBKEl3VJEXQKWQgsSkyC14Ig-lpOTf1JjsHnTL1NHS4oKeM1Kw-Q\",\"type\":\"text/javascript\",\"size\":126}},\"source\":{\"app\":\"pages\",\"origin\":\"https://pages.hashbin.page/\"}}",
+      "error": "bad-manifest"
+    },
+    {
+      "name": "no files",
+      "text": "{\"format\":\"binfire-site\",\"version\":1,\"name\":\"Clock\",\"entry\":\"index.html\",\"files\":{},\"source\":{\"app\":\"pages\",\"origin\":\"https://pages.hashbin.page/\"}}",
+      "error": "too-many-files"
+    },
+    {
+      "name": "too many files",
+      "text": "{\"format\":\"binfire-site\",\"version\":1,\"name\":\"Clock\",\"entry\":\"a\",\"files\":{\"a\":{\"cid\":\"AAAAAAABYQ\",\"type\":\"text/html\",\"size\":1},\"b\":{\"cid\":\"AAAAAAABYg\",\"type\":\"text/html\",\"size\":1},\"c\":{\"cid\":\"AAAAAAABYw\",\"type\":\"text/html\",\"size\":1},\"d\":{\"cid\":\"AAAAAAABZA\",\"type\":\"text/html\",\"size\":1},\"e\":{\"cid\":\"AAAAAAABZQ\",\"type\":\"text/html\",\"size\":1}},\"source\":{\"app\":\"pages\",\"origin\":\"https://pages.hashbin.page/\"}}",
+      "error": "too-many-files"
+    },
+    {
+      "name": "dot-dot path",
+      "text": "{\"format\":\"binfire-site\",\"version\":1,\"name\":\"Clock\",\"entry\":\"../x\",\"files\":{\"../x\":{\"cid\":\"AAAAAAABeA\",\"type\":\"text/html\",\"size\":1}},\"source\":{\"app\":\"pages\",\"origin\":\"https://pages.hashbin.page/\"}}",
+      "error": "bad-path"
+    },
+    {
+      "name": "absolute path",
+      "text": "{\"format\":\"binfire-site\",\"version\":1,\"name\":\"Clock\",\"entry\":\"/x\",\"files\":{\"/x\":{\"cid\":\"AAAAAAABeA\",\"type\":\"text/html\",\"size\":1}},\"source\":{\"app\":\"pages\",\"origin\":\"https://pages.hashbin.page/\"}}",
+      "error": "bad-path"
+    },
+    {
+      "name": "trailing slash",
+      "text": "{\"format\":\"binfire-site\",\"version\":1,\"name\":\"Clock\",\"entry\":\"x/\",\"files\":{\"x/\":{\"cid\":\"AAAAAAABeA\",\"type\":\"text/html\",\"size\":1}},\"source\":{\"app\":\"pages\",\"origin\":\"https://pages.hashbin.page/\"}}",
+      "error": "bad-path"
+    },
+    {
+      "name": "backslash",
+      "text": "{\"format\":\"binfire-site\",\"version\":1,\"name\":\"Clock\",\"entry\":\"a\\\\b\",\"files\":{\"a\\\\b\":{\"cid\":\"AAAAAAABeA\",\"type\":\"text/html\",\"size\":1}},\"source\":{\"app\":\"pages\",\"origin\":\"https://pages.hashbin.page/\"}}",
+      "error": "bad-path"
+    },
+    {
+      "name": "empty segment",
+      "text": "{\"format\":\"binfire-site\",\"version\":1,\"name\":\"Clock\",\"entry\":\"a//b\",\"files\":{\"a//b\":{\"cid\":\"AAAAAAABeA\",\"type\":\"text/html\",\"size\":1}},\"source\":{\"app\":\"pages\",\"origin\":\"https://pages.hashbin.page/\"}}",
+      "error": "bad-path"
+    },
+    {
+      "name": "duplicate after lowercasing",
+      "text": "{\"format\":\"binfire-site\",\"version\":1,\"name\":\"Clock\",\"entry\":\"a.html\",\"files\":{\"A.html\":{\"cid\":\"AAAAAAABeA\",\"type\":\"text/html\",\"size\":1},\"a.html\":{\"cid\":\"AAAAAAABeQ\",\"type\":\"text/html\",\"size\":1}},\"source\":{\"app\":\"pages\",\"origin\":\"https://pages.hashbin.page/\"}}",
+      "error": "duplicate-path"
+    },
+    {
+      "name": "bad cid",
+      "text": "{\"format\":\"binfire-site\",\"version\":1,\"name\":\"Clock\",\"entry\":\"x\",\"files\":{\"x\":{\"cid\":\"nope\",\"type\":\"text/html\",\"size\":4}},\"source\":{\"app\":\"pages\",\"origin\":\"https://pages.hashbin.page/\"}}",
+      "error": "invalid-cid"
+    },
+    {
+      "name": "size mismatch",
+      "text": "{\"format\":\"binfire-site\",\"version\":1,\"name\":\"Clock\",\"entry\":\"x\",\"files\":{\"x\":{\"cid\":\"AAAAAAABeA\",\"type\":\"text/html\",\"size\":2}},\"source\":{\"app\":\"pages\",\"origin\":\"https://pages.hashbin.page/\"}}",
+      "error": "size-mismatch"
+    },
+    {
+      "name": "bad type",
+      "text": "{\"format\":\"binfire-site\",\"version\":1,\"name\":\"Clock\",\"entry\":\"x\",\"files\":{\"x\":{\"cid\":\"AAAAAAABeA\",\"type\":\"text/html; x\",\"size\":1}},\"source\":{\"app\":\"pages\",\"origin\":\"https://pages.hashbin.page/\"}}",
+      "error": "bad-manifest"
+    },
+    {
+      "name": "file too large",
+      "text": "{\"format\":\"binfire-site\",\"version\":1,\"name\":\"Clock\",\"entry\":\"x\",\"files\":{\"x\":{\"cid\":\"AAAAAAPp0q1XeO2Ghwo9eqJj4BRRslAirYWVVcRIBHHau4BBCqgYZBbVM1ya9gmhq5DyWRXIT6D__x3wqqxpSok_HFvzmA\",\"type\":\"text/html\",\"size\":1001}},\"source\":{\"app\":\"pages\",\"origin\":\"https://pages.hashbin.page/\"}}",
+      "error": "too-large"
+    },
+    {
+      "name": "total too large",
+      "text": "{\"format\":\"binfire-site\",\"version\":1,\"name\":\"Clock\",\"entry\":\"a\",\"files\":{\"a\":{\"cid\":\"AAAAAAMg5dL_H6Xd1UNgKpG9g3xNpenl9rYoCQZf91NkarJLTdLjNTKpeTUV3HVpt4ZaVpS4CqhvOhd6ZgowxMqFmPqukA\",\"type\":\"text/html\",\"size\":800},\"b\":{\"cid\":\"AAAAAAMgMQI1kIYro6hf5ga17ONa9HAN0e2uzKTzLVL8QHmkc8ryukxXw1Qlg-pnFIREM2czY3m59T1cKNKhibeE-EUHHQ\",\"type\":\"text/html\",\"size\":800}},\"source\":{\"app\":\"pages\",\"origin\":\"https://pages.hashbin.page/\"}}",
+      "error": "too-large"
+    },
+    {
+      "name": "missing entry",
+      "text": "{\"format\":\"binfire-site\",\"version\":1,\"name\":\"Clock\",\"entry\":\"nope.html\",\"files\":{\"index.html\":{\"cid\":\"AAAAAABEM5NbTKMRLKS5pQDT2C8qZ-Ofd812dgtZS-nGN2ZoDm8fv6HfhS9OjbB0P1265BqLBQK6uNmBt9AKarSGgmNpTA\",\"type\":\"text/html\",\"size\":68},\"js/app.js\":{\"cid\":\"AAAAAAB-mOG6MBwVxOB1arAX9mEEgjhAdL-KyYceyKkBKEl3VJEXQKWQgsSkyC14Ig-lpOTf1JjsHnTL1NHS4oKeM1Kw-Q\",\"type\":\"text/javascript\",\"size\":126}},\"source\":{\"app\":\"pages\",\"origin\":\"https://pages.hashbin.page/\"}}",
+      "error": "missing-entry"
+    }
+  ],
+  "paths": [
+    {
+      "path": "index.html",
+      "ok": true
+    },
+    {
+      "path": "a/b/c.js",
+      "ok": true
+    },
+    {
+      "path": "ü.txt",
+      "ok": true
+    },
+    {
+      "path": ".well-known/x",
+      "ok": true
+    },
+    {
+      "path": "a..b",
+      "ok": true
+    },
+    {
+      "path": "",
+      "ok": false
+    },
+    {
+      "path": "/a",
+      "ok": false
+    },
+    {
+      "path": "a/",
+      "ok": false
+    },
+    {
+      "path": "a//b",
+      "ok": false
+    },
+    {
+      "path": ".",
+      "ok": false
+    },
+    {
+      "path": "..",
+      "ok": false
+    },
+    {
+      "path": "a/./b",
+      "ok": false
+    },
+    {
+      "path": "a/../b",
+      "ok": false
+    },
+    {
+      "path": "a\\b",
+      "ok": false
+    },
+    {
+      "path": "c:x",
+      "ok": false
+    },
+    {
+      "path": "a?b",
+      "ok": false
+    },
+    {
+      "path": "a#b",
+      "ok": false
+    },
+    {
+      "path": "a\u0001b",
+      "ok": false
+    },
+    {
+      "path": "ab",
+      "ok": false
+    },
+    {
+      "path": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "ok": false
+    },
+    {
+      "path": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "ok": false
+    }
+  ],
+  "siteIds": [
+    {
+      "cid": "AAAAAAAA",
+      "siteId": "ynflnk5xwk5vsw6clq5trdehf7i5k5mbtkhvltdisuicqxrbeocq"
+    },
+    {
+      "cid": "AAAAAABBuDCGzYSU5VcIrX7Ngt-0vKG9ph7Lt8rwxolnkC5wk0Xl2DBet6wNWIr8bLt1FhqpyMfg6phr2DPa_l4czTc0Wg",
+      "siteId": "gngiosql2mc54eirq6noen3rckkgd2pjpuzqisr5pmpgazfoltha"
+    }
+  ]
+}

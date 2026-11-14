@@ -1,0 +1,13 @@
+{
+  "name": "binfire-tools",
+  "private": true,
+  "type": "module",
+  "description": "Repository tools: configure, sync, fixture generation and checks. Node 20+, no dependencies.",
+  "scripts": {
+    "configure": "node configure.mjs",
+    "sync": "node sync.mjs",
+    "fixtures": "node gen-fixtures.mjs",
+    "check": "node check.mjs",
+    "test": "node --test test/"
+  }
+}

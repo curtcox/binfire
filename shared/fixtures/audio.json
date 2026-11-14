@@ -1,0 +1,46 @@
+{
+  "generatedBy": "tools/gen-fixtures.mjs",
+  "payloads": [
+    {
+      "text": "AAAAAABBuDCGzYSU5VcIrX7Ngt-0vKG9ph7Lt8rwxolnkC5wk0Xl2DBet6wNWIr8bLt1FhqpyMfg6phr2DPa_l4czTc0Wg",
+      "ok": true
+    },
+    {
+      "text": "AAAAAAAFaGVsbG8",
+      "ok": true
+    },
+    {
+      "text": "https://binfire.app/c#AAAAAABBuDCGzYSU5VcIrX7Ngt-0vKG9ph7Lt8rwxolnkC5wk0Xl2DBet6wNWIr8bLt1FhqpyMfg6phr2DPa_l4czTc0Wg",
+      "ok": true
+    },
+    {
+      "text": "https://binfire.app/s#AAAAAABBuDCGzYSU5VcIrX7Ngt-0vKG9ph7Lt8rwxolnkC5wk0Xl2DBet6wNWIr8bLt1FhqpyMfg6phr2DPa_l4czTc0Wg",
+      "ok": true
+    },
+    {
+      "text": "https://binfire.app/a/python#AAAAAAAFaGVsbG8",
+      "ok": true
+    },
+    {
+      "text": "https://binfire.app/a/python#v1.AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "ok": false
+    },
+    {
+      "text": "https://binfire.app/open#u=https%3A%2F%2Fpython.hashbin.page%2F%23x",
+      "ok": false
+    },
+    {
+      "text": "https://example.com/",
+      "ok": false
+    },
+    {
+      "text": "https://python.hashbin.page/#v1.abc",
+      "ok": false
+    },
+    {
+      "text": "hello",
+      "ok": false
+    }
+  ],
+  "waveforms": []
+}

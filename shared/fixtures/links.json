@@ -1,0 +1,405 @@
+{
+  "generatedBy": "tools/gen-fixtures.mjs",
+  "config": {
+    "linkDomain": "binfire.app",
+    "scheme": "binfire",
+    "content": "https://256t.us"
+  },
+  "route": [
+    {
+      "input": "AAAAAAAFaGVsbG8",
+      "expect": {
+        "action": "load-cid",
+        "cid": "AAAAAAAFaGVsbG8",
+        "app": null
+      }
+    },
+    {
+      "input": "#AAAAAABBuDCGzYSU5VcIrX7Ngt-0vKG9ph7Lt8rwxolnkC5wk0Xl2DBet6wNWIr8bLt1FhqpyMfg6phr2DPa_l4czTc0Wg",
+      "expect": {
+        "action": "load-cid",
+        "cid": "AAAAAABBuDCGzYSU5VcIrX7Ngt-0vKG9ph7Lt8rwxolnkC5wk0Xl2DBet6wNWIr8bLt1FhqpyMfg6phr2DPa_l4czTc0Wg",
+        "app": null
+      }
+    },
+    {
+      "input": "  https://binfire.app/a/python?run=0#v1.abc \n",
+      "expect": {
+        "action": "open-app",
+        "app": "python",
+        "url": "https://python.hashbin.page/?run=0#v1.abc",
+        "state": "v1",
+        "run": false,
+        "view": null
+      }
+    },
+    {
+      "input": "https://binfire.app/a/python#AAAAAAAFaGVsbG8",
+      "expect": {
+        "action": "open-app",
+        "app": "python",
+        "url": "https://python.hashbin.page/#AAAAAAAFaGVsbG8",
+        "state": "cid",
+        "run": true,
+        "view": null
+      }
+    },
+    {
+      "input": "https://BINFIRE.APP/a/python/",
+      "expect": {
+        "action": "open-app",
+        "app": "python",
+        "url": "https://python.hashbin.page/",
+        "state": "none",
+        "run": true,
+        "view": null
+      }
+    },
+    {
+      "input": "https://binfire.app/a/python?run=0&view=code#AAAAAAAFaGVsbG8",
+      "expect": {
+        "action": "open-app",
+        "app": "python",
+        "url": "https://python.hashbin.page/?run=0&view=code#AAAAAAAFaGVsbG8",
+        "state": "cid",
+        "run": false,
+        "view": "code"
+      }
+    },
+    {
+      "input": "https://binfire.app/a/nosuch#x",
+      "expect": {
+        "action": "error",
+        "error": "unknown-app"
+      }
+    },
+    {
+      "input": "https://binfire.app/a/",
+      "expect": {
+        "action": "error",
+        "error": "unknown-link"
+      }
+    },
+    {
+      "input": "binfire://a/sheets?view=preview#%23%20Hi",
+      "expect": {
+        "action": "open-app",
+        "app": "sheets",
+        "url": "https://sheets.hashbin.page/?view=preview#%23%20Hi",
+        "state": "fragment",
+        "run": true,
+        "view": "preview"
+      }
+    },
+    {
+      "input": "binfire:///a/r#src=abc",
+      "expect": {
+        "action": "open-app",
+        "app": "r",
+        "url": "https://r.hashbin.page/#src=abc",
+        "state": "src",
+        "run": true,
+        "view": null
+      }
+    },
+    {
+      "input": "https://binfire.app/open#u=https%3A%2F%2Fcurtcox.github.io%2FPythonOnline%2F%3Fcompressed%3DCYUwZgBA5gTiIBcAUA7AhgWxASgFwCgIiI4EBXG",
+      "expect": {
+        "action": "open-app",
+        "app": "python",
+        "url": "https://curtcox.github.io/PythonOnline/?compressed=CYUwZgBA5gTiIBcAUA7AhgWxASgFwCgIiI4EBXG",
+        "state": "compressed",
+        "run": true,
+        "view": null
+      }
+    },
+    {
+      "input": "binfire://open#u=https%3A%2F%2Fmodl.hashbin.page%2F%23h1%3De30",
+      "expect": {
+        "action": "open-app",
+        "app": "modl",
+        "url": "https://modl.hashbin.page/#h1=e30",
+        "state": "h1",
+        "run": true,
+        "view": null
+      }
+    },
+    {
+      "input": "https://binfire.app/open#u=https%3A%2F%2Fexample.com%2Fx%3Fy%3D1",
+      "expect": {
+        "action": "show-text",
+        "text": "https://example.com/x?y=1"
+      }
+    },
+    {
+      "input": "https://binfire.app/open#x=1",
+      "expect": {
+        "action": "error",
+        "error": "bad-link"
+      }
+    },
+    {
+      "input": "https://binfire.app/open#u=not%20a%20url",
+      "expect": {
+        "action": "error",
+        "error": "bad-link"
+      }
+    },
+    {
+      "input": "https://binfire.app/open",
+      "expect": {
+        "action": "error",
+        "error": "bad-link"
+      }
+    },
+    {
+      "input": "https://binfire.app/c#AAAAAABBuDCGzYSU5VcIrX7Ngt-0vKG9ph7Lt8rwxolnkC5wk0Xl2DBet6wNWIr8bLt1FhqpyMfg6phr2DPa_l4czTc0Wg",
+      "expect": {
+        "action": "load-cid",
+        "cid": "AAAAAABBuDCGzYSU5VcIrX7Ngt-0vKG9ph7Lt8rwxolnkC5wk0Xl2DBet6wNWIr8bLt1FhqpyMfg6phr2DPa_l4czTc0Wg",
+        "app": null
+      }
+    },
+    {
+      "input": "https://binfire.app/c?app=python#AAAAAABBuDCGzYSU5VcIrX7Ngt-0vKG9ph7Lt8rwxolnkC5wk0Xl2DBet6wNWIr8bLt1FhqpyMfg6phr2DPa_l4czTc0Wg",
+      "expect": {
+        "action": "load-cid",
+        "cid": "AAAAAABBuDCGzYSU5VcIrX7Ngt-0vKG9ph7Lt8rwxolnkC5wk0Xl2DBet6wNWIr8bLt1FhqpyMfg6phr2DPa_l4czTc0Wg",
+        "app": "python"
+      }
+    },
+    {
+      "input": "https://binfire.app/c?app=nosuch#AAAAAABBuDCGzYSU5VcIrX7Ngt-0vKG9ph7Lt8rwxolnkC5wk0Xl2DBet6wNWIr8bLt1FhqpyMfg6phr2DPa_l4czTc0Wg",
+      "expect": {
+        "action": "load-cid",
+        "cid": "AAAAAABBuDCGzYSU5VcIrX7Ngt-0vKG9ph7Lt8rwxolnkC5wk0Xl2DBet6wNWIr8bLt1FhqpyMfg6phr2DPa_l4czTc0Wg",
+        "app": null
+      }
+    },
+    {
+      "input": "https://binfire.app/c/#AAAAAAAFaGVsbG8",
+      "expect": {
+        "action": "load-cid",
+        "cid": "AAAAAAAFaGVsbG8",
+        "app": null
+      }
+    },
+    {
+      "input": "https://binfire.app/c#nope",
+      "expect": {
+        "action": "error",
+        "error": "invalid-cid"
+      }
+    },
+    {
+      "input": "https://binfire.app/c",
+      "expect": {
+        "action": "error",
+        "error": "invalid-cid"
+      }
+    },
+    {
+      "input": "https://binfire.app/s#AAAAAABBuDCGzYSU5VcIrX7Ngt-0vKG9ph7Lt8rwxolnkC5wk0Xl2DBet6wNWIr8bLt1FhqpyMfg6phr2DPa_l4czTc0Wg",
+      "expect": {
+        "action": "open-site",
+        "cid": "AAAAAABBuDCGzYSU5VcIrX7Ngt-0vKG9ph7Lt8rwxolnkC5wk0Xl2DBet6wNWIr8bLt1FhqpyMfg6phr2DPa_l4czTc0Wg"
+      }
+    },
+    {
+      "input": "binfire://s/#AAAAAABBuDCGzYSU5VcIrX7Ngt-0vKG9ph7Lt8rwxolnkC5wk0Xl2DBet6wNWIr8bLt1FhqpyMfg6phr2DPa_l4czTc0Wg",
+      "expect": {
+        "action": "open-site",
+        "cid": "AAAAAABBuDCGzYSU5VcIrX7Ngt-0vKG9ph7Lt8rwxolnkC5wk0Xl2DBet6wNWIr8bLt1FhqpyMfg6phr2DPa_l4czTc0Wg"
+      }
+    },
+    {
+      "input": "https://binfire.app/s#AAAAAABBuDCGzYSU5VcIrX7Ngt-0vKG9ph7Lt8rwxolnkC5wk0Xl2DBet6wNWIr8bLt1FhqpyMfg6phr2DPa_l4czTc0Wgx",
+      "expect": {
+        "action": "error",
+        "error": "invalid-cid"
+      }
+    },
+    {
+      "input": "https://binfire.app/",
+      "expect": {
+        "action": "error",
+        "error": "unknown-link"
+      }
+    },
+    {
+      "input": "https://binfire.app",
+      "expect": {
+        "action": "error",
+        "error": "unknown-link"
+      }
+    },
+    {
+      "input": "https://binfire.app/x/y",
+      "expect": {
+        "action": "error",
+        "error": "unknown-link"
+      }
+    },
+    {
+      "input": "binfire://zzz",
+      "expect": {
+        "action": "error",
+        "error": "unknown-link"
+      }
+    },
+    {
+      "input": "https://www.binfire.app/a/python",
+      "expect": {
+        "action": "show-text",
+        "text": "https://www.binfire.app/a/python"
+      }
+    },
+    {
+      "input": "https://256t.us/AAAAAABBuDCGzYSU5VcIrX7Ngt-0vKG9ph7Lt8rwxolnkC5wk0Xl2DBet6wNWIr8bLt1FhqpyMfg6phr2DPa_l4czTc0Wg",
+      "expect": {
+        "action": "load-cid",
+        "cid": "AAAAAABBuDCGzYSU5VcIrX7Ngt-0vKG9ph7Lt8rwxolnkC5wk0Xl2DBet6wNWIr8bLt1FhqpyMfg6phr2DPa_l4czTc0Wg",
+        "app": null
+      }
+    },
+    {
+      "input": "https://256t.us/notacid",
+      "expect": {
+        "action": "show-text",
+        "text": "https://256t.us/notacid"
+      }
+    },
+    {
+      "input": "https://256t.us/a/AAAAAABBuDCGzYSU5VcIrX7Ngt-0vKG9ph7Lt8rwxolnkC5wk0Xl2DBet6wNWIr8bLt1FhqpyMfg6phr2DPa_l4czTc0Wg",
+      "expect": {
+        "action": "show-text",
+        "text": "https://256t.us/a/AAAAAABBuDCGzYSU5VcIrX7Ngt-0vKG9ph7Lt8rwxolnkC5wk0Xl2DBet6wNWIr8bLt1FhqpyMfg6phr2DPa_l4czTc0Wg"
+      }
+    },
+    {
+      "input": "https://python.hashbin.page/#v1.abc",
+      "expect": {
+        "action": "open-app",
+        "app": "python",
+        "url": "https://python.hashbin.page/#v1.abc",
+        "state": "v1",
+        "run": true,
+        "view": null
+      }
+    },
+    {
+      "input": "https://curtcox.github.io/sheets/index.html?run=0#x",
+      "expect": {
+        "action": "open-app",
+        "app": "sheets",
+        "url": "https://curtcox.github.io/sheets/index.html?run=0#x",
+        "state": "fragment",
+        "run": false,
+        "view": null
+      }
+    },
+    {
+      "input": "https://hashbin.org/docs/textpad/app",
+      "expect": {
+        "action": "open-app",
+        "app": "textpad",
+        "url": "https://hashbin.org/docs/textpad/app",
+        "state": "none",
+        "run": true,
+        "view": null
+      }
+    },
+    {
+      "input": "https://evil.example/#v1.abc",
+      "expect": {
+        "action": "show-text",
+        "text": "https://evil.example/#v1.abc"
+      }
+    },
+    {
+      "input": "http://python.hashbin.page/",
+      "expect": {
+        "action": "show-text",
+        "text": "http://python.hashbin.page/"
+      }
+    },
+    {
+      "input": "javascript:alert(1)",
+      "expect": {
+        "action": "show-text",
+        "text": "javascript:alert(1)"
+      }
+    },
+    {
+      "input": "hello world",
+      "expect": {
+        "action": "show-text",
+        "text": "hello world"
+      }
+    },
+    {
+      "input": "",
+      "expect": {
+        "action": "show-text",
+        "text": ""
+      }
+    }
+  ],
+  "makeLink": [
+    {
+      "url": "https://python.hashbin.page/#v1.abc",
+      "link": "https://binfire.app/a/python#v1.abc"
+    },
+    {
+      "url": "https://python.hashbin.page/?run=0#AAAAAAAFaGVsbG8",
+      "link": "https://binfire.app/a/python?run=0#AAAAAAAFaGVsbG8"
+    },
+    {
+      "url": "https://python.hashbin.page/",
+      "link": "https://binfire.app/a/python"
+    },
+    {
+      "url": "https://python.hashbin.page/index.html#x",
+      "link": "https://binfire.app/open#u=https%3A%2F%2Fpython.hashbin.page%2Findex.html%23x"
+    },
+    {
+      "url": "https://curtcox.github.io/PythonOnline/?compressed=CYUwZgBA5gTiIBcAUA7AhgWxASgFwCgIiI4EBXG",
+      "link": "https://binfire.app/open#u=https%3A%2F%2Fcurtcox.github.io%2FPythonOnline%2F%3Fcompressed%3DCYUwZgBA5gTiIBcAUA7AhgWxASgFwCgIiI4EBXG"
+    },
+    {
+      "url": "https://sheets.hashbin.page/?view=preview#a b'()*!~é",
+      "link": "https://binfire.app/open#u=https%3A%2F%2Fsheets.hashbin.page%2F%3Fview%3Dpreview%23a%20b'()*!~%C3%A9"
+    }
+  ],
+  "makeCIDLink": [
+    {
+      "cid": "AAAAAABBuDCGzYSU5VcIrX7Ngt-0vKG9ph7Lt8rwxolnkC5wk0Xl2DBet6wNWIr8bLt1FhqpyMfg6phr2DPa_l4czTc0Wg",
+      "link": "https://binfire.app/c#AAAAAABBuDCGzYSU5VcIrX7Ngt-0vKG9ph7Lt8rwxolnkC5wk0Xl2DBet6wNWIr8bLt1FhqpyMfg6phr2DPa_l4czTc0Wg"
+    },
+    {
+      "cid": "AAAAAABBuDCGzYSU5VcIrX7Ngt-0vKG9ph7Lt8rwxolnkC5wk0Xl2DBet6wNWIr8bLt1FhqpyMfg6phr2DPa_l4czTc0Wg",
+      "app": "python",
+      "link": "https://binfire.app/c?app=python#AAAAAABBuDCGzYSU5VcIrX7Ngt-0vKG9ph7Lt8rwxolnkC5wk0Xl2DBet6wNWIr8bLt1FhqpyMfg6phr2DPa_l4czTc0Wg"
+    }
+  ],
+  "makeSiteLink": [
+    {
+      "cid": "AAAAAABBuDCGzYSU5VcIrX7Ngt-0vKG9ph7Lt8rwxolnkC5wk0Xl2DBet6wNWIr8bLt1FhqpyMfg6phr2DPa_l4czTc0Wg",
+      "link": "https://binfire.app/s#AAAAAABBuDCGzYSU5VcIrX7Ngt-0vKG9ph7Lt8rwxolnkC5wk0Xl2DBet6wNWIr8bLt1FhqpyMfg6phr2DPa_l4czTc0Wg"
+    }
+  ],
+  "encodeURIComponent": [
+    {
+      "text": "a b'()*!~-_.é/?#&=+%",
+      "encoded": "a%20b'()*!~-_.%C3%A9%2F%3F%23%26%3D%2B%25"
+    },
+    {
+      "text": "https://x.y/?a=1&b=2#c",
+      "encoded": "https%3A%2F%2Fx.y%2F%3Fa%3D1%26b%3D2%23c"
+    },
+    {
+      "text": "😀",
+      "encoded": "%F0%9F%98%80"
+    }
+  ]
+}

@@ -1,0 +1,123 @@
+{
+  "generatedBy": "tools/gen-fixtures.mjs",
+  "cases": [
+    {
+      "text": "{\"format\":\"hashbin-audio\",\"version\":1,\"src\":\"from audio import *\\n\\nclass Hello(Scene):\\n    \\\"\\\"\\\"Four chime notes over a soft noise bed, then a low thump.\\\"\\\"\\\"\\n\\n    def construct(self):\\n        bed = Noise(color=\\\"pink\\\").lowpass(900).gain(-24).dur(2.5).fade_in(0.5).fade_out(0.8)\\n        self.add(bed, at=0, track=\\\"ambience\\\")\\n        for i, freq in enumerate([523.25, 659.25, 783.99, 1046.5]):\\n            note = Sine(freq).env(adsr(0.005, 0.3, 0.2, 0.6)).dur(1.2).gain(-9)\\n            self.add(note, at=0.25 * i, track=\\\"chime\\\", pan=-0.6 + 0.4 * i)\\n        self.wait(1.5)\\n        thump = (Sine(55).env(adsr(0.002, 0.15, 0, 0.2)).dur(0.4)\\n                 + Noise(seed=1).lowpass(600).env(adsr(0.001, 0.05, 0, 0.05)).dur(0.12))\\n        self.add(thump, track=\\\"sfx\\\", gain=-3)\\n\",\"type\":\"python\",\"settings\":{\"sampleRate\":22050,\"channels\":1,\"scene\":\"\",\"renderer\":\"auto\"},\"files\":{}}",
+      "documentType": "hashbin-audio:python",
+      "apps": [
+        "audio"
+      ]
+    },
+    {
+      "text": "{\"format\":\"hashbin-diagram\",\"version\":1,\"type\":\"gnuplot\",\"src\":\"# A function and a few observations\\nset title \\\"A little signal, a little noise\\\" font \\\",18\\\"\\nset xlabel \\\"Time (s)\\\"\\nset ylabel \\\"Amplitude\\\"\\nset grid back lc rgb \\\"#e2eaed\\\"\\nset border 3 lc rgb \\\"#718994\\\"\\nset tics nomirror\\nset key top right\\nset xrange [0:10]\\nf(x) = sin(x) * exp(-x/8)\\n$observations << EOD\\n0.5 0.52\\n1.5 0.77\\n2.5 0.49\\n3.5 -0.18\\n4.5 -0.55\\n5.5 -0.39\\n6.5 0.16\\n7.5 0.42\\n8.5 0.31\\n9.5 -0.08\\nEOD\\nplot f(x) title \\\"Damped wave\\\" with lines lw 3 lc rgb \\\"#087e8b\\\", \\\\\\n     $observations title \\\"Observations\\\" with points pt 7 ps 1.2 lc rgb \\\"#e49c46\\\"\",\"gnuplot\":{\"width\":640,\"height\":480,\"background\":\"transparent\"},\"files\":{\"values.dat\":\"1 2\\n2 3\"}}",
+      "documentType": "hashbin-diagram:gnuplot",
+      "apps": [
+        "gnuplot"
+      ]
+    },
+    {
+      "text": "{\"format\":\"hashbin-diagram\",\"version\":1,\"src\":\"# Nodes: id [size] [shape] [color] [url] [text...]\\neditor square blue Edit source\\npreview circle green Preview diagram\\nsaved diamond purple Save to HashBin\\n\\n# Edges: from -> to [size] [style] [color] [url] [text...]\\neditor -> preview solid teal Render\\npreview -> saved dashed purple Save\\nsaved -> editor dotted orange Load\\n\",\"type\":\"modl\",\"pos\":{}}",
+      "documentType": "hashbin-diagram:modl",
+      "apps": [
+        "manim"
+      ]
+    },
+    {
+      "text": "{\"format\":\"hashbin-diagram\",\"version\":1,\"type\":\"python\",\"src\":\"def greet(name):\\n    return f\\\"Hello, {name}!\\\"\\n\\nfor _ in range(3):\\n    print(greet(input(\\\"Your name: \\\")))\\n\\nimport turtle as t\\nt.speed(0)\\nt.color(\\\"#167c80\\\")\\nfor side in range(36):\\n    t.forward(100)\\n    t.left(170)\\nprint(\\\"Try changing the angle or the names below.\\\")\\n\",\"python\":{\"stdin\":\"Ada\\nGrace\\nGuido\\n\",\"autorun\":false}}",
+      "documentType": "hashbin-diagram:python",
+      "apps": [
+        "python"
+      ]
+    },
+    {
+      "text": "{\"format\":\"hashbin-diagram\",\"version\":1,\"type\":\"r\",\"src\":\"# Welcome to R Online. Change a value and run again.\\nx <- c(2, 4, 8, 16, 32)\\ncat(\\\"Hello, R!\\\\n\\\")\\nsummary(x)\\nplot(x, type = \\\"b\\\", pch = 19, col = \\\"#167c80\\\",\\n     main = \\\"A little code. Endless possibilities.\\\", xlab = \\\"Step\\\", ylab = \\\"Value\\\")\\n\",\"r\":{\"stdin\":\"Corpus input\\n\",\"autorun\":false}}",
+      "documentType": "hashbin-diagram:r",
+      "apps": [
+        "r"
+      ]
+    },
+    {
+      "text": "{\"format\":\"hashbin-diagram\",\"version\":1,\"type\":\"apptron\",\"src\":\"# apptron snapshot v1\\n-- .apptron/envrc --\\ncd /project\\necho\\necho \\\"Hello from a real Linux VM.\\\"\\necho \\\"Try: sh hello.sh\\\"\\necho\\n-- hello.sh --\\n#!/bin/sh\\nprintf 'Hello, %s!\\\\n' \\\"${1:-Apptron}\\\"\\nprintf 'Kernel: '; uname -sr\\nprintf 'Project files:\\\\n'; ls -la /project\\n\"}",
+      "documentType": "hashbin-diagram:apptron",
+      "apps": [
+        "apptron"
+      ]
+    },
+    {
+      "text": "{\"format\":\"hashbin-diagram\",\"version\":1,\"type\":\"livelier\",\"src\":\"// Your saved shapes stay put when this script runs.\\n// This ball belongs to the script. Try changing its color.\\nconst ball = new Ellipse({\\n  name: 'bouncing-ball',\\n  position: pt(420, 380),\\n  extent: pt(36, 36),\\n  fill: '#729b78'\\n});\\nworld.addMorph(ball);\\nball.addScript(function step() {\\n  this.position = pt(this.position.x,\\n    370 + Math.abs(Math.sin(performance.now() / 500)) * 65);\\n});\\nball.startStepping(16);\\nconsole.log('Welcome to Livelier. Make something yours.');\",\"livelier\":{\"kernel\":1,\"autorun\":true,\"world\":{\"v\":1,\"root\":{\"id\":\"m1\",\"class\":\"World\",\"props\":{\"name\":\"world\",\"position\":{\"x\":0,\"y\":0},\"extent\":{\"x\":760,\"y\":640},\"origin\":{\"x\":0,\"y\":0},\"rotation\":0,\"scale\":1,\"fill\":\"#f4f6ed\",\"borderWidth\":0,\"borderColor\":\"#25473e\",\"borderRadius\":8,\"borderStyle\":\"solid\",\"opacity\":1,\"visible\":true,\"clip\":false,\"shadow\":\"\",\"reactsToPointer\":true,\"draggable\":false,\"grabbable\":false,\"acceptsDrops\":true,\"text\":\"\",\"fontFamily\":\"system-ui, sans-serif\",\"fontSize\":18,\"fontColor\":\"#233e36\",\"textAlign\":\"left\",\"editable\":false,\"vertices\":[],\"closed\":false,\"stroke\":\"#25473e\",\"strokeWidth\":2,\"url\":\"\",\"value\":0,\"min\":0,\"max\":100,\"items\":[],\"selection\":-1,\"title\":\"Window\",\"minimized\":false,\"html\":\"\"},\"scripts\":{},\"submorphs\":[{\"id\":\"m2\",\"class\":\"Label\",\"props\":{\"name\":\"heading\",\"position\":{\"x\":28,\"y\":25},\"extent\":{\"x\":640,\"y\":58},\"origin\":{\"x\":0,\"y\":0},\"rotation\":0,\"scale\":1,\"fill\":\"transparent\",\"borderWidth\":0,\"borderColor\":\"#25473e\",\"borderRadius\":8,\"borderStyle\":\"solid\",\"opacity\":1,\"visible\":true,\"clip\":false,\"shadow\":\"\",\"reactsToPointer\":true,\"draggable\":true,\"grabbable\":false,\"acceptsDrops\":false,\"text\":\"Make yourself at home.\",\"fontFamily\":\"Georgia, serif\",\"fontSize\":34,\"fontColor\":\"#294b3d\",\"textAlign\":\"left\",\"editable\":false,\"vertices\":[],\"closed\":false,\"stroke\":\"#25473e\",\"strokeWidth\":2,\"url\":\"\",\"value\":0,\"min\":0,\"max\":100,\"items\":[],\"selection\":-1,\"title\":\"Window\",\"minimized\":false,\"html\":\"\"},\"scripts\":{},\"submorphs\":[]},{\"id\":\"m3\",\"class\":\"Label\",\"props\":{\"name\":\"hint\",\"position\":{\"x\":30,\"y\":90},\"extent\":{\"x\":640,\"y\":65},\"origin\":{\"x\":0,\"y\":0},\"rotation\":0,\"scale\":1,\"fill\":\"transparent\",\"borderWidth\":0,\"borderColor\":\"#25473e\",\"borderRadius\":8,\"borderStyle\":\"solid\",\"opacity\":1,\"visible\":true,\"clip\":false,\"shadow\":\"\",\"reactsToPointer\":true,\"draggable\":true,\"grabbable\":false,\"acceptsDrops\":false,\"text\":\"This is a live world. Alt-click or long-press anything to change it.\",\"fontFamily\":\"system-ui, sans-serif\",\"fontSize\":14,\"fontColor\":\"#7b8d77\",\"textAlign\":\"left\",\"editable\":false,\"vertices\":[],\"closed\":false,\"stroke\":\"#25473e\",\"strokeWidth\":2,\"url\":\"\",\"value\":0,\"min\":0,\"max\":100,\"items\":[],\"selection\":-1,\"title\":\"Window\",\"minimized\":false,\"html\":\"\"},\"scripts\":{},\"submorphs\":[]},{\"id\":\"m4\",\"class\":\"Morph\",\"props\":{\"name\":\"little-square\",\"position\":{\"x\":44,\"y\":190},\"extent\":{\"x\":100,\"y\":100},\"origin\":{\"x\":0,\"y\":0},\"rotation\":-0.12,\"scale\":1,\"fill\":\"#9bb6cf\",\"borderWidth\":0,\"borderColor\":\"#25473e\",\"borderRadius\":16,\"borderStyle\":\"solid\",\"opacity\":1,\"visible\":true,\"clip\":false,\"shadow\":\"\",\"reactsToPointer\":true,\"draggable\":true,\"grabbable\":false,\"acceptsDrops\":false,\"text\":\"\",\"fontFamily\":\"system-ui, sans-serif\",\"fontSize\":18,\"fontColor\":\"#233e36\",\"textAlign\":\"left\",\"editable\":false,\"vertices\":[],\"closed\":false,\"stroke\":\"#25473e\",\"strokeWidth\":2,\"url\":\"\",\"value\":0,\"min\":0,\"max\":100,\"items\":[],\"selection\":-1,\"title\":\"Window\",\"minimized\":false,\"html\":\"\"},\"scripts\":{},\"submorphs\":[]},{\"id\":\"m5\",\"class\":\"Ellipse\",\"props\":{\"name\":\"circle\",\"position\":{\"x\":200,\"y\":185},\"extent\":{\"x\":110,\"y\":110},\"origin\":{\"x\":0,\"y\":0},\"rotation\":0,\"scale\":1,\"fill\":\"#dfb16c\",\"borderWidth\":0,\"borderColor\":\"#25473e\",\"borderRadius\":8,\"borderStyle\":\"solid\",\"opacity\":1,\"visible\":true,\"clip\":false,\"shadow\":\"\",\"reactsToPointer\":true,\"draggable\":true,\"grabbable\":false,\"acceptsDrops\":false,\"text\":\"\",\"fontFamily\":\"system-ui, sans-serif\",\"fontSize\":18,\"fontColor\":\"#233e36\",\"textAlign\":\"left\",\"editable\":false,\"vertices\":[],\"closed\":false,\"stroke\":\"#25473e\",\"strokeWidth\":2,\"url\":\"\",\"value\":0,\"min\":0,\"max\":100,\"items\":[],\"selection\":-1,\"title\":\"Window\",\"minimized\":false,\"html\":\"\"},\"scripts\":{},\"submorphs\":[]},{\"id\":\"m6\",\"class\":\"Path\",\"props\":{\"name\":\"triangle\",\"position\":{\"x\":360,\"y\":190},\"extent\":{\"x\":100,\"y\":100},\"origin\":{\"x\":0,\"y\":0},\"rotation\":0,\"scale\":1,\"fill\":\"#b4b5d2\",\"borderWidth\":0,\"borderColor\":\"#25473e\",\"borderRadius\":8,\"borderStyle\":\"solid\",\"opacity\":1,\"visible\":true,\"clip\":false,\"shadow\":\"\",\"reactsToPointer\":true,\"draggable\":true,\"grabbable\":false,\"acceptsDrops\":false,\"text\":\"\",\"fontFamily\":\"system-ui, sans-serif\",\"fontSize\":18,\"fontColor\":\"#233e36\",\"textAlign\":\"left\",\"editable\":false,\"vertices\":[{\"x\":50,\"y\":0},{\"x\":100,\"y\":100},{\"x\":0,\"y\":100}],\"closed\":true,\"stroke\":\"transparent\",\"strokeWidth\":2,\"url\":\"\",\"value\":0,\"min\":0,\"max\":100,\"items\":[],\"selection\":-1,\"title\":\"Window\",\"minimized\":false,\"html\":\"\"},\"scripts\":{},\"submorphs\":[]},{\"id\":\"m7\",\"class\":\"Label\",\"props\":{\"name\":\"label\",\"position\":{\"x\":34,\"y\":340},\"extent\":{\"x\":500,\"y\":40},\"origin\":{\"x\":0,\"y\":0},\"rotation\":0,\"scale\":1,\"fill\":\"transparent\",\"borderWidth\":0,\"borderColor\":\"#25473e\",\"borderRadius\":8,\"borderStyle\":\"solid\",\"opacity\":1,\"visible\":true,\"clip\":false,\"shadow\":\"\",\"reactsToPointer\":true,\"draggable\":true,\"grabbable\":false,\"acceptsDrops\":false,\"text\":\"Slide a little. Watch the circle change.\",\"fontFamily\":\"system-ui, sans-serif\",\"fontSize\":15,\"fontColor\":\"#233e36\",\"textAlign\":\"left\",\"editable\":false,\"vertices\":[],\"closed\":false,\"stroke\":\"#25473e\",\"strokeWidth\":2,\"url\":\"\",\"value\":0,\"min\":0,\"max\":100,\"items\":[],\"selection\":-1,\"title\":\"Window\",\"minimized\":false,\"html\":\"\"},\"scripts\":{},\"submorphs\":[]},{\"id\":\"m8\",\"class\":\"Slider\",\"props\":{\"name\":\"opacity\",\"position\":{\"x\":35,\"y\":385},\"extent\":{\"x\":280,\"y\":40},\"origin\":{\"x\":0,\"y\":0},\"rotation\":0,\"scale\":1,\"fill\":\"transparent\",\"borderWidth\":0,\"borderColor\":\"#25473e\",\"borderRadius\":8,\"borderStyle\":\"solid\",\"opacity\":1,\"visible\":true,\"clip\":false,\"shadow\":\"\",\"reactsToPointer\":true,\"draggable\":false,\"grabbable\":false,\"acceptsDrops\":false,\"text\":\"\",\"fontFamily\":\"system-ui, sans-serif\",\"fontSize\":18,\"fontColor\":\"#233e36\",\"textAlign\":\"left\",\"editable\":false,\"vertices\":[],\"closed\":false,\"stroke\":\"#25473e\",\"strokeWidth\":2,\"url\":\"\",\"value\":100,\"min\":0,\"max\":100,\"items\":[],\"selection\":-1,\"title\":\"Window\",\"minimized\":false,\"html\":\"\"},\"scripts\":{},\"submorphs\":[]},{\"id\":\"m9\",\"class\":\"Label\",\"props\":{\"name\":\"label\",\"position\":{\"x\":35,\"y\":478},\"extent\":{\"x\":500,\"y\":85},\"origin\":{\"x\":0,\"y\":0},\"rotation\":0,\"scale\":1,\"fill\":\"transparent\",\"borderWidth\":0,\"borderColor\":\"#25473e\",\"borderRadius\":8,\"borderStyle\":\"solid\",\"opacity\":1,\"visible\":true,\"clip\":false,\"shadow\":\"\",\"reactsToPointer\":true,\"draggable\":true,\"grabbable\":false,\"acceptsDrops\":false,\"text\":\"A few shapes. A little JavaScript.\\nA whole world of possibility.\",\"fontFamily\":\"Georgia, serif\",\"fontSize\":20,\"fontColor\":\"#789074\",\"textAlign\":\"left\",\"editable\":false,\"vertices\":[],\"closed\":false,\"stroke\":\"#25473e\",\"strokeWidth\":2,\"url\":\"\",\"value\":0,\"min\":0,\"max\":100,\"items\":[],\"selection\":-1,\"title\":\"Window\",\"minimized\":false,\"html\":\"\"},\"scripts\":{},\"submorphs\":[]}]},\"connections\":[{\"source\":\"m8\",\"prop\":\"value\",\"target\":\"m5\",\"method\":\"opacity\",\"converter\":\"v=>Math.max(.1,v/100)\"}]}}}",
+      "documentType": "hashbin-diagram:livelier",
+      "apps": [
+        "livelier"
+      ]
+    },
+    {
+      "text": "{\"src\":\"# Nodes: id [size] [shape] [color] [url] [text...]\\neditor square blue Edit source\\npreview circle green Preview diagram\\nsaved diamond purple Save to HashBin\\n\\n# Edges: from -> to [size] [style] [color] [url] [text...]\\neditor -> preview solid teal Render\\npreview -> saved dashed purple Save\\nsaved -> editor dotted orange Load\\n\",\"pos\":{\"a\":[120,80]}}",
+      "documentType": null,
+      "apps": []
+    },
+    {
+      "text": "{\"format\":\"hashbin-diagram\",\"version\":1,\"type\":\"pages\",\"src\":\"<!doctype html>\\n<html lang=\\\"en\\\">\\n<head>\\n<meta charset=\\\"utf-8\\\">\\n<meta name=\\\"viewport\\\" content=\\\"width=device-width,initial-scale=1\\\">\\n<title>Here, now</title>\\n<link rel=\\\"stylesheet\\\" href=\\\"style.css\\\">\\n\\n</head>\\n<body>\\n<main><p>NO TIME LIKE THE PRESENT</p><h1>Here, now.</h1><time></time><p id=\\\"date\\\"></p></main>\\n<script src=\\\"script.js\\\"></script>\\n</body>\\n</html>\\n\",\"pages\":{\"files\":[{\"name\":\"index.html\",\"text\":\"<!doctype html>\\n<html lang=\\\"en\\\">\\n<head>\\n<meta charset=\\\"utf-8\\\">\\n<meta name=\\\"viewport\\\" content=\\\"width=device-width,initial-scale=1\\\">\\n<title>Here, now</title>\\n<link rel=\\\"stylesheet\\\" href=\\\"style.css\\\">\\n\\n</head>\\n<body>\\n<main><p>NO TIME LIKE THE PRESENT</p><h1>Here, now.</h1><time></time><p id=\\\"date\\\"></p></main>\\n<script src=\\\"script.js\\\"></script>\\n</body>\\n</html>\\n\"},{\"name\":\"script.js\",\"text\":\"function tick(){const now=new Date();document.querySelector('time').textContent=new Intl.DateTimeFormat(undefined,{hour:'2-digit',minute:'2-digit',second:'2-digit'}).format(now);document.querySelector('#date').textContent=new Intl.DateTimeFormat(undefined,{dateStyle:'full'}).format(now);}tick();setInterval(tick,1000);\\n\"},{\"name\":\"style.css\",\"text\":\":root{font-family:system-ui,sans-serif;color:#243d3b;background:#f7f3e9}*{box-sizing:border-box}body{margin:0;padding:clamp(1.5rem,5vw,4rem)}h1{font-size:clamp(2.5rem,7vw,5rem);letter-spacing:-.06em;line-height:1.05}p{line-height:1.7}button,input{font:inherit;padding:.8rem 1rem;border:1px solid #a8bdb3;border-radius:8px}button{cursor:pointer;background:#236c60;color:white}a{color:#236c60}main{max-width:65rem;margin:auto}\\ntime{font-size:clamp(2.5rem,9vw,7rem);font-variant-numeric:tabular-nums;color:#236c60}\\n\"}],\"entry\":\"index.html\",\"active\":\"index.html\"}}",
+      "documentType": "hashbin-diagram:pages",
+      "apps": [
+        "pages"
+      ]
+    },
+    {
+      "text": "{\"format\":\"sheets-document\",\"version\":1,\"type\":\"gfm\",\"src\":\"# A small, useful note\\n\\nWriting is thinking, with a place to put the numbers.\\n\\n- [x] Make a plan\\n- [ ] Test the idea\\n\\n| Item | Cost |\\n| --- | ---: |\\n| Notebook | 4 |\\n| Pencil | 1 |\\n\\nA circle has area $A = \\\\pi r^2$.\\n\",\"view\":\"preview\"}",
+      "documentType": "sheets-document:gfm",
+      "apps": [
+        "sheets"
+      ]
+    },
+    {
+      "text": "\"just a source string\"",
+      "documentType": "source",
+      "apps": []
+    },
+    {
+      "text": "not json at all",
+      "documentType": null,
+      "apps": []
+    },
+    {
+      "text": "[1,2,3]",
+      "documentType": null,
+      "apps": []
+    },
+    {
+      "text": "null",
+      "documentType": null,
+      "apps": []
+    },
+    {
+      "text": "{\"format\":\"x-only\"}",
+      "documentType": "x-only",
+      "apps": []
+    },
+    {
+      "text": "{\"format\":1,\"type\":\"python\"}",
+      "documentType": null,
+      "apps": []
+    },
+    {
+      "text": "{\"format\":\"hashbin-diagram\",\"type\":7}",
+      "documentType": "hashbin-diagram",
+      "apps": []
+    },
+    {
+      "text": "{\"src\":\"bare\"}",
+      "documentType": null,
+      "apps": []
+    },
+    {
+      "text": "{\"format\":\"hashbin-diagram\",\"version\":1,\"type\":\"nosuchapp\",\"src\":\"\"}",
+      "documentType": "hashbin-diagram:nosuchapp",
+      "apps": []
+    },
+    {
+      "b64": "e_99",
+      "documentType": null,
+      "apps": []
+    }
+  ]
+}

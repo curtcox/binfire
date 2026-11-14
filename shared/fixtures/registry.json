@@ -1,0 +1,565 @@
+{
+  "generatedBy": "tools/gen-fixtures.mjs",
+  "cases": [
+    {
+      "url": "https://pages.hashbin.page/",
+      "app": "pages"
+    },
+    {
+      "url": "https://pages.hashbin.page/?run=0#v1.abc",
+      "app": "pages"
+    },
+    {
+      "url": "https://pages.hashbin.page/index.html#x",
+      "app": "pages"
+    },
+    {
+      "url": "https://pages.hashbin.page/other.html",
+      "app": null
+    },
+    {
+      "url": "https://pages.hashbin.page/sub/",
+      "app": null
+    },
+    {
+      "url": "https://curtcox.github.io/pages/",
+      "app": "pages"
+    },
+    {
+      "url": "https://curtcox.github.io/pages/?run=0#v1.abc",
+      "app": "pages"
+    },
+    {
+      "url": "https://curtcox.github.io/pages/index.html#x",
+      "app": "pages"
+    },
+    {
+      "url": "https://curtcox.github.io/pages/other.html",
+      "app": null
+    },
+    {
+      "url": "https://curtcox.github.io/pages/sub/",
+      "app": null
+    },
+    {
+      "url": "https://python.hashbin.page/",
+      "app": "python"
+    },
+    {
+      "url": "https://python.hashbin.page/?run=0#v1.abc",
+      "app": "python"
+    },
+    {
+      "url": "https://python.hashbin.page/index.html#x",
+      "app": "python"
+    },
+    {
+      "url": "https://python.hashbin.page/other.html",
+      "app": null
+    },
+    {
+      "url": "https://python.hashbin.page/sub/",
+      "app": null
+    },
+    {
+      "url": "https://curtcox.github.io/PythonOnline/",
+      "app": "python"
+    },
+    {
+      "url": "https://curtcox.github.io/PythonOnline/?run=0#v1.abc",
+      "app": "python"
+    },
+    {
+      "url": "https://curtcox.github.io/PythonOnline/index.html#x",
+      "app": "python"
+    },
+    {
+      "url": "https://curtcox.github.io/PythonOnline/other.html",
+      "app": null
+    },
+    {
+      "url": "https://curtcox.github.io/PythonOnline/sub/",
+      "app": null
+    },
+    {
+      "url": "https://manim.hashbin.page/",
+      "app": "manim"
+    },
+    {
+      "url": "https://manim.hashbin.page/?run=0#v1.abc",
+      "app": "manim"
+    },
+    {
+      "url": "https://manim.hashbin.page/index.html#x",
+      "app": "manim"
+    },
+    {
+      "url": "https://manim.hashbin.page/other.html",
+      "app": null
+    },
+    {
+      "url": "https://manim.hashbin.page/sub/",
+      "app": null
+    },
+    {
+      "url": "https://curtcox.github.io/ManimOnline/",
+      "app": "manim"
+    },
+    {
+      "url": "https://curtcox.github.io/ManimOnline/?run=0#v1.abc",
+      "app": "manim"
+    },
+    {
+      "url": "https://curtcox.github.io/ManimOnline/index.html#x",
+      "app": "manim"
+    },
+    {
+      "url": "https://curtcox.github.io/ManimOnline/other.html",
+      "app": null
+    },
+    {
+      "url": "https://curtcox.github.io/ManimOnline/sub/",
+      "app": null
+    },
+    {
+      "url": "https://gnuplot.hashbin.page/",
+      "app": "gnuplot"
+    },
+    {
+      "url": "https://gnuplot.hashbin.page/?run=0#v1.abc",
+      "app": "gnuplot"
+    },
+    {
+      "url": "https://gnuplot.hashbin.page/index.html#x",
+      "app": "gnuplot"
+    },
+    {
+      "url": "https://gnuplot.hashbin.page/other.html",
+      "app": null
+    },
+    {
+      "url": "https://gnuplot.hashbin.page/sub/",
+      "app": null
+    },
+    {
+      "url": "https://curtcox.github.io/GnuplotOnline/",
+      "app": "gnuplot"
+    },
+    {
+      "url": "https://curtcox.github.io/GnuplotOnline/?run=0#v1.abc",
+      "app": "gnuplot"
+    },
+    {
+      "url": "https://curtcox.github.io/GnuplotOnline/index.html#x",
+      "app": "gnuplot"
+    },
+    {
+      "url": "https://curtcox.github.io/GnuplotOnline/other.html",
+      "app": null
+    },
+    {
+      "url": "https://curtcox.github.io/GnuplotOnline/sub/",
+      "app": null
+    },
+    {
+      "url": "https://curtcox.github.io/GnuPlotOnline/",
+      "app": "gnuplot"
+    },
+    {
+      "url": "https://curtcox.github.io/GnuPlotOnline/?run=0#v1.abc",
+      "app": "gnuplot"
+    },
+    {
+      "url": "https://curtcox.github.io/GnuPlotOnline/index.html#x",
+      "app": "gnuplot"
+    },
+    {
+      "url": "https://curtcox.github.io/GnuPlotOnline/other.html",
+      "app": null
+    },
+    {
+      "url": "https://curtcox.github.io/GnuPlotOnline/sub/",
+      "app": null
+    },
+    {
+      "url": "https://sheets.hashbin.page/",
+      "app": "sheets"
+    },
+    {
+      "url": "https://sheets.hashbin.page/?run=0#v1.abc",
+      "app": "sheets"
+    },
+    {
+      "url": "https://sheets.hashbin.page/index.html#x",
+      "app": "sheets"
+    },
+    {
+      "url": "https://sheets.hashbin.page/other.html",
+      "app": null
+    },
+    {
+      "url": "https://sheets.hashbin.page/sub/",
+      "app": null
+    },
+    {
+      "url": "https://curtcox.github.io/sheets/",
+      "app": "sheets"
+    },
+    {
+      "url": "https://curtcox.github.io/sheets/?run=0#v1.abc",
+      "app": "sheets"
+    },
+    {
+      "url": "https://curtcox.github.io/sheets/index.html#x",
+      "app": "sheets"
+    },
+    {
+      "url": "https://curtcox.github.io/sheets/other.html",
+      "app": null
+    },
+    {
+      "url": "https://curtcox.github.io/sheets/sub/",
+      "app": null
+    },
+    {
+      "url": "https://gripeline.hashbin.page/",
+      "app": "gripeline"
+    },
+    {
+      "url": "https://gripeline.hashbin.page/?run=0#v1.abc",
+      "app": "gripeline"
+    },
+    {
+      "url": "https://gripeline.hashbin.page/index.html#x",
+      "app": "gripeline"
+    },
+    {
+      "url": "https://gripeline.hashbin.page/other.html",
+      "app": null
+    },
+    {
+      "url": "https://gripeline.hashbin.page/sub/",
+      "app": null
+    },
+    {
+      "url": "https://curtcox.github.io/gripeline/editor/",
+      "app": "gripeline"
+    },
+    {
+      "url": "https://curtcox.github.io/gripeline/editor/?run=0#v1.abc",
+      "app": "gripeline"
+    },
+    {
+      "url": "https://curtcox.github.io/gripeline/editor/index.html#x",
+      "app": "gripeline"
+    },
+    {
+      "url": "https://curtcox.github.io/gripeline/editor/other.html",
+      "app": null
+    },
+    {
+      "url": "https://curtcox.github.io/gripeline/editor/sub/",
+      "app": null
+    },
+    {
+      "url": "https://modl.hashbin.page/",
+      "app": "modl"
+    },
+    {
+      "url": "https://modl.hashbin.page/?run=0#v1.abc",
+      "app": "modl"
+    },
+    {
+      "url": "https://modl.hashbin.page/index.html#x",
+      "app": "modl"
+    },
+    {
+      "url": "https://modl.hashbin.page/other.html",
+      "app": null
+    },
+    {
+      "url": "https://modl.hashbin.page/sub/",
+      "app": null
+    },
+    {
+      "url": "https://curtcox.github.io/modl/",
+      "app": "modl"
+    },
+    {
+      "url": "https://curtcox.github.io/modl/?run=0#v1.abc",
+      "app": "modl"
+    },
+    {
+      "url": "https://curtcox.github.io/modl/index.html#x",
+      "app": "modl"
+    },
+    {
+      "url": "https://curtcox.github.io/modl/other.html",
+      "app": null
+    },
+    {
+      "url": "https://curtcox.github.io/modl/sub/",
+      "app": null
+    },
+    {
+      "url": "https://diagram.hashbin.page/",
+      "app": "diagram"
+    },
+    {
+      "url": "https://diagram.hashbin.page/?run=0#v1.abc",
+      "app": "diagram"
+    },
+    {
+      "url": "https://diagram.hashbin.page/index.html#x",
+      "app": "diagram"
+    },
+    {
+      "url": "https://diagram.hashbin.page/other.html",
+      "app": null
+    },
+    {
+      "url": "https://diagram.hashbin.page/sub/",
+      "app": null
+    },
+    {
+      "url": "https://curtcox.github.io/hashbin.org/diagram-oauth.html",
+      "app": "diagram"
+    },
+    {
+      "url": "https://curtcox.github.io/hashbin.org/diagram-oauth.html?run=0#v1.abc",
+      "app": "diagram"
+    },
+    {
+      "url": "https://curtcox.github.io/hashbin.org/diagram-oauth.html/",
+      "app": null
+    },
+    {
+      "url": "https://textpad.hashbin.page/",
+      "app": "textpad"
+    },
+    {
+      "url": "https://textpad.hashbin.page/?run=0#v1.abc",
+      "app": "textpad"
+    },
+    {
+      "url": "https://textpad.hashbin.page/index.html#x",
+      "app": "textpad"
+    },
+    {
+      "url": "https://textpad.hashbin.page/other.html",
+      "app": null
+    },
+    {
+      "url": "https://textpad.hashbin.page/sub/",
+      "app": null
+    },
+    {
+      "url": "https://hashbin.org/docs/textpad/app",
+      "app": "textpad"
+    },
+    {
+      "url": "https://hashbin.org/docs/textpad/app?run=0#v1.abc",
+      "app": "textpad"
+    },
+    {
+      "url": "https://hashbin.org/docs/textpad/app/",
+      "app": null
+    },
+    {
+      "url": "https://r.hashbin.page/",
+      "app": "r"
+    },
+    {
+      "url": "https://r.hashbin.page/?run=0#v1.abc",
+      "app": "r"
+    },
+    {
+      "url": "https://r.hashbin.page/index.html#x",
+      "app": "r"
+    },
+    {
+      "url": "https://r.hashbin.page/other.html",
+      "app": null
+    },
+    {
+      "url": "https://r.hashbin.page/sub/",
+      "app": null
+    },
+    {
+      "url": "https://curtcox.github.io/R/",
+      "app": "r"
+    },
+    {
+      "url": "https://curtcox.github.io/R/?run=0#v1.abc",
+      "app": "r"
+    },
+    {
+      "url": "https://curtcox.github.io/R/index.html#x",
+      "app": "r"
+    },
+    {
+      "url": "https://curtcox.github.io/R/other.html",
+      "app": null
+    },
+    {
+      "url": "https://curtcox.github.io/R/sub/",
+      "app": null
+    },
+    {
+      "url": "https://livelier.hashbin.page/",
+      "app": "livelier"
+    },
+    {
+      "url": "https://livelier.hashbin.page/?run=0#v1.abc",
+      "app": "livelier"
+    },
+    {
+      "url": "https://livelier.hashbin.page/index.html#x",
+      "app": "livelier"
+    },
+    {
+      "url": "https://livelier.hashbin.page/other.html",
+      "app": null
+    },
+    {
+      "url": "https://livelier.hashbin.page/sub/",
+      "app": null
+    },
+    {
+      "url": "https://curtcox.github.io/livelier/",
+      "app": "livelier"
+    },
+    {
+      "url": "https://curtcox.github.io/livelier/?run=0#v1.abc",
+      "app": "livelier"
+    },
+    {
+      "url": "https://curtcox.github.io/livelier/index.html#x",
+      "app": "livelier"
+    },
+    {
+      "url": "https://curtcox.github.io/livelier/other.html",
+      "app": null
+    },
+    {
+      "url": "https://curtcox.github.io/livelier/sub/",
+      "app": null
+    },
+    {
+      "url": "https://apptron.hashbin.page/",
+      "app": "apptron"
+    },
+    {
+      "url": "https://apptron.hashbin.page/?run=0#v1.abc",
+      "app": "apptron"
+    },
+    {
+      "url": "https://apptron.hashbin.page/index.html#x",
+      "app": "apptron"
+    },
+    {
+      "url": "https://apptron.hashbin.page/other.html",
+      "app": null
+    },
+    {
+      "url": "https://apptron.hashbin.page/sub/",
+      "app": null
+    },
+    {
+      "url": "https://curtcox.github.io/apptron/",
+      "app": "apptron"
+    },
+    {
+      "url": "https://curtcox.github.io/apptron/?run=0#v1.abc",
+      "app": "apptron"
+    },
+    {
+      "url": "https://curtcox.github.io/apptron/index.html#x",
+      "app": "apptron"
+    },
+    {
+      "url": "https://curtcox.github.io/apptron/other.html",
+      "app": null
+    },
+    {
+      "url": "https://curtcox.github.io/apptron/sub/",
+      "app": null
+    },
+    {
+      "url": "https://audio.hashbin.page/",
+      "app": "audio"
+    },
+    {
+      "url": "https://audio.hashbin.page/?run=0#v1.abc",
+      "app": "audio"
+    },
+    {
+      "url": "https://audio.hashbin.page/index.html#x",
+      "app": "audio"
+    },
+    {
+      "url": "https://audio.hashbin.page/other.html",
+      "app": null
+    },
+    {
+      "url": "https://audio.hashbin.page/sub/",
+      "app": null
+    },
+    {
+      "url": "https://curtcox.github.io/AudioOnline/",
+      "app": "audio"
+    },
+    {
+      "url": "https://curtcox.github.io/AudioOnline/?run=0#v1.abc",
+      "app": "audio"
+    },
+    {
+      "url": "https://curtcox.github.io/AudioOnline/index.html#x",
+      "app": "audio"
+    },
+    {
+      "url": "https://curtcox.github.io/AudioOnline/other.html",
+      "app": null
+    },
+    {
+      "url": "https://curtcox.github.io/AudioOnline/sub/",
+      "app": null
+    },
+    {
+      "url": "https://PYTHON.HashBin.page/#x",
+      "app": "python"
+    },
+    {
+      "url": "http://python.hashbin.page/",
+      "app": null
+    },
+    {
+      "url": "https://python.hashbin.page:8443/",
+      "app": null
+    },
+    {
+      "url": "https://user:pw@python.hashbin.page/",
+      "app": null
+    },
+    {
+      "url": "https://curtcox.github.io/pythononline/",
+      "app": null
+    },
+    {
+      "url": "https://curtcox.github.io/",
+      "app": null
+    },
+    {
+      "url": "https://hashbin.page/",
+      "app": null
+    },
+    {
+      "url": "https://example.com/",
+      "app": null
+    },
+    {
+      "url": "https://python.hashbin.page",
+      "app": "python"
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+# Packaged sites
+
+A packaged site is an immutable static site addressed by the CID of its
+manifest.
+
+## Manifest
+
+```json
+{ "format": "binfire-site", "version": 1, "name": "Clock", "entry": "index.html",
+  "files": {
+    "index.html": { "cid": "…", "type": "text/html", "size": 1234 },
+    "app.js":     { "cid": "…", "type": "text/javascript", "size": 99 }
+  },
+  "source": { "app": "pages", "origin": "https://pages.hashbin.page/" } }
+```
+
+Validation (`validateManifest(bytes, limits)`), in order:
+
+1. The bytes are at most 1 MiB, valid UTF-8 and a JSON object → `bad-manifest`.
+2. `format == "binfire-site"` and `version == 1` → `bad-manifest`.
+3. `name` is a non-empty string of at most 200 characters → `bad-manifest`.
+4. `files` is a non-empty object with at most `limits.maxSiteFiles` keys →
+   `too-many-files`.
+5. Every path is a valid path (below) → `bad-path`. No two paths are equal
+   after ASCII lower-casing → `duplicate-path`.
+6. Every file has a valid `cid` (`invalid-cid`) and a `type` that is a
+   non-empty string of at most 100 characters with no control characters or
+   spaces (`bad-manifest`). `size` is an integer equal to `cidLength(cid)`
+   (`size-mismatch`) and at most `limits.maxSiteFileBytes` (`too-large`).
+7. The sum of sizes is at most `limits.maxSiteTotalBytes` → `too-large`.
+8. `entry` is a key of `files` → `missing-entry`.
+9. `source` is optional. If present, it is an object, and binfire only displays
+   it.
+
+Unknown top-level fields are ignored.
+
+### Paths
+
+A valid path:
+
+- is 1 to 1024 bytes of UTF-8;
+- does not start or end with `/`;
+- splits on `/` into segments that are each 1 to 255 bytes long, are not `.` or
+  `..`, and contain no `\`, `:`, NUL or control characters (U+0000–U+001F,
+  U+007F), and no `?` or `#`.
+
+A request for directory `d/` serves `d/index.html` if that exists. A missing
+path returns 404. Paths are matched exactly (case-sensitive) after
+percent-decoding the request path once.
+
+## Site ID and origin
+
+`siteId(manifestCID) = lowercase(base32(SHA-256(ascii(manifestCID))))`, using
+RFC 4648 base32 with no padding. It is always 52 characters, so it fits in one
+DNS label.
+
+Each platform serves the site from its own origin that contains the ID, so every
+site gets separate storage:
+
+| Platform | Origin |
+| --- | --- |
+| iOS WKWebView (Swift, Flutter, RN) | `binfire-site://<siteId>/` via `WKURLSchemeHandler` |
+| Android WebView (Kotlin, Flutter, RN) | `https://<siteId>.site.binfire.invalid/` via `shouldInterceptRequest`. The `.invalid` TLD can never resolve, so nothing leaks to the network. |
+
+Responses carry the manifest `type` as `Content-Type`. Sites get no bridge by
+default and are never treated as registered apps.
+
+## Fixture `site-manifest.json`
+
+```json
+{ "valid":   [{ "name", "text", "cid", "siteId", "entry", "files": n }],
+  "invalid": [{ "name", "text", "error" }],
+  "paths":   [{ "path", "ok": true|false }],
+  "limits":  { … the limits these cases assume … } }
+```
