@@ -65,6 +65,23 @@ Rules, in order:
 binfire never rewrites a recovery-origin URL to the canonical origin when
 opening it. `makeLink` uses the canonical origin.
 
+Definitions used above:
+
+- **Raw query:** the substring after the first `?` and before the first `#`.
+- **Raw fragment:** the substring after the first `#`.
+
+Ports split these out of the input string themselves. Platform URL types
+normalize escapes differently, so they must not be used to rebuild a target.
+Query values (`run`, `view`, `app`, `u`) are decoded the way
+`URLSearchParams` decodes them: `+` becomes a space, then percent-decode as
+UTF-8. Hosts compare case-insensitively.
+
+**`encodeURIComponent`** means exactly JavaScript's version: everything
+except `A–Z a–z 0–9 - _ . ! ~ * ' ( )` is percent-encoded as UTF-8 with
+uppercase hex. Kotlin's `URLEncoder` and Swift's `addingPercentEncoding` both
+differ from this, so ports implement it themselves (fixture
+`encodeURIComponent`).
+
 ## `makeLink(url)` → string
 
 For a URL that matches app `A`:

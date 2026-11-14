@@ -1,0 +1,208 @@
+{
+  "format": "binfire-registry",
+  "version": 1,
+  "apps": [
+    {
+      "slug": "pages",
+      "name": "Pages",
+      "canonicalOrigin": "https://pages.hashbin.page/",
+      "recoveryOrigin": "https://curtcox.github.io/pages/",
+      "otherOrigins": [],
+      "documentTypes": [
+        "hashbin-diagram:pages"
+      ],
+      "offlineManifest": null,
+      "icon": null,
+      "capabilities": {
+        "fragmentKit": true,
+        "publish": true
+      }
+    },
+    {
+      "slug": "python",
+      "name": "Python",
+      "canonicalOrigin": "https://python.hashbin.page/",
+      "recoveryOrigin": "https://curtcox.github.io/PythonOnline/",
+      "otherOrigins": [],
+      "documentTypes": [
+        "hashbin-diagram:python"
+      ],
+      "offlineManifest": null,
+      "icon": null,
+      "capabilities": {
+        "fragmentKit": true,
+        "publish": true
+      }
+    },
+    {
+      "slug": "manim",
+      "name": "Manim",
+      "canonicalOrigin": "https://manim.hashbin.page/",
+      "recoveryOrigin": "https://curtcox.github.io/ManimOnline/",
+      "otherOrigins": [],
+      "documentTypes": [
+        "hashbin-diagram:modl"
+      ],
+      "offlineManifest": null,
+      "icon": null,
+      "capabilities": {
+        "fragmentKit": true,
+        "publish": true
+      }
+    },
+    {
+      "slug": "gnuplot",
+      "name": "Gnuplot",
+      "canonicalOrigin": "https://gnuplot.hashbin.page/",
+      "recoveryOrigin": "https://curtcox.github.io/GnuplotOnline/",
+      "otherOrigins": [
+        "https://curtcox.github.io/GnuPlotOnline/"
+      ],
+      "documentTypes": [
+        "hashbin-diagram:gnuplot"
+      ],
+      "offlineManifest": null,
+      "icon": null,
+      "capabilities": {
+        "fragmentKit": true,
+        "publish": true
+      }
+    },
+    {
+      "slug": "sheets",
+      "name": "Sheets",
+      "canonicalOrigin": "https://sheets.hashbin.page/",
+      "recoveryOrigin": "https://curtcox.github.io/sheets/",
+      "otherOrigins": [],
+      "documentTypes": [
+        "sheets-document:gfm"
+      ],
+      "offlineManifest": null,
+      "icon": null,
+      "capabilities": {
+        "fragmentKit": true,
+        "publish": true
+      }
+    },
+    {
+      "slug": "gripeline",
+      "name": "Gripeline",
+      "canonicalOrigin": "https://gripeline.hashbin.page/",
+      "recoveryOrigin": "https://curtcox.github.io/gripeline/editor/",
+      "otherOrigins": [],
+      "documentTypes": [],
+      "offlineManifest": null,
+      "icon": null,
+      "capabilities": {
+        "fragmentKit": true,
+        "publish": true
+      }
+    },
+    {
+      "slug": "modl",
+      "name": "modl",
+      "canonicalOrigin": "https://modl.hashbin.page/",
+      "recoveryOrigin": "https://curtcox.github.io/modl/",
+      "otherOrigins": [],
+      "documentTypes": [],
+      "offlineManifest": null,
+      "icon": null,
+      "capabilities": {
+        "fragmentKit": true,
+        "publish": true
+      }
+    },
+    {
+      "slug": "diagram",
+      "name": "Diagram",
+      "canonicalOrigin": "https://diagram.hashbin.page/",
+      "recoveryOrigin": "https://curtcox.github.io/hashbin.org/diagram-oauth.html",
+      "otherOrigins": [],
+      "documentTypes": [],
+      "offlineManifest": null,
+      "icon": null,
+      "capabilities": {
+        "fragmentKit": false,
+        "publish": true
+      }
+    },
+    {
+      "slug": "textpad",
+      "name": "Textpad",
+      "canonicalOrigin": "https://textpad.hashbin.page/",
+      "recoveryOrigin": "https://hashbin.org/docs/textpad/app",
+      "otherOrigins": [],
+      "documentTypes": [],
+      "offlineManifest": null,
+      "icon": null,
+      "capabilities": {
+        "fragmentKit": false,
+        "publish": true
+      }
+    },
+    {
+      "slug": "r",
+      "name": "R",
+      "canonicalOrigin": "https://r.hashbin.page/",
+      "recoveryOrigin": "https://curtcox.github.io/R/",
+      "otherOrigins": [],
+      "documentTypes": [
+        "hashbin-diagram:r"
+      ],
+      "offlineManifest": null,
+      "icon": null,
+      "capabilities": {
+        "fragmentKit": true,
+        "publish": true
+      }
+    },
+    {
+      "slug": "livelier",
+      "name": "Livelier",
+      "canonicalOrigin": "https://livelier.hashbin.page/",
+      "recoveryOrigin": "https://curtcox.github.io/livelier/",
+      "otherOrigins": [],
+      "documentTypes": [
+        "hashbin-diagram:livelier"
+      ],
+      "offlineManifest": null,
+      "icon": null,
+      "capabilities": {
+        "fragmentKit": true,
+        "publish": true
+      }
+    },
+    {
+      "slug": "apptron",
+      "name": "Apptron",
+      "canonicalOrigin": "https://apptron.hashbin.page/",
+      "recoveryOrigin": "https://curtcox.github.io/apptron/",
+      "otherOrigins": [],
+      "documentTypes": [
+        "hashbin-diagram:apptron"
+      ],
+      "offlineManifest": null,
+      "icon": null,
+      "capabilities": {
+        "fragmentKit": true,
+        "publish": true
+      }
+    },
+    {
+      "slug": "audio",
+      "name": "Audio",
+      "canonicalOrigin": "https://audio.hashbin.page/",
+      "recoveryOrigin": "https://curtcox.github.io/AudioOnline/",
+      "otherOrigins": [],
+      "documentTypes": [
+        "hashbin-audio:python"
+      ],
+      "offlineManifest": null,
+      "icon": null,
+      "capabilities": {
+        "fragmentKit": true,
+        "publish": true
+      }
+    }
+  ]
+}

@@ -7,7 +7,41 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "app.binfire.rn",
+      "associatedDomains": [
+        "applinks:binfire.app",
+        "webcredentials:binfire.app"
+      ],
+      "infoPlist": {
+        "CFBundleDocumentTypes": [
+          {
+            "CFBundleTypeName": "binfire bundle",
+            "LSHandlerRank": "Owner",
+            "LSItemContentTypes": [
+              "app.binfire.bundle"
+            ]
+          }
+        ],
+        "UTExportedTypeDeclarations": [
+          {
+            "UTTypeIdentifier": "app.binfire.bundle",
+            "UTTypeDescription": "binfire bundle",
+            "UTTypeConformsTo": [
+              "public.data"
+            ],
+            "UTTypeTagSpecification": {
+              "public.filename-extension": [
+                "binfire"
+              ],
+              "public.mime-type": [
+                "application/vnd.binfire.bundle"
+              ]
+            }
+          }
+        ],
+        "LSSupportsOpeningDocumentsInPlace": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -16,10 +50,57 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "app.binfire.rn",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ],
+          "data": [
+            {
+              "scheme": "https",
+              "host": "binfire.app",
+              "pathPrefix": "/a/"
+            },
+            {
+              "scheme": "https",
+              "host": "binfire.app",
+              "path": "/open"
+            },
+            {
+              "scheme": "https",
+              "host": "binfire.app",
+              "path": "/c"
+            },
+            {
+              "scheme": "https",
+              "host": "binfire.app",
+              "path": "/s"
+            }
+          ]
+        },
+        {
+          "action": "VIEW",
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ],
+          "data": [
+            {
+              "scheme": "content",
+              "mimeType": "application/vnd.binfire.bundle"
+            }
+          ]
+        }
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "scheme": "binfire"
   }
 }

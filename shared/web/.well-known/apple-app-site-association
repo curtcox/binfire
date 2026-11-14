@@ -1,0 +1,42 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": [
+          "TEAMID0000.app.binfire.ios",
+          "TEAMID0000.app.binfire.flutter",
+          "TEAMID0000.app.binfire.rn"
+        ],
+        "components": [
+          {
+            "/": "/a/*",
+            "comment": "app state"
+          },
+          {
+            "/": "/open",
+            "comment": "any registered app URL"
+          },
+          {
+            "/": "/c",
+            "comment": "HashBin document"
+          },
+          {
+            "/": "/s",
+            "comment": "packaged site"
+          },
+          {
+            "/": "/oauth",
+            "comment": "HashBin OAuth redirect"
+          }
+        ]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": [
+      "TEAMID0000.app.binfire.ios",
+      "TEAMID0000.app.binfire.flutter",
+      "TEAMID0000.app.binfire.rn"
+    ]
+  }
+}

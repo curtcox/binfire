@@ -1,0 +1,20 @@
+name: ios
+on:
+  push:
+    paths: [ios/**, shared/**, spec/**, config/**, .github/workflows/ios.yml]
+  pull_request:
+    paths: [ios/**, shared/**, spec/**, config/**, .github/workflows/ios.yml]
+jobs:
+  ios:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Core unit tests (fixtures)
+        run: cd ios/BinfireCore && swift test
+      - name: Simulator build
+        run: |
+          brew install xcodegen
+          cd ios && xcodegen generate
+          xcodebuild -project Binfire.xcodeproj -scheme Binfire \
+            -destination 'generic/platform=iOS Simulator' -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO build

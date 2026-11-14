@@ -1,4 +1,4 @@
-package app.binfire.binfire
+package app.binfire.flutter
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>binfire</title>
+<style>
+  :root { color-scheme: light dark; --fg: #1d1d1f; --bg: #fbfbfd; --muted: #6e6e73; --accent: #d9480f; }
+  @media (prefers-color-scheme: dark) { :root { --fg: #f5f5f7; --bg: #111; --muted: #a1a1a6; --accent: #ff7a45; } }
+  body { margin: 0; font: 17px/1.5 system-ui, -apple-system, sans-serif; color: var(--fg); background: var(--bg); }
+  main { max-width: 36rem; margin: 0 auto; padding: 3rem 1rem; }
+  h1 { font-size: 1.6rem; margin: 0 0 1rem; }
+  h1 span { color: var(--accent); }
+  p, li { color: var(--muted); }
+  a { color: var(--accent); }
+  code, .url { font: 0.85em ui-monospace, monospace; word-break: break-all; }
+  ul { padding-left: 1.2rem; }
+  .card { border: 1px solid color-mix(in srgb, var(--muted) 30%, transparent); border-radius: 12px; padding: 1rem; margin: 1rem 0; }
+</style>
+<script src="/registry.js"></script>
+</head>
+<body>
+<main id="main">
+  <h1><span>bin</span>fire</h1>
+  <p>A mobile player for static web apps whose whole document lives in the link.</p>
+  <noscript><p>This page needs JavaScript to forward links. The fragment after <code>#</code> never reaches this server.</p></noscript>
+</main>
+<script>
+(function () {
+  'use strict';
+  addEventListener('hashchange', function () { location.reload(); });
+  var cfg = window.BINFIRE_CONFIG, registry = window.BINFIRE_REGISTRY;
+  var main = document.getElementById('main');
+  var path = location.pathname.replace(/^\/+|\/+$/g, '');
+  var hash = location.hash.slice(1);
+  var query = new URLSearchParams(location.search);
+
+  function el(tag, attrs, text) {
+    var e = document.createElement(tag);
+    for (var k in attrs || {}) e.setAttribute(k, attrs[k]);
+    if (text != null) e.textContent = text;
+    return e;
+  }
+  function say(title, body) {
+    main.replaceChildren(el('h1', {}, title));
+    (body || []).forEach(function (n) { main.append(typeof n === 'string' ? el('p', {}, n) : n); });
+  }
+  function link(href, text) { var p = el('p'); p.append(el('a', { href: href, rel: 'noreferrer' }, text)); return p; }
+  function bySlug(slug) { return registry.apps.find(function (a) { return a.slug === slug; }); }
+
+  // spec/registry.md matching
+  function appForURL(text) {
+    var url; try { url = new URL(text); } catch (e) { return null; }
+    if (url.username || url.password) return null;
+    for (var i = 0; i < registry.apps.length; i++) {
+      var app = registry.apps[i];
+      var bases = [app.canonicalOrigin, app.recoveryOrigin].concat(app.otherOrigins);
+      for (var j = 0; j < bases.length; j++) {
+        var b = new URL(bases[j]);
+        if (url.protocol !== b.protocol || url.host !== b.host) continue;
+        var ok = b.pathname.endsWith('/') ? (url.pathname === b.pathname || url.pathname === b.pathname + 'index.html') : url.pathname === b.pathname;
+        if (ok) return app;
+      }
+    }
+    return null;
+  }
+  // spec/cid.md validation
+  function b64(text) {
+    if (!/^[A-Za-z0-9_-]*$/.test(text) || text.length % 4 === 1) return null;
+    var bin = atob(text.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((text.length + 3) % 4));
+    var bytes = Uint8Array.from(bin, function (c) { return c.charCodeAt(0); });
+    var back = btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    return back === text ? bytes : null;
+  }
+  function cidLength(cid) { var p = b64(cid.slice(0, 8)); if (!p) return -1; var n = 0; for (var i = 0; i < 6; i++) n = n * 256 + p[i]; return n; }
+  function isCID(cid) {
+    if (!/^[A-Za-z0-9_-]{8,94}$/.test(cid)) return false;
+    var n = cidLength(cid), s = b64(cid.slice(8));
+    if (n < 0 || !s) return false;
+    return n <= 64 ? cid.length === 8 + Math.ceil(4 * n / 3) && s.length === n : cid.length === 94 && s.length === 64;
+  }
+  function documentType(bytes) {
+    try {
+      var v = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes));
+      if (typeof v === 'string') return 'source';
+      if (!v || typeof v !== 'object' || Array.isArray(v) || typeof v.format !== 'string') return null;
+      return typeof v.type === 'string' ? v.format + ':' + v.type : v.format;
+    } catch (e) { return null; }
+  }
+  function go(target, app) {
+    say('Opening ' + app.name + '…', [link(target, 'Continue to ' + app.name)]);
+    location.replace(target);
+  }
+  function chooser(cid, note) {
+    var list = el('ul');
+    registry.apps.forEach(function (a) {
+      var li = el('li'); li.append(el('a', { href: a.canonicalOrigin + '#' + cid, rel: 'noreferrer' }, a.name)); list.append(li);
+    });
+    say('Open this document with…', [note, list, link(cfg.content + '/' + cid, 'View the raw content on HashBin')]);
+  }
+
+  var parts = path.split('/');
+  if (parts[0] === 'a' && parts.length === 2) {
+    var app = bySlug(parts[1]);
+    if (!app) return say('Unknown app', ['binfire does not know an app called “' + parts[1] + '”.']);
+    var raw = location.href.slice(location.href.indexOf(location.pathname) + location.pathname.length);
+    return go(app.canonicalOrigin + raw, app);
+  }
+  if (path === 'open') {
+    var u = new URLSearchParams(hash).get('u');
+    var target = u && appForURL(u);
+    if (target) return go(u, target);
+    return say('Not a registered app link', [u ? el('p', { class: 'url' }, u) : 'This link is missing its target.', 'binfire only forwards links to apps it knows, so this one was not opened.']);
+  }
+  if (path === 'c') {
+    if (!isCID(hash)) return say('Broken link', ['This HashBin link does not contain a valid content ID.']);
+    var hint = bySlug(query.get('app') || '');
+    if (hint) return go(hint.canonicalOrigin + '#' + hash, hint);
+    var n = cidLength(hash);
+    if (n > 5 * 1024 * 1024) return chooser(hash, 'This document is too large to inspect here.');
+    say('Looking up this document…');
+    var load = n <= 64 ? Promise.resolve(b64(hash.slice(8))) :
+      fetch(cfg.content + '/' + hash, { credentials: 'omit', referrerPolicy: 'no-referrer' })
+        .then(function (r) { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); })
+        .then(function (b) { return new Uint8Array(b); });
+    return load.then(function (bytes) {
+      var type = documentType(bytes);
+      var apps = registry.apps.filter(function (a) { return type && a.documentTypes.indexOf(type) >= 0; });
+      if (apps.length === 1) return go(apps[0].canonicalOrigin + '#' + hash, apps[0]);
+      chooser(hash, type ? 'Document type: ' + type : 'binfire could not tell which app made this document.');
+    }, function () { chooser(hash, 'The document could not be fetched right now.'); });
+  }
+  if (path === 's') {
+    return say('Packaged site', ['This link is a packaged static site. Open it in the binfire app to run it offline.',
+      isCID(hash) ? link(cfg.content + '/' + hash, 'View the site manifest') : 'This link does not contain a valid content ID.']);
+  }
+  if (path === 'oauth') {
+    return say('Return to binfire', ['Sign-in finished. If binfire did not open by itself, switch back to it now.']);
+  }
+  if (path !== '') say('Unknown link', ['This binfire link is not one this page understands.']);
+})();
+</script>
+</body>
+</html>

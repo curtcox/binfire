@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "app.binfire.binfire"
+    namespace = "app.binfire.flutter"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -21,7 +21,9 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "app.binfire.binfire"
+        // >>> binfire:configure application-id
+        applicationId = "app.binfire.flutter"
+        // <<< binfire:configure application-id
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

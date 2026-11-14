@@ -8,6 +8,6 @@
     "sync": "node sync.mjs",
     "fixtures": "node gen-fixtures.mjs",
     "check": "node check.mjs",
-    "test": "node --test test/"
+    "test": "node --test test/*.test.mjs"
   }
 }

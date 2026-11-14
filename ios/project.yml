@@ -29,9 +29,36 @@ targets:
         CFBundleDisplayName: binfire
         UILaunchScreen: {}
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+        # >>> binfire:configure info-properties
+        CFBundleURLTypes:
+          - CFBundleURLName: binfire
+            CFBundleURLSchemes: [binfire]
+        CFBundleDocumentTypes:
+          - CFBundleTypeName: binfire bundle
+            LSHandlerRank: Owner
+            LSItemContentTypes: [app.binfire.bundle]
+        UTExportedTypeDeclarations:
+          - UTTypeIdentifier: app.binfire.bundle
+            UTTypeDescription: binfire bundle
+            UTTypeConformsTo: [public.data]
+            UTTypeTagSpecification:
+              public.filename-extension: [binfire]
+              public.mime-type: [application/vnd.binfire.bundle]
+        LSSupportsOpeningDocumentsInPlace: false
+        # <<< binfire:configure info-properties
+    entitlements:
+      path: App/Binfire.entitlements
+      properties:
+        # >>> binfire:configure entitlements
+        com.apple.developer.associated-domains:
+          - applinks:binfire.app
+          - webcredentials:binfire.app
+        # <<< binfire:configure entitlements
     settings:
       base:
+        # >>> binfire:configure target-settings
         PRODUCT_BUNDLE_IDENTIFIER: app.binfire.ios
+        # <<< binfire:configure target-settings
         GENERATE_INFOPLIST_FILE: NO
         CODE_SIGN_STYLE: Automatic
 schemes:

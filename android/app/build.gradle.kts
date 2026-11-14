@@ -9,7 +9,9 @@ android {
     compileSdk = 36
 
     defaultConfig {
+        // >>> binfire:configure application-id
         applicationId = "app.binfire.android"
+        // <<< binfire:configure application-id
         minSdk = 26
         targetSdk = 36
         versionCode = 1
@@ -22,8 +24,6 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-
-    sourceSets["main"].assets.srcDirs("src/main/assets", "../../shared/generated/android-assets")
 }
 
 kotlin { jvmToolchain(17) }

@@ -1,0 +1,25 @@
+name: react-native
+on:
+  push:
+    paths: [react-native/**, shared/**, spec/**, config/**, .github/workflows/react-native.yml]
+  pull_request:
+    paths: [react-native/**, shared/**, spec/**, config/**, .github/workflows/react-native.yml]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: cd react-native && npm ci && npx tsc --noEmit && npm test
+  android:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 17 }
+      - uses: android-actions/setup-android@v3
+      - run: cd react-native && npm ci && npx expo prebuild --platform android --no-install && cd android && ./gradlew assembleDebug

@@ -1,0 +1,23 @@
+{
+  "appName": "binfire",
+  "linkDomain": "binfire.app",
+  "scheme": "binfire",
+  "hashbin": {
+    "api": "https://hashbin.org",
+    "content": "https://256t.us",
+    "clientId": ""
+  },
+  "ble": {
+    "serviceUuid": "6b1f0001-5b6e-4d1a-9f2e-62696e666972",
+    "controlCharacteristicUuid": "6b1f0002-5b6e-4d1a-9f2e-62696e666972",
+    "dataCharacteristicUuid": "6b1f0003-5b6e-4d1a-9f2e-62696e666972"
+  },
+  "limits": {
+    "maxStateBytes": 5242880,
+    "maxSiteFileBytes": 26214400,
+    "maxSiteTotalBytes": 104857600,
+    "maxSiteFiles": 2000,
+    "maxTransferBytes": 104857600
+  },
+  "oauthRedirect": "binfire://oauth"
+}
