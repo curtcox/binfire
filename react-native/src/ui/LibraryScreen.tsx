@@ -25,13 +25,22 @@ function when(iso: string): string {
 export interface LibraryScreenProps {
   registry: Registry;
   library: Library;
-  /** Routes typed or pasted text. */
+  /** Routes typed text (and saved/recent URLs) with route(). */
   onOpenText: (text: string) => void;
+  /** Routes pasted text with routeShared(), which finds a link inside words. */
+  onPasteText: (text: string) => void;
   onOpenApp: (app: RegistryApp) => void;
   onDeleteSaved: (id: string) => void;
 }
 
-export function LibraryScreen({ registry, library, onOpenText, onOpenApp, onDeleteSaved }: LibraryScreenProps) {
+export function LibraryScreen({
+  registry,
+  library,
+  onOpenText,
+  onPasteText,
+  onOpenApp,
+  onDeleteSaved,
+}: LibraryScreenProps) {
   const insets = useSafeAreaInsets();
   const [input, setInput] = useState('');
   const [tab, setTab] = useState<Tab>('apps');
@@ -41,7 +50,7 @@ export function LibraryScreen({ registry, library, onOpenText, onOpenApp, onDele
     const text = await Clipboard.getStringAsync().catch(() => '');
     if (!text) return; // empty clipboard: nothing
     setInput(text);
-    onOpenText(text);
+    onPasteText(text);
   };
 
   const appName = (slug: string) => appForSlug(slug, registry)?.name ?? slug;

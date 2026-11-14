@@ -2,11 +2,14 @@
 import { randomUUID } from 'expo-crypto';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import * as Linking from 'expo-linking';
+import { useShareIntent } from 'expo-share-intent';
 import { BackHandler, StyleSheet, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { defaultContext, type RegistryApp } from '../core/config';
 import { addRecent, addSaved, removeSaved, type Library } from '../core/library';
-import { makeLink, route, withoutRun, type Route } from '../core/links';
+import { makeLink, route, routeShared, withoutRun, type Route } from '../core/links';
+import { parseUrl } from '../core/url';
 import { appForUrl } from '../core/registry';
 import { classifyState } from '../core/state';
 import { BrowserScreen, type BrowserState } from './BrowserScreen';
@@ -103,6 +106,53 @@ export default function BinfireApp() {
   );
 
   const openText = useCallback((text: string) => handleRoute(route(text, ctx)), [handleRoute]);
+  const openShared = useCallback((text: string) => handleRoute(routeShared(text, ctx)), [handleRoute]);
+
+  // Tapped links in: custom scheme, Universal/App Links, and `.binfire` file opens.
+  const openIncomingUrl = useCallback(
+    (url: string) => {
+      const parsed = parseUrl(url);
+      const scheme = parsed?.scheme;
+      // expo-share-intent's own hand-off from the iOS Share Extension; the hook below handles it.
+      if (url.toLowerCase().startsWith(`${ctx.config.scheme.toLowerCase()}://dataurl=`)) return;
+      if (scheme === 'file' || scheme === 'content') {
+        setSheet({ kind: 'error', message: 'Opening .binfire files is coming in M5.' });
+        return;
+      }
+      handleRoute(route(url, ctx));
+    },
+    [handleRoute],
+  );
+  const openIncomingRef = useRef(openIncomingUrl);
+  useEffect(() => {
+    openIncomingRef.current = openIncomingUrl;
+  }, [openIncomingUrl]);
+  useEffect(() => {
+    let cancelled = false;
+    Linking.getInitialURL().then(
+      url => {
+        if (url && !cancelled) openIncomingRef.current(url);
+      },
+      () => undefined,
+    );
+    const sub = Linking.addEventListener('url', ({ url }) => openIncomingRef.current(url));
+    return () => {
+      cancelled = true;
+      sub.remove();
+    };
+  }, []);
+
+  // Share target in (iOS Share Extension, Android ACTION_SEND).
+  const { hasShareIntent, shareIntent, resetShareIntent } = useShareIntent({ resetOnBackground: true });
+  useEffect(() => {
+    if (!hasShareIntent) return;
+    const text = shareIntent.text ?? shareIntent.webUrl;
+    // The share intent is an external event delivered through the hook's state, so routing it here is intended.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (text) openShared(text);
+    else if (shareIntent.files?.length) setSheet({ kind: 'error', message: 'Opening shared files is coming in M5.' });
+    resetShareIntent();
+  }, [hasShareIntent, shareIntent, resetShareIntent, openShared]);
 
   const openTile = useCallback(
     (app: RegistryApp) => {
@@ -179,6 +229,7 @@ export default function BinfireApp() {
           registry={ctx.registry}
           library={library}
           onOpenText={openText}
+          onPasteText={openShared}
           onOpenApp={openTile}
           onDeleteSaved={id => setLibrary(lib => removeSaved(lib, id))}
         />
