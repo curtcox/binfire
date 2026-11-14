@@ -26,8 +26,11 @@
                 <data android:host="binfire.app" />
                 <data android:pathPrefix="/a/" />
                 <data android:path="/open" />
+                <data android:path="/open/" />
                 <data android:path="/c" />
+                <data android:path="/c/" />
                 <data android:path="/s" />
+                <data android:path="/s/" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />

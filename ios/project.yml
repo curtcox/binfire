@@ -88,8 +88,9 @@ targets:
               NSExtensionActivationSupportsText: true
     settings:
       base:
-        # <ios id>.share; keep in step with PRODUCT_BUNDLE_IDENTIFIER above.
+        # >>> binfire:configure share-extension-settings
         PRODUCT_BUNDLE_IDENTIFIER: app.binfire.ios.share
+        # <<< binfire:configure share-extension-settings
         GENERATE_INFOPLIST_FILE: NO
         CODE_SIGN_STYLE: Automatic
         APPLICATION_EXTENSION_API_ONLY: YES

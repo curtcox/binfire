@@ -17,11 +17,23 @@
             "comment": "any registered app URL"
           },
           {
+            "/": "/open/",
+            "comment": "any registered app URL"
+          },
+          {
             "/": "/c",
             "comment": "HashBin document"
           },
           {
+            "/": "/c/",
+            "comment": "HashBin document"
+          },
+          {
             "/": "/s",
+            "comment": "packaged site"
+          },
+          {
+            "/": "/s/",
             "comment": "packaged site"
           },
           {

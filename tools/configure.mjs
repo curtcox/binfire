@@ -19,7 +19,8 @@ const cfg = JSON.parse(readFileSync(join(root, 'config/binfire.config.json'), 'u
 const registryText = readFileSync(join(root, cfg.registry), 'utf8');
 const bridgeText = readFileSync(join(root, 'shared/bridge/binfire-bridge.js'), 'utf8');
 const D = cfg.linkDomain, S = cfg.scheme;
-const LINK_PATHS = ['/a/', '/open', '/c', '/s'];
+// '/a/' is a prefix; the others are exact paths, also accepted with a trailing slash (spec/links.md).
+const LINK_PATHS = ['/a/', '/open', '/open/', '/c', '/c/', '/s', '/s/'];
 const runtimeConfig = JSON.stringify({
   appName: cfg.appName, linkDomain: D, scheme: S, hashbin: cfg.hashbin, ble: cfg.ble, limits: cfg.limits,
   oauthRedirect: `${S}://oauth`,
@@ -53,7 +54,9 @@ const appleIds = [cfg.ids.ios, cfg.ids.flutter, cfg.ids.reactNative].map(id => `
 emit('shared/web/.well-known/apple-app-site-association', JSON.stringify({
   applinks: { details: [{ appIDs: appleIds, components: [
     { '/': '/a/*', comment: 'app state' }, { '/': '/open', comment: 'any registered app URL' },
-    { '/': '/c', comment: 'HashBin document' }, { '/': '/s', comment: 'packaged site' },
+    { '/': '/open/', comment: 'any registered app URL' },
+    { '/': '/c', comment: 'HashBin document' }, { '/': '/c/', comment: 'HashBin document' },
+    { '/': '/s', comment: 'packaged site' }, { '/': '/s/', comment: 'packaged site' },
     { '/': '/oauth', comment: 'HashBin OAuth redirect' },
   ] }] },
   webcredentials: { apps: appleIds },
@@ -85,7 +88,7 @@ emit('react-native/src/generated/shared.ts',
 
 // ------------------------------------------------------------- Android (native)
 function androidIntentFilters() {
-  const https = LINK_PATHS.map(p => p.endsWith('/')
+  const https = LINK_PATHS.map(p => p === '/a/'
     ? `<data android:pathPrefix="${p}" />` : `<data android:path="${p}" />`);
   return [
     '<intent-filter android:autoVerify="true">',
@@ -196,6 +199,9 @@ function entitlementsPlist() {
 block('ios/project.yml', 'target-settings', [
   `PRODUCT_BUNDLE_IDENTIFIER: ${cfg.ids.ios}`,
 ]);
+block('ios/project.yml', 'share-extension-settings', [
+  `PRODUCT_BUNDLE_IDENTIFIER: ${cfg.ids.ios}.share`,
+]);
 block('ios/project.yml', 'info-properties', [
   'CFBundleURLTypes:',
   `  - CFBundleURLName: ${S}`,
@@ -233,7 +239,7 @@ block('ios/project.yml', 'entitlements', [
       LSSupportsOpeningDocumentsInPlace: false } };
   e.android = { ...e.android, package: cfg.ids.reactNative, intentFilters: [
     { action: 'VIEW', autoVerify: true, category: ['BROWSABLE', 'DEFAULT'],
-      data: LINK_PATHS.map(p => p.endsWith('/') ? { scheme: 'https', host: D, pathPrefix: p } : { scheme: 'https', host: D, path: p }) },
+      data: LINK_PATHS.map(p => p === '/a/' ? { scheme: 'https', host: D, pathPrefix: p } : { scheme: 'https', host: D, path: p }) },
     { action: 'VIEW', category: ['BROWSABLE', 'DEFAULT'], data: [{ scheme: 'content', mimeType: 'application/vnd.binfire.bundle' }] },
   ] };
   emit(path, JSON.stringify(app, null, 2) + '\n');

@@ -74,12 +74,27 @@
             {
               "scheme": "https",
               "host": "binfire.app",
+              "path": "/open/"
+            },
+            {
+              "scheme": "https",
+              "host": "binfire.app",
               "path": "/c"
             },
             {
               "scheme": "https",
               "host": "binfire.app",
+              "path": "/c/"
+            },
+            {
+              "scheme": "https",
+              "host": "binfire.app",
               "path": "/s"
+            },
+            {
+              "scheme": "https",
+              "host": "binfire.app",
+              "path": "/s/"
             }
           ]
         },

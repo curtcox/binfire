@@ -3,7 +3,22 @@ tags: [m2]
 ---
 - launchApp:
     clearState: true
-- openLink: "binfire://a/python#AAAAAAAFaGVsbG8"
+# autoVerify answers Android's "Open with" chooser when several binfire ports
+# that share the scheme are installed on one device.
+- openLink:
+    link: "binfire://a/python#AAAAAAAFaGVsbG8"
+    autoVerify: true
+# iOS 26 asks "Open in “binfire”?" before delivering a custom-scheme link. The
+# library screen behind the alert has its own Open button, so tap the alert's
+# button by its position below the alert title.
+- runFlow:
+    when:
+      visible: "Open in .*"
+    commands:
+      - tapOn:
+          text: "Open"
+          below:
+            text: "Open in .*"
 - assertVisible:
     id: web.view
 - assertVisible:
