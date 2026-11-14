@@ -18,9 +18,12 @@ targets:
     platform: iOS
     sources:
       - App/Sources
+      # Individual files, copied to the bundle root. (A folder reference named
+      # "Resources" makes CFBundle treat the .app as an old-style bundle, and
+      # the simulator then can't read its bundle ID.)
       - path: App/Resources
         optional: true
-        type: folder
+        buildPhase: resources
     dependencies:
       - package: BinfireCore
     info:
