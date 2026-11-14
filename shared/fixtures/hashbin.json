@@ -1,0 +1,43 @@
+{
+  "generatedBy": "tools/gen-fixtures.mjs",
+  "pkce": [
+    {
+      "verifier": "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk",
+      "challenge": "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM"
+    },
+    {
+      "verifier": "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE",
+      "challenge": "VtX6czP210fbQsI5QH5dpMMvTHnzXQkrE0_TWkAtnFw"
+    }
+  ],
+  "saveBytes": [
+    {
+      "url": "https://python.hashbin.page/#v1.EQBwTglgdgLgFAHWACwkglMIA",
+      "kind": "text",
+      "text": "print(\"hi\")"
+    },
+    {
+      "url": "https://python.hashbin.page/?run=0#v1.N4IgZg9gTgtghgFxALhACzgZzQIwJYB2AtACZ5wDmUcMIANCAG4CmUmeEBKAjAwgJ4AHZihCD+CNJ3ohMUAMajBUQggAUAHXR4tAShABfIA",
+      "kind": "json",
+      "text": "{\"format\":\"hashbin-diagram\",\"version\":1,\"type\":\"python\",\"src\":\"print(\\\"hi\\\")\"}"
+    },
+    {
+      "url": "https://python.hashbin.page/#AAAAAABBuDCGzYSU5VcIrX7Ngt-0vKG9ph7Lt8rwxolnkC5wk0Xl2DBet6wNWIr8bLt1FhqpyMfg6phr2DPa_l4czTc0Wg",
+      "kind": "cid",
+      "cid": "AAAAAABBuDCGzYSU5VcIrX7Ngt-0vKG9ph7Lt8rwxolnkC5wk0Xl2DBet6wNWIr8bLt1FhqpyMfg6phr2DPa_l4czTc0Wg"
+    },
+    {
+      "url": "https://python.hashbin.page/#print(1)",
+      "kind": "none"
+    },
+    {
+      "url": "https://python.hashbin.page/?compressed=abc",
+      "kind": "none"
+    },
+    {
+      "url": "https://python.hashbin.page/#v1.!!!",
+      "kind": "none",
+      "error": "invalid"
+    }
+  ]
+}

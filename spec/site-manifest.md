@@ -73,3 +73,28 @@ default and are never treated as registered apps.
   "paths":   [{ "path", "ok": true|false }],
   "limits":  { … the limits these cases assume … } }
 ```
+
+## Offline snapshots of registered apps (M6)
+
+A registry app with an `offlineManifest` can be snapshotted into a package,
+so it runs with no network:
+
+1. Fetch `offlineManifest`, which is FK's generated `offline-assets.js`, with a
+   1 MiB limit. Take the text after the first `self.OfflineAssets = ` up to the
+   matching closing `}` (the generator writes it with `JSON.stringify`), and
+   `JSON.parse` it. It has `{version, prefix, assets: [...], hashes: {path: sha256hex}}`.
+2. For each entry in `assets` that is a relative path:
+   - Fetch `canonicalOrigin + path` and check its SHA-256 against
+     `hashes[path]`, or fail with `mismatch`.
+   - Compute its CID.
+   - Add it to `files` with the response `Content-Type` (without parameters).
+   - The path `""` or `"./"` maps to `index.html`.
+3. Absolute `https:` assets (pinned CDN files) are fetched and verified the
+   same way, and are stored under `_ext/<host>/<path>`. The snapshot does not
+   rewrite the app's references to them, so they stay online-only in v1. The
+   manifest lists them in `"external": [url, …]`.
+4. Write the manifest with `name` = app name, `entry: "index.html"`, and
+   `source: {app: slug, origin: canonicalOrigin, version}`.
+
+A snapshot runs on its own site origin, so its drafts and storage are separate
+from the live app's. The UI labels it "offline copy".

@@ -14,6 +14,8 @@ fixtures in the same commit.
 | [site-manifest.md](site-manifest.md) | Packaged static sites and site IDs | `site-manifest.json` |
 | [ble-gatt.md](ble-gatt.md) | Bluetooth LE service, handshake and confirmation code | `ble.json` |
 | [audio.md](audio.md) | Data-over-sound payload rules (ggwave) | `audio.json` |
+| [hashbin.md](hashbin.md) | Native Save (OAuth + PKCE), Publish popup compatibility | `hashbin.json` |
+| [qr.md](qr.md) | QR sizing plan, multi-frame QR, scanning rules | `qr.json` |
 | [bridge.md](bridge.md) | `window.binfire` host bridge for registered origins | (M8) |
 | [ui.md](ui.md) | Screens, actions and accessibility IDs shared by all ports | `maestro/` flows |
 

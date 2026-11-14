@@ -1,0 +1,53 @@
+{
+  "generatedBy": "tools/gen-fixtures.mjs",
+  "thresholds": {
+    "okMax": 858,
+    "denseMax": 2953
+  },
+  "plans": [
+    {
+      "bytes": 0,
+      "plan": "ok"
+    },
+    {
+      "bytes": 1,
+      "plan": "ok"
+    },
+    {
+      "bytes": 500,
+      "plan": "ok"
+    },
+    {
+      "bytes": 857,
+      "plan": "ok"
+    },
+    {
+      "bytes": 858,
+      "plan": "ok"
+    },
+    {
+      "bytes": 859,
+      "plan": "dense"
+    },
+    {
+      "bytes": 2000,
+      "plan": "dense"
+    },
+    {
+      "bytes": 2952,
+      "plan": "dense"
+    },
+    {
+      "bytes": 2953,
+      "plan": "dense"
+    },
+    {
+      "bytes": 2954,
+      "plan": "too-long"
+    },
+    {
+      "bytes": 100000,
+      "plan": "too-long"
+    }
+  ]
+}

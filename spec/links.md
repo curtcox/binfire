@@ -97,12 +97,24 @@ For a URL that matches app `A`:
 The custom scheme forms are only for receiving. Ports always send `https`
 links, so they still work for people who don't have binfire.
 
+## `withRunZero(url)` → string
+
+Used for received content (QR, BLE, audio, files). If the URL's query already
+has a `run` key, the URL is returned unchanged. Otherwise `run=0` is added to
+the raw query:
+
+- with no query, insert `?run=0` before the `#` (or at the end);
+- otherwise, append `&run=0` to the raw query.
+
+Nothing else in the URL changes.
+
 ## Fixture `links.json`
 
 ```json
 { "config": { "linkDomain": "binfire.app", "scheme": "binfire", "content": "https://256t.us" },
   "route":    [{ "input": "…", "expect": { "action": "…", … } }],
-  "makeLink": [{ "url": "…", "link": "…" }] }
+  "makeLink": [{ "url": "…", "link": "…" }],
+  "withRunZero": [{ "url": "…", "result": "…" }] }
 ```
 
 Fields that don't apply to an action are left out of `expect`, and ports

@@ -298,6 +298,16 @@ const makeLink = [
 write('links.json', {
   config: { linkDomain: D, scheme: config.scheme, content: config.hashbin.content },
   route, makeLink,
+  withRunZero: [
+    ['https://python.hashbin.page/#v1.abc', 'https://python.hashbin.page/?run=0#v1.abc'],
+    ['https://python.hashbin.page/', 'https://python.hashbin.page/?run=0'],
+    ['https://python.hashbin.page/?view=code#x', 'https://python.hashbin.page/?view=code&run=0#x'],
+    ['https://python.hashbin.page/?run=1#x', 'https://python.hashbin.page/?run=1#x'],
+    ['https://python.hashbin.page/?run=0', 'https://python.hashbin.page/?run=0'],
+    ['https://python.hashbin.page/?#x', 'https://python.hashbin.page/?&run=0#x'],
+    ['https://python.hashbin.page/#a?b', 'https://python.hashbin.page/?run=0#a?b'],
+    ['https://python.hashbin.page/?xrun=1', 'https://python.hashbin.page/?xrun=1&run=0'],
+  ].map(([url, result]) => ({ url, result })),
   makeCIDLink: [{ cid: cidB, link: `https://${D}/c#${cidB}` }, { cid: cidB, app: 'python', link: `https://${D}/c?app=python#${cidB}` }],
   makeSiteLink: [{ cid: cidB, link: `https://${D}/s#${cidB}` }],
   encodeURIComponent: ["a b'()*!~-_.é/?#&=+%", 'https://x.y/?a=1&b=2#c', '😀'].map(s => ({ text: s, encoded: enc(s) })),
@@ -437,3 +447,23 @@ const audioPayloads = [
   ['https://python.hashbin.page/#v1.abc', false], ['hello', false],
 ].map(([t, ok]) => ({ text: t, ok }));
 write('audio.json', { payloads: audioPayloads, waveforms: [] });
+
+// ---------------------------------------------------------------- qr
+write('qr.json', { thresholds: { okMax: 858, denseMax: 2953 },
+  plans: [0, 1, 500, 857, 858, 859, 2000, 2952, 2953, 2954, 100000].map(bytes => ({ bytes, plan: bytes <= 858 ? 'ok' : bytes <= 2953 ? 'dense' : 'too-long' })) });
+
+// ---------------------------------------------------------------- hashbin
+const verifiers = ['dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk', R.b64url(Buffer.alloc(32, 1))];
+const pkce = verifiers.map(verifier => ({ verifier, challenge: R.b64url(R.sha256(Buffer.from(verifier, 'ascii'))) }));
+assert(pkce[0].challenge === 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM', 'RFC 7636 appendix B vector');
+const pySrc = 'print("hi")';
+const pyEnvelope = JSON.stringify({ format: 'hashbin-diagram', version: 1, type: 'python', src: pySrc });
+const saveBytes = [
+  ['https://python.hashbin.page/#v1.' + compress(JSON.stringify(pySrc)), { kind: 'text', text: pySrc }],
+  ['https://python.hashbin.page/?run=0#v1.' + compress(pyEnvelope), { kind: 'json', text: pyEnvelope }],
+  [`https://python.hashbin.page/#${cidB}`, { kind: 'cid', cid: cidB }],
+  ['https://python.hashbin.page/#print(1)', { kind: 'none' }],
+  ['https://python.hashbin.page/?compressed=abc', { kind: 'none' }],
+  ['https://python.hashbin.page/#v1.!!!', { kind: 'none', error: 'invalid' }],
+].map(([url, expect]) => ({ url, ...expect }));
+write('hashbin.json', { pkce, saveBytes });
