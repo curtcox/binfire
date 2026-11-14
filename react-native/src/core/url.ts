@@ -138,7 +138,7 @@ export function percentDecode(text: string): string {
 }
 
 /** Decoded name/value pairs of a query string, the way `URLSearchParams` parses it. */
-export type QueryPairs = ReadonlyArray<readonly [string, string]>;
+export type QueryPairs = readonly (readonly [string, string])[];
 
 /**
  * Parses a query string like `new URLSearchParams(text)`: one leading `?` is
@@ -148,7 +148,7 @@ export type QueryPairs = ReadonlyArray<readonly [string, string]>;
 export function parseQuery(text: string | null): QueryPairs {
   if (!text) return [];
   if (text.startsWith('?')) text = text.slice(1);
-  const pairs: Array<readonly [string, string]> = [];
+  const pairs: (readonly [string, string])[] = [];
   for (const part of text.split('&')) {
     if (part === '') continue;
     const eq = part.indexOf('=');

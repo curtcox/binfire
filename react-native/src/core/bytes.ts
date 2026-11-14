@@ -34,6 +34,20 @@ export function utf8Encode(text: string): Uint8Array {
   return out;
 }
 
+/** Number of Unicode code points (a lone surrogate counts as one). */
+export function codePointLength(text: string): number {
+  let n = 0;
+  for (let i = 0; i < text.length; i++) {
+    const c = text.charCodeAt(i);
+    if (c >= 0xd800 && c <= 0xdbff && i + 1 < text.length) {
+      const d = text.charCodeAt(i + 1);
+      if (d >= 0xdc00 && d <= 0xdfff) i++;
+    }
+    n++;
+  }
+  return n;
+}
+
 /** Length in bytes of `utf8Encode(text)`, without allocating. */
 export function utf8Length(text: string): number {
   let n = 0;

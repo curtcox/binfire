@@ -1,6 +1,6 @@
 // Packaged static sites (spec/site-manifest.md).
 import { sha256 } from '@noble/hashes/sha2.js';
-import { asciiBytes, utf8Decode, utf8Length } from './bytes';
+import { asciiBytes, codePointLength, utf8Decode, utf8Length } from './bytes';
 import { cidLength, isCid } from './cid';
 import type { Limits } from './config';
 import { BinfireError } from './errors';
@@ -31,12 +31,6 @@ export interface SiteManifest {
 
 const isObject = (v: unknown): v is Record<string, unknown> =>
   typeof v === 'object' && v !== null && !Array.isArray(v);
-
-const codePointCount = (s: string): number => {
-  let n = 0;
-  for (const _ of s) n++;
-  return n;
-};
 
 const hasControl = (s: string): boolean => /[\u0000-\u001f\u007f]/.test(s);
 
@@ -76,7 +70,7 @@ export function validateManifest(bytes: Uint8Array, limits: SiteLimits): SiteMan
 
   // 3. Name.
   const name = doc.name;
-  if (typeof name !== 'string' || name.length === 0 || codePointCount(name) > 200)
+  if (typeof name !== 'string' || name.length === 0 || codePointLength(name) > 200)
     throw new BinfireError('bad-manifest', 'name');
 
   // 4. Files object.
@@ -102,7 +96,7 @@ export function validateManifest(bytes: Uint8Array, limits: SiteLimits): SiteMan
     if (!isObject(f)) throw new BinfireError('bad-manifest', `file ${p}`);
     const { cid, type, size } = f;
     if (typeof cid !== 'string' || !isCid(cid)) throw new BinfireError('invalid-cid', p);
-    if (typeof type !== 'string' || type.length === 0 || codePointCount(type) > 100 || hasControl(type) || type.includes(' '))
+    if (typeof type !== 'string' || type.length === 0 || codePointLength(type) > 100 || hasControl(type) || type.includes(' '))
       throw new BinfireError('bad-manifest', `type of ${p}`);
     if (typeof size !== 'number' || !Number.isInteger(size) || size !== cidLength(cid))
       throw new BinfireError('size-mismatch', p);

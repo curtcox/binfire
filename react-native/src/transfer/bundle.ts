@@ -1,6 +1,6 @@
 // Bundle container: the payload of `.binfire` files and chunked channels
 // (spec/transfer.md, "Bundle container").
-import { asciiBytes, bytesEqual, concatBytes, utf8Decode, utf8Encode } from '../core/bytes';
+import { asciiBytes, bytesEqual, codePointLength, concatBytes, utf8Decode, utf8Encode } from '../core/bytes';
 import { cidLength, computeCid, isCid, verify } from '../core/cid';
 import type { Limits } from '../core/config';
 import { BinfireError } from '../core/errors';
@@ -49,12 +49,6 @@ const isObject = (v: unknown): v is Record<string, unknown> =>
 const readU32 = (b: Uint8Array, at: number): number =>
   ((b[at] << 24) >>> 0) + (b[at + 1] << 16) + (b[at + 2] << 8) + b[at + 3];
 
-function nameLength(s: string): number {
-  let n = 0;
-  for (const _ of s) n++;
-  return n;
-}
-
 function parseHeader(bytes: Uint8Array): { header: BundleHeader; entryCids: string[] } {
   const bad = (why: string) => new BinfireError('bad-bundle', why);
   const text = utf8Decode(bytes, { ignoreBOM: true });
@@ -81,7 +75,7 @@ function parseHeader(bytes: Uint8Array): { header: BundleHeader; entryCids: stri
     header.app = app;
   }
   if (name !== undefined) {
-    if (typeof name !== 'string' || nameLength(name) > MAX_NAME_LENGTH) throw bad('name');
+    if (typeof name !== 'string' || codePointLength(name) > MAX_NAME_LENGTH) throw bad('name');
     header.name = name;
   }
   if (!Array.isArray(entries)) throw bad('entries');
