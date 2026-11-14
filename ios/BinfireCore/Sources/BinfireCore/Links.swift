@@ -212,6 +212,23 @@ public struct Links: Sendable {
         return out
     }
 
+    /// Removes every `run` parameter from the raw query (names decoded as
+    /// `URLSearchParams` does), keeping everything else byte for byte. The `?`
+    /// is dropped when nothing remains. Used by the Run button.
+    public static func removingRun(_ url: String) -> String {
+        let split = URLParts.splitQueryAndFragment(url)
+        guard let query = split.query else { return url }
+        let kept = query.split(separator: "&", omittingEmptySubsequences: false).filter { part in
+            let name = part.firstIndex(of: "=").map { part[..<$0] } ?? part
+            return QueryParams.decode(name) != "run"
+        }
+        var out = split.beforeQuery
+        let joined = kept.joined(separator: "&")
+        if !joined.isEmpty { out += "?" + joined }
+        if let f = split.fragment { out += "#" + f }
+        return out
+    }
+
     /// Trims ASCII whitespace (tab, LF, FF, CR, space) from both ends.
     public static func trimASCIIWhitespace(_ text: String) -> String {
         let ws: Set<UInt8> = [0x09, 0x0A, 0x0C, 0x0D, 0x20]
