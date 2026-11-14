@@ -10,6 +10,9 @@ dependencies:
   crypto: ^3.0.8
   flutter:
     sdk: flutter
+  flutter_inappwebview: ^6.1.5
+  path_provider: ^2.1.6
+  url_launcher: ^6.3.3
 
 dev_dependencies:
   flutter_test:

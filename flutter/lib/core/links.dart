@@ -298,3 +298,20 @@ String withRunZero(String url) {
   final insert = raw.query == null ? '?run=0' : '&run=0';
   return hash < 0 ? '$url$insert' : '${url.substring(0, hash)}$insert${url.substring(hash)}';
 }
+
+/// Removes every `run` parameter from [url]'s raw query, keeping everything
+/// else byte-for-byte. Drops the `?` when nothing is left. Used by **Run**
+/// (ui.md), which reloads the same URL without `run`.
+String withoutRun(String url) {
+  final raw = splitRaw(url);
+  if (raw.query == null) return url;
+  final kept = raw.query!.split('&').where((part) {
+    final eq = part.indexOf('=');
+    return percentDecode(eq < 0 ? part : part.substring(0, eq)) != 'run';
+  }).toList();
+  final query = kept.join('&');
+  final out = StringBuffer(raw.head);
+  if (query.isNotEmpty) out.write('?$query');
+  if (raw.fragment != null) out.write('#${raw.fragment}');
+  return out.toString();
+}

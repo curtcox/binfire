@@ -83,6 +83,23 @@ void main() {
     expect(small.route('é' * 2054).toJson()['action'], 'error');
   });
 
+  group('withoutRun', () {
+    const cases = {
+      'https://python.hashbin.page/?run=0#x': 'https://python.hashbin.page/#x',
+      'https://python.hashbin.page/?run=0': 'https://python.hashbin.page/',
+      'https://python.hashbin.page/?view=code&run=0&a=%20#x?run=0': 'https://python.hashbin.page/?view=code&a=%20#x?run=0',
+      'https://python.hashbin.page/?r%75n=0&xrun=1': 'https://python.hashbin.page/?xrun=1',
+      'https://python.hashbin.page/?run&run=1': 'https://python.hashbin.page/',
+      'https://python.hashbin.page/#run=0': 'https://python.hashbin.page/#run=0',
+    };
+    for (final MapEntry(key: url, value: want) in cases.entries) {
+      test(url, () {
+        expect(withoutRun(url), want);
+        expect(classifyState(withoutRun(url)).run, isTrue);
+      });
+    }
+  });
+
   test('makeLink returns null for unregistered URLs', () {
     expect(links.makeLink('https://example.com/'), isNull);
   });
