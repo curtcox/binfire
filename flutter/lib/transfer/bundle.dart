@@ -97,7 +97,7 @@ class Bundle {
   /// Optional app slug hint (`cid`).
   final String? app;
 
-  /// Optional display name, at most 200 characters.
+  /// Optional display name, at most 200 code points.
   final String? name;
 
   /// Entries in header order.
@@ -151,9 +151,7 @@ Bundle decodeBundle(List<int> data, {BinfireLimits limits = BinfireLimits.defaul
   }
 
   // 2.
-  final text = decodeUtf8Strict(Uint8List.sublistView(bytes, 8, 8 + hlen));
-  if (text == null) fail(ErrorCodes.badBundle, 'header not UTF-8');
-  final parsed = tryParseJson(text);
+  final parsed = decodeUtf8Json(Uint8List.sublistView(bytes, 8, 8 + hlen));
   final h = parsed.value;
   if (!parsed.ok || h is! Map<String, Object?>) fail(ErrorCodes.badBundle, 'header not an object');
   final kind = switch (h['kind']) {
@@ -175,7 +173,7 @@ Bundle decodeBundle(List<int> data, {BinfireLimits limits = BinfireLimits.defaul
   final name = optString('name');
   if (kind == BundleKind.url && (url == null || ParsedUrl.parse(url) == null)) fail(ErrorCodes.badBundle, 'url');
   if (kind != BundleKind.url && cid == null) fail(ErrorCodes.badBundle, 'cid');
-  if (name != null && name.length > 200) fail(ErrorCodes.badBundle, 'name');
+  if (name != null && codePointLength(name) > 200) fail(ErrorCodes.badBundle, 'name');
   final rawEntries = h['entries'];
   if (rawEntries is! List) fail(ErrorCodes.badBundle, 'entries');
   final cids = <String>[];
@@ -186,6 +184,7 @@ Bundle decodeBundle(List<int> data, {BinfireLimits limits = BinfireLimits.defaul
 
   // 3.
   var sum = 0;
+  if (cid != null && !isCid(cid)) fail(ErrorCodes.invalidCid, cid);
   for (final c in cids) {
     if (!isCid(c)) fail(ErrorCodes.invalidCid, c);
   }

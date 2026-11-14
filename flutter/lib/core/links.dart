@@ -127,6 +127,10 @@ class Links {
   /// Routes any input text (links.md, `route(text)`).
   Route route(String input) {
     final text = _trimAsciiWhitespace(input);
+    for (var i = 0; i < text.length; i++) {
+      final c = text.codeUnitAt(i);
+      if (c < 0x20 || c == 0x7F) return Route._(RouteAction.showText, text: text);
+    }
     final bound = config.limits.maxStateBytes + 4096;
     if (text.length > bound || utf8Length(text) > bound) return _error(ErrorCodes.tooLarge);
 
@@ -221,12 +225,14 @@ class Links {
   Route _error(String code) => Route._(RouteAction.error, error: code);
 
   /// The shareable `https` link for a registered app [url], or `null` when
-  /// [url] matches no app (links.md, `makeLink`).
+  /// [url] matches no app (links.md, `makeLink`). The short `/a/<slug>` form
+  /// is used only for a canonical base-path URL whose raw query and fragment
+  /// are URL-safe; anything else becomes `/open#u=`.
   String? makeLink(String url) {
     final m = registry.match(url);
     if (m == null) return null;
-    if (m.isCanonical && m.isExactBasePath) {
-      final raw = splitRaw(url);
+    final raw = splitRaw(url);
+    if (m.isCanonical && m.isExactBasePath && _isUrlSafe(raw.query) && _isUrlSafe(raw.fragment)) {
       final out = StringBuffer('https://${config.linkDomain}/a/${m.app.slug}');
       if (raw.query != null) out.write('?${raw.query}');
       if (raw.fragment != null) out.write('#${raw.fragment}');
@@ -243,6 +249,29 @@ class Links {
   /// `https://D/s#<cid>` for a site manifest CID.
   String makeSiteLink(String cid) => 'https://${config.linkDomain}/s#$cid';
 }
+
+const _rfc3986QueryChars = "-._~!\$&'()*+,;=:@/?";
+
+/// Whether [s] holds only RFC 3986 query/fragment characters and `%XX`.
+bool _isUrlSafe(String? s) {
+  if (s == null) return true;
+  for (var i = 0; i < s.length; i++) {
+    final c = s.codeUnitAt(i);
+    if ((c >= 0x41 && c <= 0x5A) || (c >= 0x61 && c <= 0x7A) || (c >= 0x30 && c <= 0x39)) continue;
+    if (c == 0x25) {
+      if (i + 2 < s.length && _isHex(s.codeUnitAt(i + 1)) && _isHex(s.codeUnitAt(i + 2))) {
+        i += 2;
+        continue;
+      }
+      return false;
+    }
+    if (c < 0x80 && _rfc3986QueryChars.contains(String.fromCharCode(c))) continue;
+    return false;
+  }
+  return true;
+}
+
+bool _isHex(int c) => (c >= 0x30 && c <= 0x39) || (c >= 0x41 && c <= 0x46) || (c >= 0x61 && c <= 0x66);
 
 bool _isAsciiWhitespace(int c) => c == 0x09 || c == 0x0A || c == 0x0C || c == 0x0D || c == 0x20;
 

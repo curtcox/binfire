@@ -12,7 +12,7 @@ void main() {
   group('valid', () {
     for (final c in objects(f['valid'])) {
       test('${c['name']}', () {
-        final bytes = utf8.encode(c['text'] as String);
+        final bytes = bytesOf(c);
         final m = validateManifest(bytes, limits);
         final cid = computeCid(bytes);
         expect(cid, c['cid']);
@@ -27,7 +27,7 @@ void main() {
     for (final c in objects(f['invalid'])) {
       test('${c['name']}', () {
         expect(
-          () => validateManifest(utf8.encode(c['text'] as String), limits),
+          () => validateManifest(bytesOf(c), limits),
           throwsA(predicate(hasCode(c['error'] as String))),
         );
       });

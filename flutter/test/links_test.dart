@@ -30,16 +30,7 @@ void main() {
   group('makeLink', () {
     for (final c in objects(f['makeLink'])) {
       final url = c['url'] as String;
-      test(
-        url,
-        () => expect(links.makeLink(url), c['link']),
-        // links.md says a canonical-origin URL whose path is exactly the base
-        // path becomes /a/<slug> + raw query + raw fragment, but this case
-        // expects the /open form. Reported as a spec/fixture disagreement.
-        skip: url.startsWith('https://sheets.hashbin.page/?view=preview#a b')
-            ? 'fixture expects /open for a canonical base-path URL; spec says /a/<slug>'
-            : false,
-      );
+      test(url, () => expect(links.makeLink(url), c['link']));
     }
   });
 

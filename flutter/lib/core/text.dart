@@ -56,6 +56,19 @@ String? decodeUtf8Strict(List<int> bytes) {
   }
 }
 
+/// Decodes UTF-8 JSON bytes as the spec conventions require: strict UTF-8,
+/// one leading byte-order mark stripped (as `TextDecoder` does), then
+/// `JSON.parse`. `ok` is false when the bytes are not UTF-8 or not JSON.
+({bool ok, Object? value}) decodeUtf8Json(List<int> bytes) {
+  var text = decodeUtf8Strict(bytes);
+  if (text == null) return (ok: false, value: null);
+  if (text.startsWith('\uFEFF')) text = text.substring(1);
+  return tryParseJson(text);
+}
+
+/// The length of [s] in Unicode code points (spec "characters").
+int codePointLength(String s) => s.runes.length;
+
 /// Parses [text] as JSON. `ok` is false when it is not JSON.
 ({bool ok, Object? value}) tryParseJson(String text) {
   try {

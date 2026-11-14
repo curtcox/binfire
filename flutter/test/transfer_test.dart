@@ -27,7 +27,8 @@ void main() {
         // Re-encoding gives a bundle that decodes the same way.
         final again = decodeBundle(encodeBundle(b), limits: limits);
         expect(again.entries.map((e) => e.cid).toList(), want['entries']);
-        if (c['name'] != 'unknown header fields ignored') expect(encodeBundle(b), data);
+        // Byte-exact when the sender wrote the same header JSON we do.
+        if (c['name'] != 'unknown header fields ignored' && data[8] == 0x7B) expect(encodeBundle(b), data);
       });
     }
   });

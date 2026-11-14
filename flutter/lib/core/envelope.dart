@@ -7,11 +7,7 @@ import 'text.dart';
 /// Classifies a HashBin document's [bytes]: `"<format>:<type>"`,
 /// `"<format>"`, `"source"` for a JSON string, or `null`.
 String? documentType(List<int> bytes) {
-  var text = decodeUtf8Strict(bytes);
-  if (text == null) return null;
-  // TextDecoder('utf-8') strips a leading byte-order mark.
-  if (text.startsWith('﻿')) text = text.substring(1);
-  final parsed = tryParseJson(text);
+  final parsed = decodeUtf8Json(bytes);
   if (!parsed.ok) return null;
   final value = parsed.value;
   if (value is String) return 'source';

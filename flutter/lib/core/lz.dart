@@ -22,7 +22,8 @@ final List<int> _reverse = () {
 
 int _indexOf(int codeUnit) => codeUnit < 128 ? _reverse[codeUnit] : -1;
 
-/// lz-string 1.5.0 `compressToEncodedURIComponent(text)`.
+/// lz-string 1.5.0 `compressToEncodedURIComponent(text)`, including its
+/// `__proto__` dictionary quirk (state.md).
 String lzCompress(String text) {
   final dictionary = <String, int>{};
   final toCreate = <String>{};
@@ -85,7 +86,13 @@ String lzCompress(String text) {
       w = wc;
     } else {
       emit(w);
-      dictionary[wc] = dictSize++;
+      // lz-string's dictionary is a plain JS object: assigning "__proto__"
+      // sets the prototype instead of adding a key, but the size still grows.
+      if (wc == '__proto__') {
+        dictSize++;
+      } else {
+        dictionary[wc] = dictSize++;
+      }
       w = c;
     }
   }

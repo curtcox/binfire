@@ -66,11 +66,9 @@ SiteManifest validateManifest(List<int> bytes, BinfireLimits limits) {
 
   // 1.
   if (bytes.length > maxManifestBytes) fail(ErrorCodes.badManifest, 'over 1 MiB');
-  final text = decodeUtf8Strict(bytes);
-  if (text == null) fail(ErrorCodes.badManifest, 'not UTF-8');
-  final parsed = tryParseJson(text);
+  final parsed = decodeUtf8Json(bytes);
   final json = parsed.value;
-  if (!parsed.ok || json is! Map<String, Object?>) fail(ErrorCodes.badManifest, 'not a JSON object');
+  if (!parsed.ok || json is! Map<String, Object?>) fail(ErrorCodes.badManifest, 'not a UTF-8 JSON object');
 
   // 2.
   if (json['format'] != 'binfire-site' || json['version'] != 1) {
@@ -79,7 +77,7 @@ SiteManifest validateManifest(List<int> bytes, BinfireLimits limits) {
 
   // 3.
   final name = json['name'];
-  if (name is! String || name.isEmpty || name.length > 200) fail(ErrorCodes.badManifest, 'name');
+  if (name is! String || name.isEmpty || codePointLength(name) > 200) fail(ErrorCodes.badManifest, 'name');
 
   // 4.
   final files = json['files'];
@@ -95,20 +93,30 @@ SiteManifest validateManifest(List<int> bytes, BinfireLimits limits) {
     if (!lowered.add(_asciiLower(path))) fail(ErrorCodes.duplicatePath, path);
   }
 
-  // 6.
-  final out = <String, SiteFile>{};
-  var total = 0;
+  // 6. Each check runs over all files before the next one starts.
   for (final MapEntry(key: path, value: f) in files.entries) {
     if (f is! Map<String, Object?>) fail(ErrorCodes.badManifest, 'file $path is not an object');
+  }
+  final entries = files.map((path, f) => MapEntry(path, f as Map<String, Object?>));
+  for (final MapEntry(key: path, value: f) in entries.entries) {
     final cid = f['cid'];
     if (cid is! String || !isCid(cid)) fail(ErrorCodes.invalidCid, path);
+  }
+  for (final MapEntry(key: path, value: f) in entries.entries) {
     final type = f['type'];
     if (type is! String || !_isValidType(type)) fail(ErrorCodes.badManifest, 'type of $path');
+  }
+  for (final MapEntry(key: path, value: f) in entries.entries) {
     final size = _asInteger(f['size']);
-    if (size == null || size != cidLength(cid)) fail(ErrorCodes.sizeMismatch, path);
+    if (size == null || size != cidLength(f['cid'] as String)) fail(ErrorCodes.sizeMismatch, path);
+  }
+  final out = <String, SiteFile>{};
+  var total = 0;
+  for (final MapEntry(key: path, value: f) in entries.entries) {
+    final size = _asInteger(f['size'])!;
     if (size > limits.maxSiteFileBytes) fail(ErrorCodes.tooLarge, path);
     total += size;
-    out[path] = SiteFile(cid: cid, type: type, size: size);
+    out[path] = SiteFile(cid: f['cid'] as String, type: f['type'] as String, size: size);
   }
 
   // 7.
@@ -140,7 +148,7 @@ int? _asInteger(Object? v) {
 }
 
 bool _isValidType(String type) {
-  if (type.isEmpty || type.length > 100) return false;
+  if (type.isEmpty || codePointLength(type) > 100) return false;
   for (final c in type.codeUnits) {
     if (c <= 0x20 || c == 0x7F) return false;
   }

@@ -121,6 +121,8 @@ Frame decodeFrame(List<int> data) {
   final cid = String.fromCharCodes(b, frameHeaderBytes, frameHeaderBytes + cidLen);
   final chunk = Uint8List.sublistView(b, frameHeaderBytes + cidLen);
   if (count < 1 || index >= count) throw const BinfireException(ErrorCodes.badFrame, 'index');
+  // Bounds what a receiver tracks: more frames than bytes can never tile.
+  if (count > math.max(1, total)) throw const BinfireException(ErrorCodes.badFrame, 'count');
   if (offset + chunk.length > total) throw const BinfireException(ErrorCodes.badFrame, 'past total');
   if (!isCid(cid) || cidLength(cid) != total) throw const BinfireException(ErrorCodes.badFrame, 'cid');
   return Frame(
@@ -184,7 +186,6 @@ class Reassembler {
     final first = _first;
     if (first == null) {
       if (f.total > maxTransferBytes) throw const BinfireException(ErrorCodes.tooLarge);
-      // More frames than bytes can never tile the payload; bound missing().
       if (f.count > math.max(1, f.total)) throw const BinfireException(ErrorCodes.badFrame, 'count');
       _first = f;
     } else if (!bytesEqual(f.id, first.id) || f.count != first.count || f.total != first.total || f.cid != first.cid) {
