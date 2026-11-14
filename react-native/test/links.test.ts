@@ -1,5 +1,5 @@
 import { defaultContext, type BinfireContext } from '../src/core/config';
-import { encodeUriComponent, makeCidLink, makeLink, makeSiteLink, route, withoutRun, withRunZero } from '../src/core/links';
+import { encodeUriComponent, makeCidLink, makeLink, makeSiteLink, route, routeShared, withoutRun, withRunZero } from '../src/core/links';
 import { loadFixture } from './fixtures';
 
 const fx = loadFixture('links.json');
@@ -27,6 +27,18 @@ describe('links.json', () => {
   test.each(fx.withRunZero as { url: string; result: string }[])('withRunZero $url', ({ url, result }) => {
     expect(withRunZero(url)).toBe(result);
   });
+
+  test.each(fx.withoutRun as { url: string; result: string }[])('withoutRun $url', ({ url, result }) => {
+    expect(withoutRun(url)).toBe(result);
+  });
+
+  test.each(fx.routeShared as { input: string; expect: Record<string, unknown> }[])(
+    'routeShared $input',
+    ({ input, expect: want }) => {
+      const got = routeShared(input, ctx) as Record<string, unknown>;
+      expect(Object.fromEntries(Object.keys(want).map(k => [k, got[k]]))).toEqual(want);
+    },
+  );
 
   test.each(fx.makeCIDLink as { cid: string; app?: string; link: string }[])('makeCidLink $link', ({ cid, app, link }) => {
     expect(makeCidLink(cid, app, ctx)).toBe(link);

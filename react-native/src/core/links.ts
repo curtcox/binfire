@@ -50,7 +50,7 @@ export function binfireLinkPath(url: ParsedUrl, ctx: BinfireContext = defaultCon
   return path.replace(/^\/+|\/+$/g, '');
 }
 
-function routeBinfireLink(url: ParsedUrl, path: string, ctx: BinfireContext): Route {
+function routeBinfireLink(url: ParsedUrl, path: string, ctx: BinfireContext, allowShare: boolean): Route {
   const segments = path.split('/');
   const head = segments.length === 1 ? segments[0] : null;
   if (segments.length === 2 && segments[0] === 'a') {
@@ -66,6 +66,12 @@ function routeBinfireLink(url: ParsedUrl, path: string, ctx: BinfireContext): Ro
     if (u === null || !parseUrl(u)) return { action: 'error', error: 'bad-link' };
     const app = appForUrl(u, ctx.registry);
     return app ? openApp(app.slug, u) : { action: 'show-text', text: u };
+  }
+  if (head === 'share' && allowShare && url.scheme === ctx.config.scheme.toLowerCase()) {
+    // Share extensions that can only open a URL hand text over as S://share#t=<text>.
+    const t = queryGet(parseQuery(url.fragment), 't');
+    if (t === null) return { action: 'error', error: 'bad-link' };
+    return shareRoute(t, ctx, false);
   }
   if (head === 'c' || head === 's') {
     const cid = url.fragment;
@@ -92,11 +98,15 @@ function contentHostCid(url: ParsedUrl, ctx: BinfireContext): string | null {
  * an action. Never navigates by itself; unregistered URLs become `show-text`.
  */
 export function route(input: string, ctx: BinfireContext = defaultContext): Route {
+  return routeText(input, ctx, true);
+}
+
+function routeText(input: string, ctx: BinfireContext, allowShare: boolean): Route {
+  // Bound before scanning, then trim, then refuse control characters.
   const limit = ctx.config.limits.maxStateBytes + 4096;
+  if (input.length > limit || utf8Length(input) > limit) return { action: 'error', error: 'too-large' };
   const text = trimAsciiWhitespace(input);
-  // Control characters (C0, DEL) inside: never a link, only text.
   if (/[\u0000-\u001f\u007f]/.test(text)) return { action: 'show-text', text };
-  if (text.length > limit || utf8Length(text) > limit) return { action: 'error', error: 'too-large' };
 
   // 1. A bare CID, optionally after `#`.
   const bare = text.startsWith('#') ? text.slice(1) : text;
@@ -108,7 +118,7 @@ export function route(input: string, ctx: BinfireContext = defaultContext): Rout
 
   // 3. binfire links.
   const path = binfireLinkPath(url, ctx);
-  if (path !== null) return routeBinfireLink(url, path, ctx);
+  if (path !== null) return routeBinfireLink(url, path, ctx, allowShare);
 
   // 4. A content-host URL naming a CID.
   const cid = contentHostCid(url, ctx);
@@ -120,6 +130,58 @@ export function route(input: string, ctx: BinfireContext = defaultContext): Rout
 
   // 6. Anything else.
   return { action: 'show-text', text };
+}
+
+const LEADING = /^[<([{"']+/;
+const TRAILING = /[>.,;:!?"']+$/;
+const BRACKETS: Record<string, string> = { ')': '(', ']': '[', '}': '{' };
+
+/** Strips wrapping punctuation from a word of shared text (spec/links.md, routeShared). */
+export function cleanSharedToken(token: string): string {
+  let t = token.replace(LEADING, '');
+  for (;;) {
+    const before = t;
+    t = t.replace(TRAILING, '');
+    // Strip a closing bracket only while it is unbalanced, so `#print(1)` survives.
+    while (t.length > 0 && BRACKETS[t[t.length - 1]]) {
+      const close = t[t.length - 1];
+      const open = BRACKETS[close];
+      let opens = 0;
+      let closes = 0;
+      for (const ch of t) {
+        if (ch === open) opens++;
+        else if (ch === close) closes++;
+      }
+      if (closes <= opens) break;
+      t = t.slice(0, -1);
+    }
+    if (t === before) return t;
+  }
+}
+
+function shareRoute(text: string, ctx: BinfireContext, allowShare: boolean): Route {
+  const whole = routeText(text, ctx, allowShare);
+  if (whole.action !== 'show-text') return whole;
+  const prefixes = ['https://', 'http://', ctx.config.scheme.toLowerCase() + '://'];
+  for (const raw of text.split(/[\t\n\f\r ]+/)) {
+    const token = cleanSharedToken(raw);
+    if (!token) continue;
+    const lower = token.slice(0, 16).toLowerCase();
+    const candidate =
+      prefixes.some(p => lower.startsWith(p)) || isCid(token.startsWith('#') ? token.slice(1) : token);
+    if (!candidate) continue;
+    const r = routeText(token, ctx, allowShare);
+    if (r.action !== 'show-text') return r;
+  }
+  return whole;
+}
+
+/**
+ * Routes shared or pasted text, which often wraps a link in words: the whole
+ * text first, then the first link-like word that routes to something.
+ */
+export function routeShared(text: string, ctx: BinfireContext = defaultContext): Route {
+  return shareRoute(text, ctx, true);
 }
 
 // RFC 3986 query/fragment characters, plus `%` followed by two hex digits.
