@@ -56,7 +56,7 @@ final class BrowserController: NSObject, ObservableObject, WKNavigationDelegate,
 
     /// Run: reload the same URL without the `run` parameter.
     func run() {
-        load(Links.removingRun(currentURL.isEmpty ? loadedURL : currentURL))
+        load(Links.withoutRun(currentURL.isEmpty ? loadedURL : currentURL))
     }
 
     func reload() {

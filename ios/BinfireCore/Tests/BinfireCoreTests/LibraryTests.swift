@@ -109,8 +109,8 @@ final class LibraryTests: XCTestCase {
             ("https://x/?&run=0#y", "https://x/#y"),
             ("https://x/", "https://x/"),
         ]
-        for (input, want) in cases { XCTAssertEqual(Links.removingRun(input), want, input) }
+        for (input, want) in cases { XCTAssertEqual(Links.withoutRun(input), want, input) }
         // Round trip with withRunZero.
-        XCTAssertEqual(Links.removingRun(Links.withRunZero("https://x/?v=1#f")), "https://x/?v=1#f")
+        XCTAssertEqual(Links.withoutRun(Links.withRunZero("https://x/?v=1#f")), "https://x/?v=1#f")
     }
 }

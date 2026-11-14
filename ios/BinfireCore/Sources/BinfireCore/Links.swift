@@ -51,9 +51,53 @@ public struct Links: Sendable {
     /// Routes any input text (paste, share, scan, audio, transfer `url`).
     public func route(_ text: String) -> Route { routeWithSource(text).route }
 
-    func routeWithSource(_ text: String) -> (route: Route, source: Source) {
+    /// `route` for shared or pasted text: if plain routing only gives
+    /// `show-text`, look for the first link or CID token inside the text.
+    public func routeShared(_ text: String) -> Route { routeShared(text, allowShare: true) }
+
+    private func routeShared(_ text: String, allowShare: Bool) -> Route {
+        let whole = routeWithSource(text, allowShare: allowShare).route
+        guard case .showText = whole else { return whole }
+        let scheme = config.scheme.lowercased() + "://"
+        let ws: Set<Character> = [" ", "\t", "\n", "\r", "\u{0C}", "\r\n"]
+        for raw in text.split(whereSeparator: { ws.contains($0) }) {
+            let token = Links.stripSharedToken(String(raw))
+            let lower = token.lowercased()
+            let bare = token.hasPrefix("#") ? String(token.dropFirst()) : token
+            guard lower.hasPrefix("https://") || lower.hasPrefix("http://") || lower.hasPrefix(scheme)
+                    || CID.isCID(bare) else { continue }
+            let r = routeWithSource(token, allowShare: allowShare).route
+            if case .showText = r { continue }
+            return r
+        }
+        return .showText(Links.trimASCIIWhitespace(text))
+    }
+
+    /// Strips wrapping punctuation from a shared-text token (`spec/links.md`
+    /// "routeShared" step 2), keeping balanced closing brackets.
+    static func stripSharedToken(_ token: String) -> String {
+        let leading: Set<Character> = ["<", "(", "[", "{", "\"", "'"]
+        let trailing: Set<Character> = [">", ".", ",", ";", ":", "!", "?", "\"", "'"]
+        let pairs: [Character: Character] = [")": "(", "]": "[", "}": "{"]
+        var t = Substring(token)
+        while let f = t.first, leading.contains(f) { t = t.dropFirst() }
+        var changed = true
+        while changed {
+            changed = false
+            while let l = t.last, trailing.contains(l) { t = t.dropLast(); changed = true }
+            if let l = t.last, let open = pairs[l] {
+                let closes = t.filter { $0 == l }.count
+                let opens = t.filter { $0 == open }.count
+                if closes > opens { t = t.dropLast(); changed = true }
+            }
+        }
+        return String(t)
+    }
+
+    func routeWithSource(_ text: String, allowShare: Bool = true) -> (route: Route, source: Source) {
+        // Bound before anything else (before trimming or scanning).
+        if text.utf8.count > config.limits.maxStateBytes + 4096 { return (.error(.tooLarge), .other) }
         let input = Links.trimASCIIWhitespace(text)
-        if input.utf8.count > config.limits.maxStateBytes + 4096 { return (.error(.tooLarge), .other) }
         // Control characters (C0 or DEL) anywhere after trimming: never a link.
         if input.utf8.contains(where: { $0 < 0x20 || $0 == 0x7F }) { return (.showText(input), .other) }
 
@@ -68,11 +112,11 @@ public struct Links: Sendable {
         let scheme = config.scheme.lowercased()
         if url.scheme == scheme {
             let path = url.hasAuthority ? url.host + url.path : url.path
-            return (binfireLink(input, path: path), .schemeLink)
+            return (binfireLink(input, path: path, isScheme: true, allowShare: allowShare), .schemeLink)
         }
         if url.scheme == "https", url.hasAuthority, url.userinfo == nil, url.normalizedPort == nil,
            url.normalizedHost == config.linkDomain.lowercased() {
-            let route = binfireLink(input, path: url.normalizedPath)
+            let route = binfireLink(input, path: url.normalizedPath, isScheme: false, allowShare: false)
             let isAppLink = url.normalizedPath.split(separator: "/").first == "a"
             return (route, isAppLink ? .httpsAppLink : .httpsLink)
         }
@@ -97,7 +141,7 @@ public struct Links: Sendable {
         return .openApp(app: slug, url: url, state: s.state, run: s.run, view: s.view)
     }
 
-    private func binfireLink(_ input: String, path rawPath: String) -> Route {
+    private func binfireLink(_ input: String, path rawPath: String, isScheme: Bool, allowShare: Bool) -> Route {
         var path = Substring(rawPath)
         while path.hasPrefix("/") { path = path.dropFirst() }
         while path.hasSuffix("/") { path = path.dropLast() }
@@ -121,6 +165,10 @@ public struct Links: Sendable {
         case "s" where segments.count == 1:
             guard let cid = split.fragment, CID.isCID(cid) else { return .error(.invalidCID) }
             return .openSite(cid: cid)
+        case "share" where segments.count == 1 && isScheme && allowShare:
+            // S://share#t=<text>: share extensions hand text to the app. Not recursive.
+            guard let t = QueryParams(split.fragment).get("t") else { return .error(.badLink) }
+            return routeShared(t, allowShare: false)
         default:
             return .error(.unknownLink)
         }
@@ -215,7 +263,7 @@ public struct Links: Sendable {
     /// Removes every `run` parameter from the raw query (names decoded as
     /// `URLSearchParams` does), keeping everything else byte for byte. The `?`
     /// is dropped when nothing remains. Used by the Run button.
-    public static func removingRun(_ url: String) -> String {
+    public static func withoutRun(_ url: String) -> String {
         let split = URLParts.splitQueryAndFragment(url)
         guard let query = split.query else { return url }
         let kept = query.split(separator: "&", omittingEmptySubsequences: false).filter { part in

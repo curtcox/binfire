@@ -50,7 +50,8 @@ struct LibraryView: View {
                 guard let text = Links.pasteInput(strings.first) else { return }
                 Task { @MainActor in
                     input = text
-                    go()
+                    inputFocused = false
+                    model.openShared(text)
                 }
             }
             .labelStyle(.iconOnly)

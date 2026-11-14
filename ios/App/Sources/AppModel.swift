@@ -64,6 +64,11 @@ final class AppModel: ObservableObject {
         handle(links.route(text))
     }
 
+    /// Routes shared or pasted text, finding a link inside it (`routeShared`).
+    func openShared(_ text: String) {
+        handle(links.routeShared(text))
+    }
+
     func handle(_ route: Route) {
         switch route {
         case let .openApp(app, url, _, _, _):

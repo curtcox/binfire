@@ -30,13 +30,29 @@ final class LinksTests: XCTestCase {
         return f
     }
 
-    func testRoute() throws {
-        let cases = try Fixtures.list(fixture, "route")
+    func testRoute() throws { try checkRoutes("route") { links.route($0) } }
+
+    func testRouteShared() throws { try checkRoutes("routeShared") { links.routeShared($0) } }
+
+    func testWithoutRun() throws {
+        let cases = try Fixtures.list(fixture, "withoutRun")
+        XCTAssertFalse(cases.isEmpty)
+        for c in cases { XCTAssertEqual(Links.withoutRun(c["url"] as! String), c["result"] as? String) }
+    }
+
+    func testStripSharedToken() {
+        XCTAssertEqual(Links.stripSharedToken("(https://x/#print(1))."), "https://x/#print(1)")
+        XCTAssertEqual(Links.stripSharedToken("<a>"), "a")
+        XCTAssertEqual(Links.stripSharedToken("x)]"), "x")
+    }
+
+    private func checkRoutes(_ key: String, _ routeFn: (String) -> Route) throws {
+        let cases = try Fixtures.list(fixture, key)
         XCTAssertFalse(cases.isEmpty)
         for c in cases {
             let input = c["input"] as! String
             let expect = c["expect"] as! [String: Any]
-            let got = LinksTests.fields(links.route(input))
+            let got = LinksTests.fields(routeFn(input))
             for (key, want) in expect {
                 guard let entry = got[key] else { XCTFail("\(input): missing \(key)"); continue }
                 let have = entry ?? NSNull()
