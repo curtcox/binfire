@@ -12,7 +12,7 @@ Legend: `[x]` done and verified · `[~]` partly done (see note) · `[ ]` not sta
 | --- | --- | --- | --- | --- | --- | --- |
 | M0 | Spec and scaffolding | [x] | [x] | [x] | [x] | [x] |
 | M1 | Browser core | [x] | [x] | [x] | [x] | [x] |
-| M2 | Links in | [x] | [x] | [ ] | [ ] | [~] |
+| M2 | Links in | [x] | [x] | [x] | [ ] | [~] |
 | M3 | HashBin | [ ] | [ ] | [ ] | [ ] | [ ] |
 | M4 | QR and camera | [ ] | [ ] | [ ] | [ ] | [ ] |
 | M5 | Send and files | [ ] | [ ] | [ ] | [ ] | [ ] |
@@ -39,6 +39,15 @@ Run on a quiet machine on 2026-11-14 (after M1):
 
 Newest first. One line per meaningful step, with what was verified.
 
+- 2026-11-14: Flutter M2 done: 754 tests; Maestro deep-link passes on iPhone
+  Air; cold and warm links checked (a warm link closes an open sheet first).
+  Deep links use `app_links` 7.0. No share plugin: both candidates need an iOS
+  App Group, and so a team ID. Instead a small Swift Share Extension
+  (`<flutter id>.share`, ID now managed by configure) and Android SEND both
+  hand text over as `binfire://share#t=`. Risk: iOS share extensions in
+  native iOS, Flutter and probably RN open the host app through the responder
+  chain / Objective-C runtime, which works but is not an Apple-supported API.
+  Flutter's Android share-in has not been run yet.
 - 2026-11-14: iOS and Android M2 done. `routeShared` and `binfire://share#t=`
   are in core with fixtures. iOS: onOpenURL and Universal Links go through
   route(); the Share Extension (`<ios id>.share`) hands text over via
