@@ -123,13 +123,20 @@ the raw query:
 
 Nothing else in the URL changes.
 
+## `withoutRun(url)` → string
+
+Used by the **Run** button. It removes every `run` key (and its value) from the
+raw query, keeping the other pairs and their order and spelling. If no pairs
+are left, the `?` is dropped too. The fragment never changes.
+
 ## Fixture `links.json`
 
 ```json
 { "config": { "linkDomain": "binfire.app", "scheme": "binfire", "content": "https://256t.us" },
   "route":    [{ "input": "…", "expect": { "action": "…", … } }],
   "makeLink": [{ "url": "…", "link": "…" }],
-  "withRunZero": [{ "url": "…", "result": "…" }] }
+  "withRunZero": [{ "url": "…", "result": "…" }],
+  "withoutRun":  [{ "url": "…", "result": "…" }] }
 ```
 
 Fields that don't apply to an action are left out of `expect`, and ports

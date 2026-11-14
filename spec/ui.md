@@ -64,6 +64,8 @@ itself). Buttons expose a plain verb label ("Open", "Paste", "Save", …).
 - **Save** stores `{name, url, app, savedAt}` in the library (newest first).
 - When `run` is `false`, the run banner is shown. **Run** reloads the same URL
   without the `run` parameter. The app itself also honours `run=0`.
+- A main-frame navigation to **another registered app's** URL is cancelled
+  in this browser, and the URL opens in that app's own browser.
 - A navigation to an unregistered URL inside a browser is cancelled, and the
   URL goes to the show-text sheet. The exceptions are popups that are part of
   the HashBin Publish flow (hashbin.org) and `about:blank`.

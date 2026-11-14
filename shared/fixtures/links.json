@@ -468,6 +468,36 @@
       "result": "https://python.hashbin.page/?xrun=1&run=0"
     }
   ],
+  "withoutRun": [
+    {
+      "url": "https://python.hashbin.page/?run=0#v1.abc",
+      "result": "https://python.hashbin.page/#v1.abc"
+    },
+    {
+      "url": "https://python.hashbin.page/?run=0",
+      "result": "https://python.hashbin.page/"
+    },
+    {
+      "url": "https://python.hashbin.page/?view=code&run=0#x",
+      "result": "https://python.hashbin.page/?view=code#x"
+    },
+    {
+      "url": "https://python.hashbin.page/?run=0&view=a+b&run=1&x=%20#y",
+      "result": "https://python.hashbin.page/?view=a+b&x=%20#y"
+    },
+    {
+      "url": "https://python.hashbin.page/?xrun=0&run#y",
+      "result": "https://python.hashbin.page/?xrun=0#y"
+    },
+    {
+      "url": "https://python.hashbin.page/#run=0",
+      "result": "https://python.hashbin.page/#run=0"
+    },
+    {
+      "url": "https://python.hashbin.page/?view=code",
+      "result": "https://python.hashbin.page/?view=code"
+    }
+  ],
   "makeCIDLink": [
     {
       "cid": "AAAAAABBuDCGzYSU5VcIrX7Ngt-0vKG9ph7Lt8rwxolnkC5wk0Xl2DBet6wNWIr8bLt1FhqpyMfg6phr2DPa_l4czTc0Wg",

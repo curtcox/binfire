@@ -11,7 +11,7 @@ Legend: `[x]` done and verified · `[~]` partly done (see note) · `[ ]` not sta
 | # | Milestone | iOS | Android | Flutter | RN | Shared |
 | --- | --- | --- | --- | --- | --- | --- |
 | M0 | Spec and scaffolding | [~] | [~] | [~] | [~] | [x] |
-| M1 | Browser core | [x] | [x] | [ ] | [ ] | [x] |
+| M1 | Browser core | [x] | [x] | [x] | [ ] | [x] |
 | M2 | Links in | [ ] | [ ] | [ ] | [ ] | [ ] |
 | M3 | HashBin | [ ] | [ ] | [ ] | [ ] | [ ] |
 | M4 | QR and camera | [ ] | [ ] | [ ] | [ ] | [ ] |
@@ -25,6 +25,13 @@ Legend: `[x]` done and verified · `[~]` partly done (see note) · `[ ]` not sta
 
 Newest first. One line per meaningful step, with what was verified.
 
+- 2026-11-14: Flutter M1 done: 723 tests; Maestro m1 4/4 on the iPhone Air
+  simulator. The first full run failed at step 1 (about 14 s debug start-up
+  under load); two clean reruns passed. The Xcode 27 simulator build needs an
+  iOS 15 deployment target and x86_64 excluded. iOS and Android also got the
+  9a2d1df UI follow-ups (Paste opens, Recent byte caps, row labels; the iOS run
+  banner tracks the current URL). Spec now has `withoutRun` (with fixtures) and
+  "another registered app opens its own browser".
 - 2026-11-14: Android M1 done: Library (JSON in files/), library screen,
   WebViews held in a ViewModel, doUpdateVisitedHistory → Recent/title/banner,
   navigation policy (another registered app opens its own browser), Publish
