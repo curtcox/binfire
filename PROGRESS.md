@@ -11,7 +11,7 @@ Legend: `[x]` done and verified · `[~]` partly done (see note) · `[ ]` not sta
 | # | Milestone | iOS | Android | Flutter | RN | Shared |
 | --- | --- | --- | --- | --- | --- | --- |
 | M0 | Spec and scaffolding | [~] | [~] | [~] | [~] | [x] |
-| M1 | Browser core | [ ] | [ ] | [ ] | [ ] | [ ] |
+| M1 | Browser core | [x] | [ ] | [ ] | [ ] | [x] |
 | M2 | Links in | [ ] | [ ] | [ ] | [ ] | [ ] |
 | M3 | HashBin | [ ] | [ ] | [ ] | [ ] | [ ] |
 | M4 | QR and camera | [ ] | [ ] | [ ] | [ ] | [ ] |
@@ -25,6 +25,13 @@ Legend: `[x]` done and verified · `[~]` partly done (see note) · `[ ]` not sta
 
 Newest first. One line per meaningful step, with what was verified.
 
+- 2026-11-14: iOS M1 done: Library model/store, library screen, per-app
+  WKWebViews kept alive, KVO URL tracking → Recent, save/reload/copy-link,
+  run banner, navigation policy, Publish popups as sheets, `binfire://`
+  links via route(). 49 unit tests pass. Maestro m1 4/4 on the iPhone 17 Pro
+  simulator (second run; the first run had one launch flake). Follow-ups:
+  run banner should track the current URL, not only the loaded one; Recent
+  stores WebKit's percent-escaped spelling.
 - 2026-11-14: Port cores: RN (667 jest tests), iOS (42 XCTest groups),
   Android (42 JUnit classes) pass every fixture as of b807c62. Their reports
   surfaced spec gaps, pinned in b807c62 and ff46d7a: makeLink URL-safety, BOM
