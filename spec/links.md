@@ -112,6 +112,29 @@ links to unregistered URLs.
 The custom scheme forms are only for receiving. Ports always send `https`
 links, so they still work for people who don't have binfire.
 
+## `routeShared(text)` → Route
+
+Used for text that arrives through the share target (iOS Share Extension,
+Android `ACTION_SEND`) and the paste button. Messages often wrap a link in
+words, so:
+
+1. `r = route(text)`. If `r.action` is not `show-text`, return `r`.
+2. Otherwise, split the text on ASCII whitespace into tokens, in order. For
+   each token:
+   - Strip leading characters from `< ( [ { " '`.
+   - Strip trailing characters from `> . , ; : ! ? " '`.
+   - Strip a trailing `)`, `]` or `}` only while the token has more closing
+     than opening brackets of that kind, so `#print(1)` survives.
+   - Then re-apply the trailing strip, and repeat until nothing changes.
+   - If the token starts with `https://`, `http://` or `<scheme>://`, or is a
+     CID (optionally after a leading `#`), compute `route(token)`. The first
+     token whose route action is not `show-text` wins.
+3. If no token wins, return `show-text` with the whole trimmed text.
+
+Tapped links (Universal Links, App Links, the custom scheme) use plain
+`route`. Shared and tapped links open as given. Only content received over
+QR, BLE, audio or files gets `withRunZero` (PLAN §10).
+
 ## `withRunZero(url)` → string
 
 Used for received content (QR, BLE, audio, files). If the URL's query already
@@ -136,7 +159,8 @@ are left, the `?` is dropped too. The fragment never changes.
   "route":    [{ "input": "…", "expect": { "action": "…", … } }],
   "makeLink": [{ "url": "…", "link": "…" }],
   "withRunZero": [{ "url": "…", "result": "…" }],
-  "withoutRun":  [{ "url": "…", "result": "…" }] }
+  "withoutRun":  [{ "url": "…", "result": "…" }],
+  "routeShared": [{ "input": "…", "expect": { … as in route … } }] }
 ```
 
 Fields that don't apply to an action are left out of `expect`, and ports

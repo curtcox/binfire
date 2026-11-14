@@ -498,6 +498,144 @@
       "result": "https://python.hashbin.page/?view=code"
     }
   ],
+  "routeShared": [
+    {
+      "input": "Check this out: https://binfire.app/a/python#AAAAAAAFaGVsbG8 thanks",
+      "expect": {
+        "action": "open-app",
+        "app": "python",
+        "url": "https://python.hashbin.page/#AAAAAAAFaGVsbG8",
+        "state": "cid",
+        "run": true,
+        "view": null
+      }
+    },
+    {
+      "input": "see <https://python.hashbin.page/#v1.abc>",
+      "expect": {
+        "action": "open-app",
+        "app": "python",
+        "url": "https://python.hashbin.page/#v1.abc",
+        "state": "v1",
+        "run": true,
+        "view": null
+      }
+    },
+    {
+      "input": "(https://binfire.app/c#AAAAAABBuDCGzYSU5VcIrX7Ngt-0vKG9ph7Lt8rwxolnkC5wk0Xl2DBet6wNWIr8bLt1FhqpyMfg6phr2DPa_l4czTc0Wg).",
+      "expect": {
+        "action": "load-cid",
+        "cid": "AAAAAABBuDCGzYSU5VcIrX7Ngt-0vKG9ph7Lt8rwxolnkC5wk0Xl2DBet6wNWIr8bLt1FhqpyMfg6phr2DPa_l4czTc0Wg",
+        "app": null
+      }
+    },
+    {
+      "input": "nothing here https://example.com",
+      "expect": {
+        "action": "show-text",
+        "text": "nothing here https://example.com"
+      }
+    },
+    {
+      "input": "two links https://example.com and https://binfire.app/s#AAAAAABBuDCGzYSU5VcIrX7Ngt-0vKG9ph7Lt8rwxolnkC5wk0Xl2DBet6wNWIr8bLt1FhqpyMfg6phr2DPa_l4czTc0Wg!",
+      "expect": {
+        "action": "open-site",
+        "cid": "AAAAAABBuDCGzYSU5VcIrX7Ngt-0vKG9ph7Lt8rwxolnkC5wk0Xl2DBet6wNWIr8bLt1FhqpyMfg6phr2DPa_l4czTc0Wg"
+      }
+    },
+    {
+      "input": "the cid is AAAAAABBuDCGzYSU5VcIrX7Ngt-0vKG9ph7Lt8rwxolnkC5wk0Xl2DBet6wNWIr8bLt1FhqpyMfg6phr2DPa_l4czTc0Wg, enjoy",
+      "expect": {
+        "action": "load-cid",
+        "cid": "AAAAAABBuDCGzYSU5VcIrX7Ngt-0vKG9ph7Lt8rwxolnkC5wk0Xl2DBet6wNWIr8bLt1FhqpyMfg6phr2DPa_l4czTc0Wg",
+        "app": null
+      }
+    },
+    {
+      "input": "hash form #AAAAAAAFaGVsbG8.",
+      "expect": {
+        "action": "load-cid",
+        "cid": "AAAAAAAFaGVsbG8",
+        "app": null
+      }
+    },
+    {
+      "input": "run https://python.hashbin.page/#print(1)",
+      "expect": {
+        "action": "open-app",
+        "app": "python",
+        "url": "https://python.hashbin.page/#print(1)",
+        "state": "fragment",
+        "run": true,
+        "view": null
+      }
+    },
+    {
+      "input": "\"https://python.hashbin.page/#print(1))\"",
+      "expect": {
+        "action": "open-app",
+        "app": "python",
+        "url": "https://python.hashbin.page/#print(1)",
+        "state": "fragment",
+        "run": true,
+        "view": null
+      }
+    },
+    {
+      "input": "binfire://a/r#src=abc?",
+      "expect": {
+        "action": "open-app",
+        "app": "r",
+        "url": "https://r.hashbin.page/#src=abc?",
+        "state": "src",
+        "run": true,
+        "view": null
+      }
+    },
+    {
+      "input": "open binfire://a/r#src=abc?",
+      "expect": {
+        "action": "open-app",
+        "app": "r",
+        "url": "https://r.hashbin.page/#src=abc",
+        "state": "src",
+        "run": true,
+        "view": null
+      }
+    },
+    {
+      "input": "first https://binfire.app/a/nosuch then https://binfire.app/a/python",
+      "expect": {
+        "action": "error",
+        "error": "unknown-app"
+      }
+    },
+    {
+      "input": "https://python.hashbin.page/#v1.abc",
+      "expect": {
+        "action": "open-app",
+        "app": "python",
+        "url": "https://python.hashbin.page/#v1.abc",
+        "state": "v1",
+        "run": true,
+        "view": null
+      }
+    },
+    {
+      "input": "hello world",
+      "expect": {
+        "action": "show-text",
+        "text": "hello world"
+      }
+    },
+    {
+      "input": "  padded text  ",
+      "expect": {
+        "action": "show-text",
+        "text": "padded text"
+      }
+    }
+  ],
   "makeCIDLink": [
     {
       "cid": "AAAAAABBuDCGzYSU5VcIrX7Ngt-0vKG9ph7Lt8rwxolnkC5wk0Xl2DBet6wNWIr8bLt1FhqpyMfg6phr2DPa_l4czTc0Wg",
