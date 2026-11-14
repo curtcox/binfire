@@ -61,6 +61,27 @@ object UrlState {
     }
 
     /**
+     * [url] with every `run` parameter removed from the raw query (used by the
+     * Run button). Other parameters keep their raw text and order; an emptied
+     * query drops its `?`. Nothing else changes.
+     */
+    fun withoutRun(url: String): String {
+        val hashAt = url.indexOf('#')
+        val beforeHash = if (hashAt >= 0) url.substring(0, hashAt) else url
+        val fragment = if (hashAt >= 0) url.substring(hashAt) else ""
+        val qAt = beforeHash.indexOf('?')
+        if (qAt < 0) return url
+        val parts = beforeHash.substring(qAt + 1).split('&')
+        val kept = parts.filter { part ->
+            val name = part.substringBefore('=')
+            part.isEmpty() || QueryParams.parse(name + "=").pairs.firstOrNull()?.first != "run"
+        }
+        if (kept.size == parts.size) return url
+        val query = kept.filter { it.isNotEmpty() }.joinToString("&")
+        return beforeHash.substring(0, qAt) + (if (query.isEmpty()) "" else "?$query") + fragment
+    }
+
+    /**
      * `withRunZero(url)` from `spec/links.md`: adds `run=0` to the raw query unless
      * the query already has a `run` key. Nothing else changes.
      */
