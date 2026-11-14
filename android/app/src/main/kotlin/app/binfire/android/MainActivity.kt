@@ -22,6 +22,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        setIntent(intent)
         handle(intent)
     }
 
@@ -35,13 +36,24 @@ class MainActivity : ComponentActivity() {
         super.onDestroy()
     }
 
-    /** Text that reaches binfire from outside goes through `route` like everything else. */
+    /**
+     * Tapped links (App Links, custom scheme) go through `route`; shared text
+     * (ACTION_SEND) through `routeShared`. Called for a cold start (not after
+     * rotation or process recreation, where `savedInstanceState` is set) and for
+     * every new intent, whatever is showing.
+     */
     private fun handle(intent: Intent?) {
-        val text = when (intent?.action) {
-            Intent.ACTION_VIEW -> intent.dataString
-            Intent.ACTION_SEND -> intent.getStringExtra(Intent.EXTRA_TEXT)
-            else -> null
+        if (intent == null || intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY != 0) return
+        when (intent.action) {
+            Intent.ACTION_VIEW -> {
+                val data = intent.data ?: return
+                if (data.scheme == "content" || data.scheme == "file") vm.openFile()
+                else intent.dataString?.let { vm.open(it) }
+            }
+            Intent.ACTION_SEND -> {
+                val text = intent.getCharSequenceExtra(Intent.EXTRA_TEXT)?.toString()
+                if (!text.isNullOrBlank()) vm.openShared(text)
+            }
         }
-        if (!text.isNullOrBlank()) vm.open(text)
     }
 }

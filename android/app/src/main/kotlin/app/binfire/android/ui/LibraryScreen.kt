@@ -83,7 +83,7 @@ fun LibraryScreen(vm: BinfireViewModel) {
                     val text = clip?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.coerceToText(context)?.toString()
                     if (!text.isNullOrBlank()) {
                         input = text
-                        vm.open(text)
+                        vm.openShared(text)
                     }
                 },
                 modifier = Modifier.testTag("open.paste"),

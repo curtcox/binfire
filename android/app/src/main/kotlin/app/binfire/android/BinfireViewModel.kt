@@ -90,9 +90,19 @@ class BinfireViewModel(application: Application) : AndroidViewModel(application)
 
     fun flush() = store.flushNow()
 
-    /** Routes any input text (paste, scan, tapped row, intent) and acts on the result. */
-    fun open(text: String) {
-        when (val r = links.route(text)) {
+    /** Routes tapped links, typed input and library rows with `route` and acts on the result. */
+    fun open(text: String) = act(links.route(text))
+
+    /** Routes shared or pasted text with `routeShared`, which finds a link inside words. */
+    fun openShared(text: String) = act(links.routeShared(text))
+
+    /** A `.binfire` file was opened from another app. */
+    fun openFile() {
+        sheet = Sheet.Error("Opening .binfire files is coming in M5.")
+    }
+
+    private fun act(route: Route) {
+        when (val r = route) {
             is Route.OpenApp -> openApp(r.app, r.url)
             is Route.ShowText -> sheet = Sheet.Text(r.text)
             is Route.Error -> sheet = Sheet.Error(errorMessage(r.error))
