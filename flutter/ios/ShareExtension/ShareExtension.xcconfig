@@ -1,10 +1,12 @@
 // Build settings for the Share Extension target.
 #include? "../Flutter/Generated.xcconfig"
 
-// Must start with the app's bundle ID (app.binfire.flutter, written into the
-// Runner target by tools/configure.mjs). Kept here, not in project.pbxproj,
-// because configure rewrites every PRODUCT_BUNDLE_IDENTIFIER there.
-PRODUCT_BUNDLE_IDENTIFIER = app.binfire.flutter.ShareExtension
+// Must start with the app's bundle ID (<flutter id>.share, as for the iOS
+// port). Kept here, not in project.pbxproj, because configure rewrites every
+// PRODUCT_BUNDLE_IDENTIFIER there. The markers let tools/configure.mjs own it.
+// >>> binfire:configure share-extension-id
+PRODUCT_BUNDLE_IDENTIFIER = app.binfire.flutter.share
+// <<< binfire:configure share-extension-id
 PRODUCT_NAME = ShareExtension
 INFOPLIST_FILE = ShareExtension/Info.plist
 IPHONEOS_DEPLOYMENT_TARGET = 15.0
