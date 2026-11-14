@@ -1,0 +1,16 @@
+// Build settings for the Share Extension target.
+#include? "../Flutter/Generated.xcconfig"
+
+// Must start with the app's bundle ID (app.binfire.flutter, written into the
+// Runner target by tools/configure.mjs). Kept here, not in project.pbxproj,
+// because configure rewrites every PRODUCT_BUNDLE_IDENTIFIER there.
+PRODUCT_BUNDLE_IDENTIFIER = app.binfire.flutter.ShareExtension
+PRODUCT_NAME = ShareExtension
+INFOPLIST_FILE = ShareExtension/Info.plist
+IPHONEOS_DEPLOYMENT_TARGET = 15.0
+SWIFT_VERSION = 5.0
+TARGETED_DEVICE_FAMILY = 1,2
+SKIP_INSTALL = YES
+APPLICATION_EXTENSION_API_ONLY = YES
+EXCLUDED_ARCHS[sdk=iphonesimulator*] = x86_64
+LD_RUNPATH_SEARCH_PATHS = $(inherited) @executable_path/Frameworks @executable_path/../../Frameworks
