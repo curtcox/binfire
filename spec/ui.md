@@ -46,7 +46,15 @@ follow each platform's conventions.
 | Error | `error.sheet`, `error.message`, `error.ok` |
 | QR display (M4) | `qr.sheet`, `qr.image`, `qr.hashbin` |
 
+Accessibility: each tagged list row exposes **one** accessible label that
+includes both its title and subtitle (Maestro matches text on the tagged node
+itself). Buttons expose a plain verb label ("Open", "Paste", "Save", …).
+
 ## Behaviour
+
+- **Paste** (`open.paste`) puts the clipboard text into `open.input` and then
+  opens it, exactly as if the user had tapped Open. An empty clipboard does
+  nothing.
 
 - Opening a route of action `open-app` opens (or reuses) that app's browser
   with the URL. Each registered app has at most one live WebView, so app
@@ -73,7 +81,10 @@ that a later export/import (M5) is the same everywhere:
   "sites":  [{ "cid": "<manifest CID>", "name": "…", "addedAt": "…" }] }
 ```
 
-- `recent` is deduplicated by `url`, newest first, and capped at 100.
+- `recent` is deduplicated by `url`, newest first, and capped at 100
+  entries **and** at 16 MiB of total URL bytes. The oldest entries are dropped
+  first. A single URL larger than 1 MiB is not added to Recent; save it by
+  name instead.
 - `saved` is newest first, has no cap, and allows duplicate URLs under
   different names. Deleting a saved state is a swipe or long-press action.
 - Titles shown in lists: the saved `name`, or for recents, the app name plus

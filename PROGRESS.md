@@ -11,7 +11,7 @@ Legend: `[x]` done and verified · `[~]` partly done (see note) · `[ ]` not sta
 | # | Milestone | iOS | Android | Flutter | RN | Shared |
 | --- | --- | --- | --- | --- | --- | --- |
 | M0 | Spec and scaffolding | [~] | [~] | [~] | [~] | [x] |
-| M1 | Browser core | [x] | [ ] | [ ] | [ ] | [x] |
+| M1 | Browser core | [x] | [x] | [ ] | [ ] | [x] |
 | M2 | Links in | [ ] | [ ] | [ ] | [ ] | [ ] |
 | M3 | HashBin | [ ] | [ ] | [ ] | [ ] | [ ] |
 | M4 | QR and camera | [ ] | [ ] | [ ] | [ ] | [ ] |
@@ -25,6 +25,16 @@ Legend: `[x]` done and verified · `[~]` partly done (see note) · `[ ]` not sta
 
 Newest first. One line per meaningful step, with what was verified.
 
+- 2026-11-14: Android M1 done: Library (JSON in files/), library screen,
+  WebViews held in a ViewModel, doUpdateVisitedHistory → Recent/title/banner,
+  navigation policy (another registered app opens its own browser), Publish
+  popups in a dialog, VIEW/SEND intents routed. 48 core/transfer tests pass.
+  Maestro m1: each flow passes alone on Pixel_8_API_34; in the full suite one
+  flow fails at its first step every time (which one varies), because Android
+  kills the fresh app process under heavy host load (load average about 110
+  while four agents ran simulators). Re-run the suite on a quiet machine. ui.md
+  now settles Paste (paste and open), Recent size caps (16 MiB total, 1 MiB per
+  URL) and row labels.
 - 2026-11-14: iOS M1 done: Library model/store, library screen, per-app
   WKWebViews kept alive, KVO URL tracking → Recent, save/reload/copy-link,
   run banner, navigation policy, Publish popups as sheets, `binfire://`
