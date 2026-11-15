@@ -44,8 +44,34 @@ reading after `cidLength(cid)` bytes and fails if more arrive.
   - Stream the body with a cap of `cidLength(cid)` bytes. If the cap is
     exceeded → `too-large`. If the bytes don't match → `mismatch`.
 
+- Before any request: if `cidLength(cid)` exceeds the caller's limit
+  (`limits.maxStateBytes` for documents) → `too-large`. Network failures
+  (DNS, TLS, offline, timeout of 30 s) → `network`.
+
+Ports implement `loadCID(cid, limit, fetch)`, where `fetch` is injectable so
+unit tests can drive it from the fixture `hashbin.json` `fetch` cases.
+
 Error codes: `invalid-cid`, `too-large`, `not-found`, `unavailable`,
-`rate-limited`, `http-error`, `mismatch`.
+`rate-limited`, `http-error`, `mismatch`, `network`.
+
+## Opening a loaded document (`load-cid` route)
+
+1. `bytes = loadCID(cid, limits.maxStateBytes)`.
+2. If the route has an `app` hint, use it. Otherwise
+   `apps = appsForDocumentType(documentType(bytes))`.
+3. One app → open `canonicalOrigin + "#" + cid` in that app's browser. The FK
+   app loads and verifies the CID again by itself.
+4. No apps, or several → show a chooser sheet listing those apps (or every
+   app when none matched), plus **Copy link** and **Open raw** (the content
+   URL, in the system browser).
+5. On error → the error sheet, with a message for the code (offline,
+   expired/not found, unavailable, rate limited, size or verification
+   failure).
+
+The verified bytes may be cached by CID for offline reopen (M6 makes this
+durable).
+
+UI IDs: `chooser.sheet`, `chooser.app.<slug>`, `chooser.copy`, `chooser.raw`.
 
 ## Fixture `cid.json`
 

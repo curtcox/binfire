@@ -39,5 +39,102 @@
       "kind": "none",
       "error": "invalid"
     }
-  ]
+  ],
+  "fetch": [
+    {
+      "name": "inline cid needs no request",
+      "cid": "AAAAAAAFaGVsbG8",
+      "limit": 1000,
+      "request": false,
+      "ok": true,
+      "bodyB64": "aGVsbG8"
+    },
+    {
+      "name": "verified body",
+      "cid": "AAAAAADNqirsEEyvbdXE4Hcj8BqExxlprM7CSX48448AQM8HPfSY29Lp-QoNklj3nF0TcwU21UubHK6xmVXB3JDvS2YIvg",
+      "limit": 5242880,
+      "request": true,
+      "status": 200,
+      "bodyB64": "eyJmb3JtYXQiOiJoYXNoYmluLWRpYWdyYW0iLCJ2ZXJzaW9uIjoxLCJ0eXBlIjoicHl0aG9uIiwic3JjIjoieCA9IDFcbnggPSAxXG54ID0gMVxueCA9IDFcbnggPSAxXG54ID0gMVxueCA9IDFcbnggPSAxXG54ID0gMVxueCA9IDFcbnggPSAxXG54ID0gMVxueCA9IDFcbnggPSAxXG54ID0gMVxueCA9IDFcbnggPSAxXG54ID0gMVxueCA9IDFcbnggPSAxXG4ifQ",
+      "ok": true
+    },
+    {
+      "name": "body does not match",
+      "cid": "AAAAAADNqirsEEyvbdXE4Hcj8BqExxlprM7CSX48448AQM8HPfSY29Lp-QoNklj3nF0TcwU21UubHK6xmVXB3JDvS2YIvg",
+      "limit": 5242880,
+      "request": true,
+      "status": 200,
+      "bodyB64": "eyJmb3JtYXQiOiJoYXNoYmluLWRpYWdyYW0iLCJ2ZXJzaW9uIjoxLCJ0eXBlIjoicHl0aG9uIiwic3JjIjoieCA9IDFcbnggPSAxXG54ID0gMVxueCA9IDFcbnggPSAxXG54ID0gMVxueCA9IDFcbnggPSAxXG54ID0gMVxueCA9IDFcbnggPSAxXG54ID0gMVxueCA9IDFcbnggPSAxXG54ID0gMVxueCA9IDFcbnggPSAxXG54ID0gMVxueCA9IDFcbnggPSAxXG4iIQ",
+      "error": "mismatch"
+    },
+    {
+      "name": "body longer than declared",
+      "cid": "AAAAAADNqirsEEyvbdXE4Hcj8BqExxlprM7CSX48448AQM8HPfSY29Lp-QoNklj3nF0TcwU21UubHK6xmVXB3JDvS2YIvg",
+      "limit": 5242880,
+      "request": true,
+      "status": 200,
+      "bodyB64": "eyJmb3JtYXQiOiJoYXNoYmluLWRpYWdyYW0iLCJ2ZXJzaW9uIjoxLCJ0eXBlIjoicHl0aG9uIiwic3JjIjoieCA9IDFcbnggPSAxXG54ID0gMVxueCA9IDFcbnggPSAxXG54ID0gMVxueCA9IDFcbnggPSAxXG54ID0gMVxueCA9IDFcbnggPSAxXG54ID0gMVxueCA9IDFcbnggPSAxXG54ID0gMVxueCA9IDFcbnggPSAxXG54ID0gMVxueCA9IDFcbnggPSAxXG4ifWV4dHJh",
+      "error": "too-large"
+    },
+    {
+      "name": "body shorter than declared",
+      "cid": "AAAAAADNqirsEEyvbdXE4Hcj8BqExxlprM7CSX48448AQM8HPfSY29Lp-QoNklj3nF0TcwU21UubHK6xmVXB3JDvS2YIvg",
+      "limit": 5242880,
+      "request": true,
+      "status": 200,
+      "bodyB64": "eyJmb3JtYXQiOg",
+      "error": "mismatch"
+    },
+    {
+      "name": "declared length over limit, no request",
+      "cid": "AAAAAADNqirsEEyvbdXE4Hcj8BqExxlprM7CSX48448AQM8HPfSY29Lp-QoNklj3nF0TcwU21UubHK6xmVXB3JDvS2YIvg",
+      "limit": 100,
+      "request": false,
+      "error": "too-large"
+    },
+    {
+      "name": "not found",
+      "cid": "AAAAAADNqirsEEyvbdXE4Hcj8BqExxlprM7CSX48448AQM8HPfSY29Lp-QoNklj3nF0TcwU21UubHK6xmVXB3JDvS2YIvg",
+      "limit": 5242880,
+      "request": true,
+      "status": 404,
+      "bodyB64": "",
+      "error": "not-found"
+    },
+    {
+      "name": "unavailable for legal reasons",
+      "cid": "AAAAAADNqirsEEyvbdXE4Hcj8BqExxlprM7CSX48448AQM8HPfSY29Lp-QoNklj3nF0TcwU21UubHK6xmVXB3JDvS2YIvg",
+      "limit": 5242880,
+      "request": true,
+      "status": 451,
+      "bodyB64": "",
+      "error": "unavailable"
+    },
+    {
+      "name": "rate limited",
+      "cid": "AAAAAADNqirsEEyvbdXE4Hcj8BqExxlprM7CSX48448AQM8HPfSY29Lp-QoNklj3nF0TcwU21UubHK6xmVXB3JDvS2YIvg",
+      "limit": 5242880,
+      "request": true,
+      "status": 429,
+      "bodyB64": "",
+      "error": "rate-limited"
+    },
+    {
+      "name": "server error",
+      "cid": "AAAAAADNqirsEEyvbdXE4Hcj8BqExxlprM7CSX48448AQM8HPfSY29Lp-QoNklj3nF0TcwU21UubHK6xmVXB3JDvS2YIvg",
+      "limit": 5242880,
+      "request": true,
+      "status": 500,
+      "bodyB64": "",
+      "error": "http-error"
+    },
+    {
+      "name": "invalid cid",
+      "cid": "nope",
+      "limit": 5242880,
+      "request": false,
+      "error": "invalid-cid"
+    }
+  ],
+  "longLinkBytes": 2000
 }

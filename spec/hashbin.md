@@ -71,9 +71,45 @@ clients.
   `GET {api}/api/config` when available), and ask for confirmation.
   `max_cost_cents` caps the charge.
 
+### Long-link offer
+
+When **Send → Copy link** (or the share sheet, from M5) produces a
+`makeLink` result longer than `longLinkBytes` = 2000 UTF-8 bytes (messengers
+and mail clients start truncating around there), binfire also shows a
+notice that offers **Save to HashBin for a short link**:
+
+- With a client ID configured, this runs Native Save and then copies the
+  `/c#` link.
+- Without one, it explains that the app's own Publish button makes a short
+  link.
+
+The long link is still copied either way. UI IDs: `long.notice`, `long.save`.
+
+### Development: mock HashBin
+
+`node tools/mock-hashbin.mjs [port]` (default 8787) serves a local stand-in
+for hashbin.org and 256t.us with the same endpoints. Its authorize step
+approves automatically, it checks PKCE, rotates refresh tokens, and stores
+uploads by their computed CID, which it serves at `GET /<cid>`. Each port
+accepts a **debug-only** override that points `hashbin.api` and
+`hashbin.content` at it and sets a test client ID (`app_mock`). This lets
+Native Save and CID loading be tested end to end before the real client ID
+exists:
+
+- iOS: launch arguments `-hashbinApi URL -hashbinContent URL -hashbinClientId ID`;
+- Android: debug build intent extras with the same names;
+- Flutter: `--dart-define=HASHBIN_API=… HASHBIN_CONTENT=… HASHBIN_CLIENT_ID=…`;
+- React Native: `EXPO_PUBLIC_HASHBIN_API`, `EXPO_PUBLIC_HASHBIN_CONTENT` and
+  `EXPO_PUBLIC_HASHBIN_CLIENT_ID`, read at build time.
+
+Release builds ignore all of these.
+
 Fixture `hashbin.json`:
 
 - `pkce`: `{ verifier, challenge }`
+- `fetch`: `{ name, cid, limit, request: true|false, status?, bodyB64?, ok?: true, error? }`.
+  When `request` is false, `loadCID` must fail without calling `fetch`.
+- `longLinkBytes`: 2000.
 - `saveBytes`: `{ url, kind: "none"|"text"|"json"|"cid", text?, cid?, error? }`.
   A `v1` payload that fails to decompress gives `kind: "none"` with the lz
   `error` code.

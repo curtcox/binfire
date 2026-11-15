@@ -530,4 +530,19 @@ const saveBytes = [
   ['https://python.hashbin.page/?compressed=abc', { kind: 'none' }],
   ['https://python.hashbin.page/#v1.!!!', { kind: 'none', error: 'invalid' }],
 ].map(([url, expect]) => ({ url, ...expect }));
-write('hashbin.json', { pkce, saveBytes });
+const doc = text('{"format":"hashbin-diagram","version":1,"type":"python","src":"' + 'x = 1\\n'.repeat(20) + '"}');
+const docC = R.computeCID(doc);
+const fetchCases = [
+  { name: 'inline cid needs no request', cid: cidA, limit: 1000, request: false, ok: true, bodyB64: R.b64url(text('hello')) },
+  { name: 'verified body', cid: docC, limit: 5242880, request: true, status: 200, bodyB64: R.b64url(doc), ok: true },
+  { name: 'body does not match', cid: docC, limit: 5242880, request: true, status: 200, bodyB64: R.b64url(Buffer.concat([doc.subarray(0, doc.length - 1), text('!')])), error: 'mismatch' },
+  { name: 'body longer than declared', cid: docC, limit: 5242880, request: true, status: 200, bodyB64: R.b64url(Buffer.concat([doc, text('extra')])), error: 'too-large' },
+  { name: 'body shorter than declared', cid: docC, limit: 5242880, request: true, status: 200, bodyB64: R.b64url(doc.subarray(0, 10)), error: 'mismatch' },
+  { name: 'declared length over limit, no request', cid: docC, limit: 100, request: false, error: 'too-large' },
+  { name: 'not found', cid: docC, limit: 5242880, request: true, status: 404, bodyB64: '', error: 'not-found' },
+  { name: 'unavailable for legal reasons', cid: docC, limit: 5242880, request: true, status: 451, bodyB64: '', error: 'unavailable' },
+  { name: 'rate limited', cid: docC, limit: 5242880, request: true, status: 429, bodyB64: '', error: 'rate-limited' },
+  { name: 'server error', cid: docC, limit: 5242880, request: true, status: 500, bodyB64: '', error: 'http-error' },
+  { name: 'invalid cid', cid: 'nope', limit: 5242880, request: false, error: 'invalid-cid' },
+];
+write('hashbin.json', { pkce, saveBytes, fetch: fetchCases, longLinkBytes: 2000 });
