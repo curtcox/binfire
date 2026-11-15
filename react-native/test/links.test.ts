@@ -9,6 +9,7 @@ const ctx: BinfireContext = {
     ...defaultContext.config,
     linkDomain: fx.config.linkDomain,
     scheme: fx.config.scheme,
+    ownScheme: fx.config.ownScheme,
     hashbin: { ...defaultContext.config.hashbin, content: fx.config.content },
   },
 };

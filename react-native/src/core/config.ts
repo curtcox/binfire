@@ -14,6 +14,8 @@ export interface BinfireConfig {
   appName: string;
   linkDomain: string;
   scheme: string;
+  /** This port's private reverse-DNS scheme (its app ID); route() treats it like `scheme`. */
+  ownScheme: string;
   hashbin: { api: string; content: string; clientId: string };
   ble: { serviceUuid: string; controlCharacteristicUuid: string; dataCharacteristicUuid: string };
   limits: Limits;

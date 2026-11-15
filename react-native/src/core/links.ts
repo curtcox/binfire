@@ -32,19 +32,22 @@ function openApp(app: string, url: string): Route {
 }
 
 /**
- * When `url` is a binfire link (scheme S, or https with host D), its path with
+ * True when `scheme` (already lower-cased) is the public scheme S or this
+ * port's own scheme O. Schemes compare case-insensitively.
+ */
+export function isBinfireScheme(scheme: string, ctx: BinfireContext = defaultContext): boolean {
+  return scheme === ctx.config.scheme.toLowerCase() || scheme === ctx.config.ownScheme.toLowerCase();
+}
+
+/**
+ * When `url` is a binfire link (scheme S or O, or https with host D), its path with
  * leading and trailing slashes removed; otherwise `null`.
  */
 export function binfireLinkPath(url: ParsedUrl, ctx: BinfireContext = defaultContext): string | null {
-  const { linkDomain, scheme } = ctx.config;
+  const { linkDomain } = ctx.config;
   let path: string;
-  if (url.scheme === scheme.toLowerCase()) path = url.host + url.path;
-  else if (
-    url.scheme === 'https' &&
-    url.host === linkDomain.toLowerCase() &&
-    url.userinfo === null &&
-    url.port === ''
-  )
+  if (isBinfireScheme(url.scheme, ctx)) path = url.host + url.path;
+  else if (url.scheme === 'https' && url.host === linkDomain.toLowerCase() && url.userinfo === null && url.port === '')
     path = url.path;
   else return null;
   return path.replace(/^\/+|\/+$/g, '');
@@ -67,7 +70,7 @@ function routeBinfireLink(url: ParsedUrl, path: string, ctx: BinfireContext, all
     const app = appForUrl(u, ctx.registry);
     return app ? openApp(app.slug, u) : { action: 'show-text', text: u };
   }
-  if (head === 'share' && allowShare && url.scheme === ctx.config.scheme.toLowerCase()) {
+  if (head === 'share' && allowShare && isBinfireScheme(url.scheme, ctx)) {
     // Share extensions that can only open a URL hand text over as S://share#t=<text>.
     const t = queryGet(parseQuery(url.fragment), 't');
     if (t === null) return { action: 'error', error: 'bad-link' };
@@ -162,13 +165,17 @@ export function cleanSharedToken(token: string): string {
 function shareRoute(text: string, ctx: BinfireContext, allowShare: boolean): Route {
   const whole = routeText(text, ctx, allowShare);
   if (whole.action !== 'show-text') return whole;
-  const prefixes = ['https://', 'http://', ctx.config.scheme.toLowerCase() + '://'];
+  const prefixes = [
+    'https://',
+    'http://',
+    ctx.config.scheme.toLowerCase() + '://',
+    ctx.config.ownScheme.toLowerCase() + '://',
+  ];
   for (const raw of text.split(/[\t\n\f\r ]+/)) {
     const token = cleanSharedToken(raw);
     if (!token) continue;
     const lower = token.slice(0, 16).toLowerCase();
-    const candidate =
-      prefixes.some(p => lower.startsWith(p)) || isCid(token.startsWith('#') ? token.slice(1) : token);
+    const candidate = prefixes.some(p => lower.startsWith(p)) || isCid(token.startsWith('#') ? token.slice(1) : token);
     if (!candidate) continue;
     const r = routeText(token, ctx, allowShare);
     if (r.action !== 'show-text') return r;

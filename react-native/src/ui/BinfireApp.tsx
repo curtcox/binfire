@@ -31,9 +31,14 @@ const ERROR_MESSAGES: Record<string, string> = {
   'invalid-cid': "That link's document ID (CID) isn't valid.",
 };
 
-/** expo-share-intent's iOS hand-off URL (`<scheme>://dataUrl=…`); its hook handles it. */
+/**
+ * expo-share-intent's iOS hand-off URL (`<scheme>://dataUrl=…`); its hook handles it.
+ * The plugin always uses the first configured scheme (the public one); the own
+ * scheme is accepted too in case that changes.
+ */
 function isShareHandoff(url: string): boolean {
-  return url.toLowerCase().startsWith(`${ctx.config.scheme.toLowerCase()}://dataurl=`);
+  const lower = url.toLowerCase();
+  return [ctx.config.scheme, ctx.config.ownScheme].some(s => lower.startsWith(`${s.toLowerCase()}://dataurl=`));
 }
 
 export default function BinfireApp() {
