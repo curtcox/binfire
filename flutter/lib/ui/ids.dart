@@ -35,6 +35,24 @@ abstract final class Ids {
   static const errorSheet = 'error.sheet';
   static const errorMessage = 'error.message';
   static const errorOk = 'error.ok';
+
+  static const sendCopy = 'send.copy';
+  static const sendHashbin = 'send.hashbin';
+  static const longNotice = 'long.notice';
+  static const longSave = 'long.save';
+  static const hashbinConfirm = 'hashbin.confirm';
+  static const hashbinSize = 'hashbin.size';
+  static const hashbinOk = 'hashbin.ok';
+  static const hashbinCancel = 'hashbin.cancel';
+  static const hashbinResult = 'hashbin.result';
+  static const hashbinLink = 'hashbin.link';
+  static const hashbinCopy = 'hashbin.copy';
+  static const hashbinPublishNote = 'hashbin.publishNote';
+  static const chooserSheet = 'chooser.sheet';
+  static String chooserApp(String slug) => 'chooser.app.$slug';
+  static const chooserCopy = 'chooser.copy';
+  static const chooserRaw = 'chooser.raw';
+  static const loadingSheet = 'loading.sheet';
 }
 
 /// Wraps [child] in its own semantics node carrying the identifier [id].

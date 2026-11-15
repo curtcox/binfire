@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 
 import '../core/core.dart';
 import 'binfire_controller.dart';
+import 'hashbin_flow.dart';
 import 'sheets.dart';
 
 /// A user-facing message for a route error code.
@@ -27,7 +28,7 @@ Future<void> performRoute(BuildContext context, BinfireController controller, Li
     case RouteAction.error:
       await showErrorSheet(context, routeErrorMessage(route.error!));
     case RouteAction.loadCid:
-      await showErrorSheet(context, 'Opening HashBin documents is coming in M3.');
+      await openCid(context, controller, route.cid!, hint: route.app);
     case RouteAction.openSite:
       await showErrorSheet(context, 'Packaged sites are coming in M6.');
   }

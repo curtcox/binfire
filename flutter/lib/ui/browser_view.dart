@@ -4,11 +4,12 @@ library;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
 import '../core/core.dart';
 import 'binfire_controller.dart';
+import 'downloads.dart';
+import 'hashbin_flow.dart';
 import 'ids.dart';
 import 'sheets.dart';
 
@@ -43,7 +44,9 @@ NavigationDecision decideNavigation({
 bool _isHashbinUrl(String url, BinfireConfig config) {
   final u = ParsedUrl.parse(url);
   final api = ParsedUrl.parse(config.hashbin.api);
-  return u != null && api != null && u.scheme == 'https' && u.scheme == api.scheme && u.host == api.host && u.port == api.port;
+  if (u == null || api == null || u.scheme != api.scheme || u.host != api.host || u.port != api.port) return false;
+  // http only for a local mock HashBin, which only debug overrides can set.
+  return u.scheme == 'https' || (kDebugMode && u.scheme == 'http' && (api.host == 'localhost' || api.host == '127.0.0.1'));
 }
 
 InAppWebViewSettings _settings() => InAppWebViewSettings(
@@ -53,6 +56,7 @@ InAppWebViewSettings _settings() => InAppWebViewSettings(
       isInspectable: kDebugMode,
       allowsBackForwardNavigationGestures: false,
       mediaPlaybackRequiresUserGesture: true,
+      useOnDownloadStart: true,
     );
 
 /// The browser for one open app.
@@ -125,10 +129,19 @@ class _AppBrowserState extends State<AppBrowser> implements BrowserHandle {
       builder: (sheetContext) => _PopupSheet(
         windowId: action.windowId,
         config: _c.config,
-        onUnregistered: (url) {
+        onLeave: (url) {
           Navigator.of(sheetContext).pop();
-          if (mounted) showTextSheet(context, url);
+          if (!mounted) return;
+          // A registered app URL (such as HashBin's redirect back with
+          // #hashbin_publish=) loads in that app's browser without asking.
+          final route = _c.route(url);
+          if (_c.registry.match(url) != null && route.action == RouteAction.openApp) {
+            _c.openApp(route.app!, route.url!);
+          } else {
+            showTextSheet(context, url);
+          }
         },
+        onDownload: _onDownload,
       ),
     );
     return true;
@@ -141,11 +154,8 @@ class _AppBrowserState extends State<AppBrowser> implements BrowserHandle {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Saved "$name"')));
   }
 
-  void _copyLink() {
-    final link = _c.links.makeLink(_open.currentUrl);
-    if (link == null) return;
-    Clipboard.setData(ClipboardData(text: link));
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Link copied')));
+  void _onDownload(InAppWebViewController web, DownloadStartRequest request) {
+    if (mounted) shareDownload(context, web, request, _c.config.limits.maxSiteFileBytes);
   }
 
   @override
@@ -169,9 +179,14 @@ class _AppBrowserState extends State<AppBrowser> implements BrowserHandle {
                   tooltip: 'Send',
                   icon: const Icon(Icons.ios_share),
                   onSelected: (v) {
-                    if (v == 'link') _copyLink();
+                    if (v == 'link') copyLink(context, _c, _slug);
+                    if (v == 'hashbin') saveToHashbin(context, _c, _slug);
                   },
-                  itemBuilder: (context) => const [PopupMenuItem(value: 'link', child: Text('Copy link'))],
+                  itemBuilder: (context) => [
+                    PopupMenuItem(value: 'link', child: withId(Ids.sendCopy, const Text('Copy link'))),
+                    if (_c.canSaveToHashbin)
+                      PopupMenuItem(value: 'hashbin', child: withId(Ids.sendHashbin, const Text('Save to HashBin'))),
+                  ],
                 ),
               ),
               withId(Ids.webReload, IconButton(onPressed: () => _web?.reload(), tooltip: 'Reload', icon: const Icon(Icons.refresh))),
@@ -217,6 +232,7 @@ class _AppBrowserState extends State<AppBrowser> implements BrowserHandle {
             if (raw != null && raw.isNotEmpty && raw != 'about:blank') _c.visited(_slug, raw);
           },
           onCreateWindow: _onCreateWindow,
+          onDownloadStartRequest: _onDownload,
         ),
       ),
     );
@@ -226,11 +242,12 @@ class _AppBrowserState extends State<AppBrowser> implements BrowserHandle {
 /// A popup window (FK's HashBin Publish), sharing the opener's process so
 /// `window.opener` keeps working.
 class _PopupSheet extends StatelessWidget {
-  const _PopupSheet({required this.windowId, required this.config, required this.onUnregistered});
+  const _PopupSheet({required this.windowId, required this.config, required this.onLeave, required this.onDownload});
 
   final int windowId;
   final BinfireConfig config;
-  final void Function(String url) onUnregistered;
+  final void Function(String url) onLeave;
+  final void Function(InAppWebViewController web, DownloadStartRequest request) onDownload;
 
   @override
   Widget build(BuildContext context) {
@@ -250,9 +267,10 @@ class _PopupSheet extends StatelessWidget {
                 if (!action.isForMainFrame) return NavigationActionPolicy.ALLOW;
                 final url = action.request.url?.rawValue ?? '';
                 if (url == 'about:blank' || _isHashbinUrl(url, config)) return NavigationActionPolicy.ALLOW;
-                onUnregistered(url);
+                onLeave(url);
                 return NavigationActionPolicy.CANCEL;
               },
+              onDownloadStartRequest: onDownload,
               onCloseWindow: (web) {
                 if (Navigator.canPop(context)) Navigator.pop(context);
               },

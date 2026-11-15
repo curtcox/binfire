@@ -22,6 +22,16 @@ bool isFileLink(String link) {
   return lower.startsWith('file:') || lower.startsWith('content:');
 }
 
+/// Whether [link] is the Native Save OAuth callback `<ownScheme>://oauth…`.
+/// The auth session (flutter_web_auth_2) consumes it; it is never routed.
+bool isOAuthCallback(String link, String ownScheme) {
+  if (ownScheme.isEmpty) return false;
+  final prefix = '${ownScheme.toLowerCase()}://oauth';
+  final lower = link.trimLeft().toLowerCase();
+  if (!lower.startsWith(prefix)) return false;
+  return lower.length == prefix.length || '/?#'.contains(lower[prefix.length]);
+}
+
 /// Delivers incoming links to [route], on cold start and while running,
 /// over whatever sheet or browser is showing.
 class IncomingLinks {
@@ -49,6 +59,7 @@ class IncomingLinks {
 
   /// Handles one incoming [link].
   Future<void> handle(String link) async {
+    if (isOAuthCallback(link, controller.config.ownScheme)) return;
     while (navigatorKey.currentState == null) {
       await WidgetsBinding.instance.endOfFrame;
     }

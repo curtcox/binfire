@@ -71,6 +71,28 @@ class _LibraryScreenState extends State<LibraryScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: Text(_c.config.appName),
+          actions: [
+            if (_c.hashbin != null)
+              ListenableBuilder(
+                listenable: _c,
+                builder: (context, _) => PopupMenuButton<String>(
+                  tooltip: 'More',
+                  onSelected: (v) async {
+                    if (v != 'signout') return;
+                    await _c.signOutOfHashbin();
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Signed out of HashBin')));
+                  },
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: 'signout',
+                      enabled: _c.hashbinSignedIn,
+                      child: const Text('Sign out of HashBin'),
+                    ),
+                  ],
+                ),
+              ),
+          ],
           bottom: TabBar(
             tabs: [
               withId(Ids.tabApps, const Tab(text: 'Apps')),

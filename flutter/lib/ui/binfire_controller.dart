@@ -3,6 +3,7 @@
 library;
 
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 
 import '../core/core.dart';
 import '../library/library.dart';
@@ -43,8 +44,12 @@ class BinfireController extends ChangeNotifier {
     required this.library,
     this.store,
     DateTime Function()? clock,
+    this.hashbin,
+    this.authenticate,
+    CidFetch? cidFetch,
   })  : links = Links(config, registry),
-        _clock = clock ?? DateTime.now;
+        _clock = clock ?? DateTime.now,
+        _cidFetch = cidFetch ?? httpCidFetch(http.Client());
 
   /// Runtime config.
   final BinfireConfig config;
@@ -62,6 +67,19 @@ class BinfireController extends ChangeNotifier {
   final LibraryStore? store;
 
   final DateTime Function() _clock;
+
+  /// The Native Save client, or `null` when no client ID is configured
+  /// (then Save to HashBin is hidden).
+  final HashbinClient? hashbin;
+
+  /// The system auth session used to sign in to HashBin.
+  final Authenticator? authenticate;
+
+  final CidFetch _cidFetch;
+
+  /// Verified documents by CID, for reopening (in memory; M6 makes it durable).
+  final Map<String, Uint8List> _cidCache = {};
+  static const _cidCacheEntries = 16;
 
   /// Open browsers, in the order they were opened. At most one per app.
   final List<OpenApp> openApps = [];
@@ -148,6 +166,37 @@ class BinfireController extends ChangeNotifier {
       _persist();
       notifyListeners();
     }
+  }
+
+  /// Whether Native Save is available (a client ID is configured).
+  bool get canSaveToHashbin => hashbin != null && authenticate != null;
+
+  /// Whether HashBin tokens are held.
+  bool get hashbinSignedIn => hashbin?.isSignedIn ?? false;
+
+  /// Tells listeners the HashBin sign-in may have changed.
+  void hashbinChanged() => notifyListeners();
+
+  /// Signs out of HashBin (revokes the refresh token).
+  Future<void> signOutOfHashbin() async {
+    await hashbin?.signOut();
+    notifyListeners();
+  }
+
+  /// Loads and verifies [cid] within `limits.maxStateBytes` (cid.md).
+  Future<Uint8List> fetchCid(String cid) async {
+    final cached = _cidCache[cid];
+    if (cached != null) return cached;
+    final bytes = await loadCid(cid, config.limits.maxStateBytes, _cidFetch, content: config.hashbin.content);
+    if (_cidCache.length >= _cidCacheEntries) _cidCache.remove(_cidCache.keys.first);
+    _cidCache[cid] = bytes;
+    return bytes;
+  }
+
+  /// The raw content URL for [cid] (`{content}/{cid}`).
+  String contentUrl(String cid) {
+    final base = config.hashbin.content;
+    return '${base.endsWith('/') ? base.substring(0, base.length - 1) : base}/$cid';
   }
 
   void _persist() => store?.save(library);
