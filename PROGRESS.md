@@ -12,7 +12,7 @@ Legend: `[x]` done and verified · `[~]` partly done (see note) · `[ ]` not sta
 | --- | --- | --- | --- | --- | --- | --- |
 | M0 | Spec and scaffolding | [x] | [x] | [x] | [x] | [x] |
 | M1 | Browser core | [x] | [x] | [x] | [x] | [x] |
-| M2 | Links in | [x] | [x] | [x] | [ ] | [~] |
+| M2 | Links in | [~] | [~] | [~] | [~] | [~] |
 | M3 | HashBin | [ ] | [ ] | [ ] | [ ] | [ ] |
 | M4 | QR and camera | [ ] | [ ] | [ ] | [ ] | [ ] |
 | M5 | Send and files | [ ] | [ ] | [ ] | [ ] | [ ] |
@@ -39,6 +39,16 @@ Run on a quiet machine on 2026-11-14 (after M1):
 
 Newest first. One line per meaningful step, with what was verified.
 
+- 2026-11-14: RN M2 done on iPhone 17: deep links cold and warm (fixed a
+  lost cold-start URL by reading expo-linking's kept URL at mount); share
+  target via `expo-share-intent` 9.0.0. Its iOS extension needs an App Group,
+  so it can't run unsigned [d]. Android pass (mine, three ports installed on
+  one emulator): SEND share-in opens Python in Flutter and RN. The deep-link
+  flow hit an "Open with" chooser because all ports claim `binfire://`. Spec
+  change 86be4db: each port also registers a private scheme = its app ID; it
+  carries the OAuth redirect (HashBin requires reverse-DNS anyway), share
+  hand-off and UI tests. All four ports are adopting it, so M2 is back to
+  [~] until they do.
 - 2026-11-14: Flutter M2 done: 754 tests; Maestro deep-link passes on iPhone
   Air; cold and warm links checked (a warm link closes an open sheet first).
   Deep links use `app_links` 7.0. No share plugin: both candidates need an iOS
