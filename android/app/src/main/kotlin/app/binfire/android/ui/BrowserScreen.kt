@@ -1,10 +1,6 @@
 package app.binfire.android.ui
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,7 +21,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -36,7 +31,6 @@ import app.binfire.core.UrlState
 
 @Composable
 fun BrowserScreen(vm: BinfireViewModel, tab: BrowserTab) {
-    val context = LocalContext.current
     val runOff = remember(tab.url) { UrlState.classify(tab.url)?.run == false }
     var menu by remember { mutableStateOf(false) }
 
@@ -54,21 +48,35 @@ fun BrowserScreen(vm: BinfireViewModel, tab: BrowserTab) {
             TextButton(onClick = { vm.requestSave(tab) }, modifier = Modifier.testTag("web.save")) { Text("Save") }
             Box {
                 TextButton(onClick = { menu = true }, modifier = Modifier.testTag("web.send")) { Text("Send") }
-                DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, modifier = Modifier.uiTestRoot()) {
                     DropdownMenuItem(
                         text = { Text("Copy link") },
                         onClick = {
                             menu = false
-                            val link = vm.linkFor(tab)
-                            if (link != null) {
-                                (context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager)
-                                    .setPrimaryClip(ClipData.newPlainText("binfire link", link))
-                                Toast.makeText(context, "Link copied", Toast.LENGTH_SHORT).show()
-                            } else {
-                                Toast.makeText(context, "No link for this page", Toast.LENGTH_SHORT).show()
-                            }
+                            vm.copyLink(tab)
                         },
+                        modifier = Modifier.testTag("send.copy"),
                     )
+                    if (vm.hashbin != null) {
+                        DropdownMenuItem(
+                            text = { Text("Save to HashBin") },
+                            onClick = {
+                                menu = false
+                                vm.startHashBinSave(tab.app.slug, tab.url)
+                            },
+                            modifier = Modifier.testTag("send.hashbin"),
+                        )
+                        if (vm.hashbinSignedIn) {
+                            DropdownMenuItem(
+                                text = { Text("Sign out of HashBin") },
+                                onClick = {
+                                    menu = false
+                                    vm.signOutHashBin()
+                                },
+                                modifier = Modifier.testTag("hashbin.signOut"),
+                            )
+                        }
+                    }
                 }
             }
         }

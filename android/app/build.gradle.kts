@@ -18,7 +18,11 @@ android {
         versionName = "0.1.0"
     }
 
-    buildFeatures { compose = true }
+    buildFeatures {
+        compose = true
+        // BuildConfig.DEBUG gates the HashBin debug overrides (spec/hashbin.md "Development").
+        buildConfig = true
+    }
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -39,4 +43,6 @@ dependencies {
     implementation("androidx.activity:activity-compose:1.10.1")
     implementation("androidx.core:core-ktx:1.16.0")
     implementation("androidx.webkit:webkit:1.14.0")
+    // Custom Tabs for the HashBin OAuth sign-in (spec/hashbin.md "Native Save").
+    implementation("androidx.browser:browser:1.8.0")
 }
