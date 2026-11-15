@@ -4,8 +4,10 @@ import Foundation
 public enum Route: Equatable, Sendable {
     /// Load `url` in the app's WebView. `state`, `run`, `view` come from `classifyState(url)`.
     case openApp(app: String, url: String, state: StateKind, run: Bool, view: String?)
-    /// Fetch and verify `cid`; `app` is a slug hint or nil.
-    case loadCID(cid: String, app: String?)
+    /// Fetch and verify `cid`; `app` is a slug hint or nil. `run` is false
+    /// for received content (`routeReceived`): the document then opens with
+    /// `withRunZero(canonicalOrigin + "#" + cid)`.
+    case loadCID(cid: String, app: String?, run: Bool = true)
     /// Load a site manifest by CID.
     case openSite(cid: String)
     /// Not something binfire opens: show it with Open in browser / Copy. Never auto-navigate.
@@ -56,6 +58,21 @@ public struct Links: Sendable {
 
     /// Routes any input text (paste, share, scan, audio, transfer `url`).
     public func route(_ text: String) -> Route { routeWithSource(text).route }
+
+    /// `route` for text that arrived over QR, BLE, audio or a received bundle
+    /// (`spec/links.md` "routeReceived"): received content never runs
+    /// automatically.
+    public func routeReceived(_ text: String) -> Route {
+        switch route(text) {
+        case let .openApp(app, url, state, _, view):
+            let u = Links.withRunZero(url)
+            return .openApp(app: app, url: u, state: state, run: URLState.classifyState(u).run, view: view)
+        case let .loadCID(cid, app, _):
+            return .loadCID(cid: cid, app: app, run: false)
+        case let other:
+            return other
+        }
+    }
 
     /// `route` for shared or pasted text: if plain routing only gives
     /// `show-text`, look for the first link or CID token inside the text.

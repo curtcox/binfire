@@ -19,8 +19,8 @@ final class LinksTests: XCTestCase {
         switch r {
         case let .openApp(app, url, state, run, view):
             f["app"] = app; f["url"] = url; f["state"] = state.rawValue; f["run"] = run; f["view"] = .some(view)
-        case let .loadCID(cid, app):
-            f["cid"] = cid; f["app"] = .some(app)
+        case let .loadCID(cid, app, run):
+            f["cid"] = cid; f["app"] = .some(app); f["run"] = run
         case let .openSite(cid):
             f["cid"] = cid
         case let .showText(text):
@@ -35,6 +35,8 @@ final class LinksTests: XCTestCase {
 
     func testRouteShared() throws { try checkRoutes("routeShared") { links.routeShared($0) } }
 
+    func testRouteReceived() throws { try checkRoutes("routeReceived") { links.routeReceived($0) } }
+
     func testWithoutRun() throws {
         let cases = try Fixtures.list(fixture, "withoutRun")
         XCTAssertFalse(cases.isEmpty)
@@ -47,22 +49,27 @@ final class LinksTests: XCTestCase {
         XCTAssertEqual(Links.stripSharedToken("x)]"), "x")
     }
 
-    private func checkRoutes(_ key: String, _ routeFn: (String) -> Route) throws {
+    func checkRoutes(_ key: String, _ routeFn: (String) -> Route) throws {
         let cases = try Fixtures.list(fixture, key)
         XCTAssertFalse(cases.isEmpty)
         for c in cases {
             let input = c["input"] as! String
-            let expect = c["expect"] as! [String: Any]
-            let got = LinksTests.fields(routeFn(input))
-            for (key, want) in expect {
-                guard let entry = got[key] else { XCTFail("\(input): missing \(key)"); continue }
-                let have = entry ?? NSNull()
-                if let h = have as? Bool {
-                    XCTAssertEqual(h, want as? Bool, "\(input): \(key)")
-                } else {
-                    XCTAssertEqual("\(have)", "\(want)", "\(input): \(key)")
-                    XCTAssertEqual(have is NSNull, want is NSNull, "\(input): \(key) null-ness")
-                }
+            LinksTests.assertRoute(routeFn(input), c["expect"] as! [String: Any], input)
+        }
+    }
+
+    /// Compares only the fields present in `expect` (a fixture route).
+    static func assertRoute(_ route: Route, _ expect: [String: Any], _ label: String,
+                            file: StaticString = #filePath, line: UInt = #line) {
+        let got = fields(route)
+        for (key, want) in expect {
+            guard let entry = got[key] else { XCTFail("\(label): missing \(key)", file: file, line: line); continue }
+            let have = entry ?? NSNull()
+            if let h = have as? Bool {
+                XCTAssertEqual(h, want as? Bool, "\(label): \(key)", file: file, line: line)
+            } else {
+                XCTAssertEqual("\(have)", "\(want)", "\(label): \(key)", file: file, line: line)
+                XCTAssertEqual(have is NSNull, want is NSNull, "\(label): \(key) null-ness", file: file, line: line)
             }
         }
     }
