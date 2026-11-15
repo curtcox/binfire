@@ -142,9 +142,6 @@ class HashbinPricing {
   }
 }
 
-/// The `max_cost_cents` cap used when HashBin publishes no price.
-const defaultMaxCostCents = 100;
-
 /// HashBin's OAuth and content API for one client ID.
 class HashbinClient {
   /// Creates a client for [api] (no trailing slash needed).

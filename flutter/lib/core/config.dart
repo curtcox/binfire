@@ -59,7 +59,10 @@ class BinfireLimits {
 /// HashBin endpoints.
 class HashbinConfig {
   /// Creates a HashBin config.
-  const HashbinConfig({this.api = '', required this.content, this.clientId = ''});
+  const HashbinConfig({this.api = '', required this.content, this.clientId = '', this.maxCostCents = defaultMaxCostCents});
+
+  /// `maxCostCents` in the shipped `config/binfire.config.json`.
+  static const defaultMaxCostCents = 25;
 
   /// HashBin API base URL.
   final String api;
@@ -69,6 +72,10 @@ class HashbinConfig {
 
   /// OAuth client ID, empty when not configured.
   final String clientId;
+
+  /// `max_cost_cents` sent with every Native Save upload, and the "up to $X"
+  /// shown when HashBin publishes no price (hashbin.md, Cost).
+  final int maxCostCents;
 }
 
 /// Bluetooth LE UUIDs (ble-gatt.md).
@@ -139,6 +146,7 @@ class BinfireConfig {
         api: str(hashbin, 'api', def: ''),
         content: str(hashbin, 'content'),
         clientId: str(hashbin, 'clientId', def: ''),
+        maxCostCents: _maxCost(hashbin['maxCostCents']),
       ),
       ble: ble == null
           ? null
@@ -150,6 +158,12 @@ class BinfireConfig {
       limits: limits == null ? BinfireLimits.defaults : BinfireLimits.fromJson(limits),
       oauthRedirect: str(json, 'oauthRedirect', def: ''),
     );
+  }
+
+  static int _maxCost(Object? v) {
+    if (v == null) return HashbinConfig.defaultMaxCostCents;
+    if (v is int && v > 0) return v;
+    throw const FormatException('config.hashbin.maxCostCents must be a positive integer');
   }
 
   /// Parses runtime config JSON text.
@@ -200,6 +214,7 @@ class BinfireConfig {
         api: api.isEmpty ? hashbin.api : api,
         content: content.isEmpty ? hashbin.content : content,
         clientId: clientId.isEmpty ? hashbin.clientId : clientId,
+        maxCostCents: hashbin.maxCostCents,
       ),
       ble: ble,
       limits: limits,

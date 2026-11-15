@@ -28,7 +28,7 @@ String cidErrorMessage(String code) => switch (code) {
 /// A user-facing message for a Native Save error code.
 String hashbinErrorMessage(String code) => switch (code) {
       ErrorCodes.insufficientBalance => 'Your HashBin balance is too low. Add funds at hashbin.org, then try again.',
-      ErrorCodes.costExceeded => 'Saving would cost more than the estimate, so nothing was saved or charged.',
+      ErrorCodes.costExceeded => 'Saving would cost more than the configured limit, so nothing was saved or charged.',
       ErrorCodes.tooLarge => 'This document is too large for HashBin.',
       ErrorCodes.mismatch => "HashBin returned an ID that doesn't match this document, so binfire didn't use it.",
       ErrorCodes.failed => "Signing in to HashBin didn't work. Try again.",
@@ -43,7 +43,8 @@ String _formatBytes(int n) {
   return '${(n / 1000000).toStringAsFixed(1)} MB';
 }
 
-String _formatCents(int c) => c < 100 ? '$c¢' : '\$${(c / 100).toStringAsFixed(2)}';
+/// [c] cents as dollars, e.g. `$0.25`.
+String formatDollars(int c) => '\$${c ~/ 100}.${(c % 100).toString().padLeft(2, '0')}';
 
 Widget _sheet(BuildContext context, String id, List<Widget> children) => withId(
       id,
@@ -195,19 +196,24 @@ Future<void> copyLink(BuildContext context, BinfireController c, String slug) as
       Text(
         'The link was copied, but it is ${_formatBytes(utf8Length(link))} long. '
         'Messengers and mail apps may cut it short. '
-        '${c.canSaveToHashbin ? 'Save the document to HashBin to get a short link.' : "Use the app's own Publish button to get a short link."}',
+        'Save the document to HashBin to get a short link.',
       ),
       _buttons([
         TextButton(onPressed: () => Navigator.pop(sheet, false), child: const Text('OK')),
-        if (c.canSaveToHashbin)
-          withId(
-            Ids.longSave,
-            FilledButton(onPressed: () => Navigator.pop(sheet, true), child: const Text('Save to HashBin for a short link')),
-          ),
+        withId(
+          Ids.longSave,
+          FilledButton(onPressed: () => Navigator.pop(sheet, true), child: const Text('Save to HashBin for a short link')),
+        ),
       ]),
     ]),
   );
-  if (save == true && context.mounted) await saveToHashbin(context, c, slug, copyResult: true);
+  if (save != true || !context.mounted) return;
+  // Without a client ID, only the app's own Publish can make a short link.
+  if (c.canSaveToHashbin) {
+    await saveToHashbin(context, c, slug, copyResult: true);
+  } else {
+    await showPublishNote(context);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -238,8 +244,9 @@ Future<void> saveToHashbin(BuildContext context, BinfireController c, String slu
   }
   final bytes = what.bytes!;
   if (!context.mounted) return;
-  final maxCost = await showHashbinConfirm(context, bytes.length, client.fetchConfig());
-  if (maxCost == null || !context.mounted) return;
+  final maxCost = c.config.hashbin.maxCostCents;
+  final ok = await showHashbinConfirm(context, bytes.length, client.fetchConfig(), maxCostCents: maxCost);
+  if (ok != true || !context.mounted) return;
   final UploadResult result;
   try {
     result = await _behindSheet(
@@ -259,10 +266,12 @@ Future<void> saveToHashbin(BuildContext context, BinfireController c, String slu
   if (context.mounted) await showHashbinResult(context, link);
 }
 
-/// Shows the size and estimated cost and asks to save. Returns the
-/// `max_cost_cents` cap to upload with, or `null` when cancelled.
-Future<int?> showHashbinConfirm(BuildContext context, int size, Future<HashbinPricing?> pricing) {
-  return showModalBottomSheet<int>(
+/// Shows the size and cost and asks to save. The cost is the estimate when
+/// HashBin publishes a price, otherwise "up to" [maxCostCents], the cap the
+/// upload is sent with (hashbin.md, Cost). Returns `true` to save.
+Future<bool?> showHashbinConfirm(BuildContext context, int size, Future<HashbinPricing?> pricing,
+    {required int maxCostCents}) {
+  return showModalBottomSheet<bool>(
     context: context,
     showDragHandle: true,
     builder: (sheet) => _sheet(sheet, Ids.hashbinConfirm, [
@@ -276,15 +285,14 @@ Future<int?> showHashbinConfirm(BuildContext context, int size, Future<HashbinPr
           final p = snap.data;
           final estimate = p?.estimateCents(size);
           final tooLarge = p?.maxUploadBytes != null && size > p!.maxUploadBytes!;
-          final cap = estimate ?? defaultMaxCostCents;
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(!done
                   ? 'Estimating cost…'
                   : estimate != null
-                      ? 'Estimated cost: ${_formatCents(estimate)} (one month)'
-                      : 'HashBin will charge at most ${_formatCents(cap)}.'),
+                      ? 'Estimated cost: ${formatDollars(estimate)} (one month)'
+                      : 'Cost: up to ${formatDollars(maxCostCents)}'),
               if (tooLarge) const Text('This is larger than HashBin accepts.'),
               const SizedBox(height: 8),
               const Text('HashBin is pay-to-publish. You may be asked to sign in.'),
@@ -293,7 +301,7 @@ Future<int?> showHashbinConfirm(BuildContext context, int size, Future<HashbinPr
                 withId(
                   Ids.hashbinOk,
                   FilledButton(
-                    onPressed: done && !tooLarge ? () => Navigator.pop(sheet, cap) : null,
+                    onPressed: done && !tooLarge ? () => Navigator.pop(sheet, true) : null,
                     child: const Text('Save'),
                   ),
                 ),

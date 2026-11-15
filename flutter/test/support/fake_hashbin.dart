@@ -18,6 +18,9 @@ class FakeHashbin {
   String? forceCid;
   Completer<void>? holdToken;
 
+  /// `price_cents_per_mb_month` served by `/api/config`, omitted when null.
+  num? price = 1;
+
   String token(String p) => '$p${n++}';
 
   Map<String, Object?> issue() {
@@ -67,7 +70,9 @@ class FakeHashbin {
       refresh.remove(b['token']);
       return json(200, {});
     }
-    if (req.url.path == '/api/config') return json(200, {'max_upload_bytes': 100, 'price_cents_per_mb_month': 1});
+    if (req.url.path == '/api/config') {
+      return json(200, {'max_upload_bytes': 100, if (price != null) 'price_cents_per_mb_month': price});
+    }
     if (req.url.path == '/api/content') {
       final auth = req.headers['authorization'] ?? '';
       if (!auth.startsWith('Bearer ') || !access.contains(auth.substring(7))) return json(401, {'error': 'unauthorized'});

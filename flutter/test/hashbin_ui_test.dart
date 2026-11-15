@@ -136,12 +136,16 @@ void main() {
       expect(byId('long.save'), findsOneWidget);
     });
 
-    testWidgets('without a client ID the notice points at Publish', (tester) async {
+    testWidgets('without a client ID long.save shows the Publish note', (tester) async {
       final c = controller()..openApp('python', 'https://python.hashbin.page/#v1.${'A' * 2100}');
       await host(tester, (context) => copyLink(context, c, 'python'));
+      expect(clipboard, startsWith('https://binfire.app/a/python#v1.AAA'));
       expect(byId('long.notice'), findsOneWidget);
-      expect(byId('long.save'), findsNothing);
-      expect(find.textContaining('Publish'), findsOneWidget);
+      expect(byId('long.save'), findsOneWidget);
+      await tester.tap(find.text('Save to HashBin for a short link'));
+      await tester.pumpAndSettle();
+      expect(byId('hashbin.publishNote'), findsOneWidget);
+      expect(clipboard, startsWith('https://binfire.app/a/python#v1.AAA'));
     });
   });
 
@@ -155,17 +159,49 @@ void main() {
       await host(tester, (context) => saveToHashbin(context, c, 'python'));
       expect(byId('hashbin.confirm'), findsOneWidget);
       expect(find.text('Size: 11 bytes'), findsOneWidget);
-      expect(find.textContaining('Estimated cost: 1¢'), findsOneWidget);
+      expect(find.textContaining('Estimated cost: \$0.01'), findsOneWidget);
       await tester.tap(find.text('Save'));
       await tester.pumpAndSettle();
       final cid = computeCid(utf8.encode('print("hi")'));
       expect(byId('hashbin.result'), findsOneWidget);
       expect(find.text('https://binfire.app/c?app=python#$cid'), findsOneWidget);
-      expect(server.log, contains('type text/plain; charset=utf-8 max 1'));
+      expect(server.log, contains('type text/plain; charset=utf-8 max ${config.hashbin.maxCostCents}'));
       expect(c.hashbinSignedIn, isTrue);
       await tester.tap(find.text('Copy'));
       await tester.pumpAndSettle();
       expect(clipboard, 'https://binfire.app/c?app=python#$cid');
+    });
+
+    testWidgets('without a price: "up to" the configured cap, which is sent', (tester) async {
+      final server = FakeHashbin()..price = null;
+      final c = controller(server: server)..openApp('python', urlOf('json'));
+      await host(tester, (context) => saveToHashbin(context, c, 'python'));
+      expect(find.text('Cost: up to \$0.25'), findsOneWidget);
+      expect(find.textContaining('Estimated'), findsNothing);
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
+      expect(byId('hashbin.result'), findsOneWidget);
+      expect(server.log, contains('type application/json max 25'));
+    });
+
+    testWidgets('a different configured cap is shown and sent', (tester) async {
+      final server = FakeHashbin()..price = null;
+      final cfg = BinfireConfig.fromJson({
+        ...jsonDecode(File(BinfireConfig.assetPath).readAsStringSync()) as Map<String, Object?>,
+        'hashbin': {'content': 'https://256t.us', 'maxCostCents': 150},
+      });
+      final c = BinfireController(
+        config: cfg,
+        registry: registry,
+        library: Library(),
+        hashbin: HashbinClient(api: 'https://hb.test', clientId: 'app_test', redirectUri: cfg.redirectUri, httpClient: server.client),
+        authenticate: server.authenticate,
+      )..openApp('python', urlOf('text'));
+      await host(tester, (context) => saveToHashbin(context, c, 'python'));
+      expect(find.text('Cost: up to \$1.50'), findsOneWidget);
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
+      expect(server.log, contains('type text/plain; charset=utf-8 max 150'));
     });
 
     testWidgets('cancel uploads nothing', (tester) async {
@@ -218,6 +254,14 @@ void main() {
       await tester.pumpAndSettle();
       expect(byId('error.sheet'), findsNothing);
       expect(byId('hashbin.result'), findsNothing);
+    });
+
+    test('cost-exceeded names the configured limit', () {
+      expect(hashbinErrorMessage(ErrorCodes.costExceeded), contains('configured limit'));
+      expect(hashbinErrorMessage(ErrorCodes.costExceeded), isNot(contains('estimate')));
+      expect(formatDollars(25), '\$0.25');
+      expect(formatDollars(100), '\$1.00');
+      expect(formatDollars(1234), '\$12.34');
     });
 
     test('no client ID: Save to HashBin is unavailable', () {
