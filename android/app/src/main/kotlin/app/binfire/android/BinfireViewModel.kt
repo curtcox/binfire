@@ -78,16 +78,22 @@ sealed interface Sheet {
     /** Send → Copy link made a link over 2000 bytes (`long.notice`). [canSave] when Native Save is configured. */
     data class LongLink(val slug: String, val url: String, val bytes: Long, val canSave: Boolean) : Sheet
 
-    /** Size and estimated cost before uploading (`hashbin.confirm`). [copyLink] copies the result (long-link path). */
+    /**
+     * Size and cost before uploading (`hashbin.confirm`). [estimateCents] only when `/api/config`
+     * has a price; otherwise the sheet shows "up to [maxCostCents]". [copyLink] copies the result.
+     */
     class HashBinConfirm(
         val slug: String,
         val bytes: ByteArray,
         val contentType: String,
         val copyLink: Boolean,
+        val maxCostCents: Long,
+        val configLoaded: Boolean = false,
         val estimateCents: Long? = null,
         val maxUploadBytes: Long? = null,
     ) : Sheet {
-        fun with(estimateCents: Long, maxUploadBytes: Long?) = HashBinConfirm(slug, bytes, contentType, copyLink, estimateCents, maxUploadBytes)
+        fun loaded(estimateCents: Long?, maxUploadBytes: Long?) =
+            HashBinConfirm(slug, bytes, contentType, copyLink, maxCostCents, true, estimateCents, maxUploadBytes)
     }
 
     /** Signing in or uploading. */
@@ -429,7 +435,7 @@ class BinfireViewModel(application: Application) : AndroidViewModel(application)
     /** Human messages for Native Save errors (`spec/hashbin.md`). */
     private fun saveErrorMessage(error: BinfireError): String = when (error) {
         BinfireError.INSUFFICIENT_BALANCE -> "Your HashBin balance is too low. Add funds on HashBin, then try again."
-        BinfireError.COST_EXCEEDED -> "HashBin would charge more than the estimate, so nothing was saved."
+        BinfireError.COST_EXCEEDED -> "HashBin would charge more than binfire's limit, so nothing was saved."
         BinfireError.TOO_LARGE -> "This document is too large for HashBin."
         BinfireError.MISMATCH -> "HashBin returned an ID that doesn't match the document, so the link wasn't used."
         BinfireError.NETWORK -> "Couldn't reach HashBin. Check your connection and try again."
@@ -526,8 +532,13 @@ class BinfireViewModel(application: Application) : AndroidViewModel(application)
 
     /** Send → Save to HashBin (or the long-link notice's Save): decides what to upload (`saveBytes`). */
     fun startHashBinSave(slug: String, url: String, copyLink: Boolean = false) {
-        val client = hashbin ?: return
         val app = registry.app(slug) ?: return
+        val client = hashbin
+        if (client == null) {
+            // No client ID (long-link notice only): the app's own Publish makes a short link.
+            sheet = Sheet.PublishNote(app.name, "Saving to HashBin isn't set up in this build.")
+            return
+        }
         when (val s = HashBin.saveBytes(url, config.limits.maxStateBytes)) {
             is SaveBytes.Cid -> finishSave(links.makeCidLink(s.cid, slug), copyLink)
             is SaveBytes.Text -> confirm(client, slug, s.bytes, SaveBytes.Text.CONTENT_TYPE, copyLink)
@@ -540,19 +551,19 @@ class BinfireViewModel(application: Application) : AndroidViewModel(application)
     }
 
     private fun confirm(client: HashBinClient, slug: String, bytes: ByteArray, type: String, copyLink: Boolean) {
-        val c = Sheet.HashBinConfirm(slug, bytes, type, copyLink)
+        val c = Sheet.HashBinConfirm(slug, bytes, type, copyLink, config.hashbin.maxCostCents)
         sheet = c
         viewModelScope.launch {
             val cfg = withContext(Dispatchers.IO) { client.fetchConfig() }
-            if (sheet === c) sheet = c.with(HashBinClient.estimateCents(bytes.size.toLong(), cfg), HashBinClient.maxUploadBytes(cfg))
+            if (sheet === c) sheet = c.loaded(HashBinClient.estimateCents(bytes.size.toLong(), cfg), HashBinClient.maxUploadBytes(cfg))
         }
     }
 
     /** Save on the confirm sheet: upload, signing in first when needed. */
     fun confirmHashBin(c: Sheet.HashBinConfirm) {
         val client = hashbin ?: return
-        val maxCost = c.estimateCents ?: HashBinClient.estimateCents(c.bytes.size.toLong(), null)
-        upload(client, c, maxCost, allowSignIn = true)
+        // Always the configured cap, so HashBin refuses anything dearer (cost-exceeded).
+        upload(client, c, c.maxCostCents, allowSignIn = true)
     }
 
     private fun upload(client: HashBinClient, c: Sheet.HashBinConfirm, maxCost: Long, allowSignIn: Boolean) {

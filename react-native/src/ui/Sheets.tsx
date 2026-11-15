@@ -1,7 +1,7 @@
 // Modal sheets: show text, error, save name, send menu, CID loading and
 // chooser, and the HashBin save sheets (spec/ui.md "Sheets").
 import * as Clipboard from 'expo-clipboard';
-import { useState, type ReactNode } from 'react';
+import { createContext, useContext, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -22,19 +22,39 @@ import { LONG_LINK_BYTES } from '../core/hashbin';
 import { parseUrl } from '../core/url';
 import { colors, common } from './theme';
 
-function Sheet({ testID, onClose, children }: { testID: string; onClose: () => void; children: ReactNode }) {
-  const insets = useSafeAreaInsets();
+const SheetCloseRef = createContext<{ current: () => void } | null>(null);
+
+/**
+ * The one modal that hosts every sheet. Switching from one sheet to another
+ * swaps only the content: presenting a new iOS modal while the previous one
+ * is still dismissing can leave an empty, touch-blocking modal behind.
+ */
+export function SheetHost({ open, children }: { open: boolean; children: ReactNode }) {
+  const closeRef = useRef<() => void>(() => undefined);
+  if (!open) return null;
   return (
-    <Modal transparent animationType="slide" onRequestClose={onClose} visible>
+    <Modal transparent animationType="slide" onRequestClose={() => closeRef.current()} visible>
       {/* Android apps run edge-to-edge (RN 0.88), so the window does not resize for the
           keyboard and the sheet must pad itself on both platforms. */}
       <KeyboardAvoidingView style={styles.root} behavior="padding">
-        <Pressable style={styles.scrim} onPress={onClose} accessible={false} />
-        <View testID={testID} style={[styles.sheet, { paddingBottom: 16 + insets.bottom }]}>
-          {children}
-        </View>
+        <Pressable style={styles.scrim} onPress={() => closeRef.current()} accessible={false} />
+        <SheetCloseRef.Provider value={closeRef}>{children}</SheetCloseRef.Provider>
       </KeyboardAvoidingView>
     </Modal>
+  );
+}
+
+/** One sheet's panel inside `SheetHost`; `onClose` handles the scrim and Android back. */
+function Sheet({ testID, onClose, children }: { testID: string; onClose: () => void; children: ReactNode }) {
+  const insets = useSafeAreaInsets();
+  const closeRef = useContext(SheetCloseRef);
+  useLayoutEffect(() => {
+    if (closeRef) closeRef.current = onClose;
+  }, [closeRef, onClose]);
+  return (
+    <View testID={testID} style={[styles.sheet, { paddingBottom: 16 + insets.bottom }]}>
+      {children}
+    </View>
   );
 }
 
@@ -199,15 +219,11 @@ export function SendSheet({
       {copied && long && (
         <View testID="long.notice" style={styles.notice}>
           <Text style={styles.body}>
-            {canSave
-              ? 'This link is long, and some messengers and mail apps cut long links off. Save to HashBin for a short link.'
-              : "This link is long, and some messengers and mail apps cut long links off. The app's own Publish button makes a short link."}
+            This link is long, and some messengers and mail apps cut long links off. Save to HashBin for a short link.
           </Text>
-          {canSave && (
-            <Pressable testID="long.save" style={common.button} onPress={() => onSave(true)} accessibilityRole="button">
-              <Text style={common.buttonText}>Save to HashBin</Text>
-            </Pressable>
-          )}
+          <Pressable testID="long.save" style={common.button} onPress={() => onSave(true)} accessibilityRole="button">
+            <Text style={common.buttonText}>Save to HashBin</Text>
+          </Pressable>
         </View>
       )}
       {canSave && <MenuItem testID="send.hashbin" label="Save to HashBin" onPress={() => onSave(false)} />}
@@ -299,11 +315,17 @@ function formatBytes(n: number): string {
 export function HashbinConfirmSheet({
   size,
   estimate,
+  maxCostCents,
+  busy,
   onOk,
   onClose,
 }: {
   size: number;
   estimate: number | null | undefined;
+  /** The cap sent as max_cost_cents; shown as "up to" when there is no estimate. */
+  maxCostCents: number;
+  /** Signing in; Save is disabled. */
+  busy: boolean;
   onOk: () => void;
   onClose: () => void;
 }) {
@@ -311,7 +333,7 @@ export function HashbinConfirmSheet({
     estimate === undefined
       ? 'Estimating cost…'
       : estimate === null
-        ? 'Estimated cost unknown'
+        ? `Cost: up to $${(maxCostCents / 100).toFixed(2)} (charged to your HashBin balance)`
         : estimate === 0
           ? 'Estimated cost: free'
           : `Estimated cost: up to ${estimate}¢ (charged to your HashBin balance)`;
@@ -325,8 +347,14 @@ export function HashbinConfirmSheet({
         {cost}
       </Text>
       <View style={styles.row}>
-        <Pressable testID="hashbin.ok" style={common.button} onPress={onOk} accessibilityRole="button">
-          <Text style={common.buttonText}>Save</Text>
+        <Pressable
+          testID="hashbin.ok"
+          style={[common.button, busy && styles.disabled]}
+          disabled={busy}
+          onPress={onOk}
+          accessibilityRole="button"
+        >
+          <Text style={common.buttonText}>{busy ? 'Signing in…' : 'Save'}</Text>
         </Pressable>
         <Pressable testID="hashbin.cancel" style={common.ghostButton} onPress={onClose} accessibilityRole="button">
           <Text style={common.ghostButtonText}>Cancel</Text>

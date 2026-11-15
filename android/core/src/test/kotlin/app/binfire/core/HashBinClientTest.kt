@@ -229,9 +229,9 @@ class HashBinClientTest {
         assertEquals(3L, HashBinClient.estimateCents(2_500_000, config))
         assertNull(client(FakeHttp { 404 to "" }).fetchConfig())
         assertNull(client(FakeHttp { throw IOException("offline") }).fetchConfig())
-        // Without a price: HashBin's base rate, $0.03/GiB-month, at least 1 cent.
-        assertEquals(1L, HashBinClient.estimateCents(10, null))
-        assertEquals(3L, HashBinClient.estimateCents(1L shl 30, null))
+        // Without a price there is no estimate (the UI shows "up to maxCostCents").
+        assertNull(HashBinClient.estimateCents(10, null))
+        assertNull(HashBinClient.estimateCents(10, mapOf("max_upload_bytes" to 1.0)))
     }
 
     private fun expectCode(code: String, block: () -> Unit) {

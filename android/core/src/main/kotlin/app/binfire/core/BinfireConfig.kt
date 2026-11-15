@@ -23,7 +23,12 @@ data class BinfireConfig(
     val oauthRedirect: String = "${ownScheme.ifEmpty { scheme }}://oauth",
 ) {
     /** HashBin endpoints. [content] is the CID content base, for example `https://256t.us`. */
-    data class HashBin(val api: String, val content: String, val clientId: String = "")
+    data class HashBin(val api: String, val content: String, val clientId: String = "", val maxCostCents: Long = DEFAULT_MAX_COST_CENTS) {
+        companion object {
+            /** Default Native Save cost cap, sent as `max_cost_cents` (`spec/hashbin.md`, "Cost"). */
+            const val DEFAULT_MAX_COST_CENTS = 25L
+        }
+    }
 
     /** BLE GATT UUIDs (`spec/ble-gatt.md`). */
     data class Ble(val serviceUuid: String, val controlCharacteristicUuid: String, val dataCharacteristicUuid: String)
@@ -58,7 +63,13 @@ data class BinfireConfig(
                 appName = root.str("appName"),
                 linkDomain = root.str("linkDomain"),
                 scheme = scheme,
-                hashbin = HashBin(hashbin.str("api"), hashbin.str("content"), hashbin["clientId"] as? String ?: ""),
+                hashbin = HashBin(
+                    hashbin.str("api"),
+                    hashbin.str("content"),
+                    hashbin["clientId"] as? String ?: "",
+                    hashbin["maxCostCents"]?.let { v -> v.asJsonInteger()?.takeIf { it >= 0 } ?: throw IllegalArgumentException("config: 'maxCostCents' must be a non-negative integer") }
+                        ?: HashBin.DEFAULT_MAX_COST_CENTS,
+                ),
                 ble = Ble(ble.str("serviceUuid"), ble.str("controlCharacteristicUuid"), ble.str("dataCharacteristicUuid")),
                 limits = Limits(
                     maxStateBytes = limits.long("maxStateBytes"),

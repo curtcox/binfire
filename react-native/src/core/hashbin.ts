@@ -132,20 +132,15 @@ export function saveBytes(url: string, limit: number = defaultContext.config.lim
 // Cost
 // ---------------------------------------------------------------------------
 
-/** HashBin's published base rate, used when `/api/config` has no price. */
-const CENTS_PER_GIB_MONTH = 3;
-
 /**
- * Estimated charge in cents for storing `size` bytes for a month. Uses
- * `price_cents_per_mb_month` from `GET /api/config` when present, otherwise
- * HashBin's base rate (inline content is free).
+ * Estimated charge in cents for storing `size` bytes, only when `GET
+ * /api/config` publishes `price_cents_per_mb_month`; otherwise `null` (binfire
+ * never invents a price and shows the configured cap instead).
  */
-export function estimateCostCents(size: number, apiConfig?: Readonly<Record<string, unknown>> | null): number {
+export function estimateCostCents(size: number, apiConfig?: Readonly<Record<string, unknown>> | null): number | null {
   const price = apiConfig?.price_cents_per_mb_month;
-  if (typeof price === 'number' && Number.isFinite(price) && price >= 0)
-    return Math.max(1, Math.ceil((size / 1_000_000) * price - 1e-9));
-  if (size <= 64) return 0;
-  return Math.max(1, Math.ceil((size / 1024 ** 3) * CENTS_PER_GIB_MONTH - 1e-9));
+  if (typeof price !== 'number' || !Number.isFinite(price) || price < 0) return null;
+  return Math.max(1, Math.ceil((size / 1_000_000) * price - 1e-9));
 }
 
 // ---------------------------------------------------------------------------

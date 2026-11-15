@@ -16,6 +16,14 @@ final class ConfigTests: XCTestCase {
         let c = try BinfireConfig.load(contentsOf: Fixtures.repoRoot.appendingPathComponent("config/binfire.config.json"))
         XCTAssertEqual(c.linkDomain, "binfire.app")
         XCTAssertEqual(c.limits, .default)
+        XCTAssertEqual(c.hashbinMaxCostCents, 25)
+    }
+
+    func testHashBinMaxCostCents() throws {
+        let c = try BinfireConfig(data: Data(#"{"hashbin":{"maxCostCents":7}}"#.utf8))
+        XCTAssertEqual(c.hashbinMaxCostCents, 7)
+        XCTAssertEqual(c.hashbinAPI, "https://hashbin.org")
+        XCTAssertThrowsError(try BinfireConfig(data: Data(#"{"hashbin":{"maxCostCents":"7"}}"#.utf8)))
     }
 
     func testRejectsWrongTypes() {

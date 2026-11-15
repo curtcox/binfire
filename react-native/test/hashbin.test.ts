@@ -84,7 +84,7 @@ describe('hashbin.json fetch', () => {
   });
 
   test('contentUrl joins without a double slash', () => {
-    const ctx = { ...defaultContext, config: { ...defaultContext.config, hashbin: { api: 'x', content: 'http://localhost:8787/', clientId: '' } } };
+    const ctx = { ...defaultContext, config: { ...defaultContext.config, hashbin: { api: 'x', content: 'http://localhost:8787/', clientId: '', maxCostCents: 25 } } };
     expect(contentUrl('AAAA', ctx)).toBe('http://localhost:8787/AAAA');
   });
 });
@@ -118,10 +118,9 @@ describe('estimateCostCents', () => {
     expect(estimateCostCents(11, { price_cents_per_mb_month: 1 })).toBe(1);
     expect(estimateCostCents(2_500_000, { price_cents_per_mb_month: 1 })).toBe(3);
   });
-  test('falls back to the base rate', () => {
-    expect(estimateCostCents(64, null)).toBe(0);
-    expect(estimateCostCents(65, {})).toBe(1);
-    expect(estimateCostCents(2 * 1024 ** 3, null)).toBe(6);
+  test('no price in the config means no estimate', () => {
+    expect(estimateCostCents(64, null)).toBeNull();
+    expect(estimateCostCents(65, { max_upload_bytes: 1 })).toBeNull();
   });
 });
 

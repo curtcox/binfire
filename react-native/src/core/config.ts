@@ -16,7 +16,8 @@ export interface BinfireConfig {
   scheme: string;
   /** This port's private reverse-DNS scheme (its app ID); route() treats it like `scheme`. */
   ownScheme: string;
-  hashbin: { api: string; content: string; clientId: string };
+  /** `maxCostCents` is always sent as `max_cost_cents` (spec/hashbin.md "Cost"). */
+  hashbin: { api: string; content: string; clientId: string; maxCostCents: number };
   ble: { serviceUuid: string; controlCharacteristicUuid: string; dataCharacteristicUuid: string };
   limits: Limits;
   oauthRedirect: string;

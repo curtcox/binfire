@@ -106,18 +106,14 @@ struct LongNoticeSheet: View {
     var body: some View {
         VStack(spacing: 16) {
             Text("Link copied, but it's long").font(.headline)
-            if model.hashbin != nil {
-                Text("Some messengers and mail apps cut off links this long. Save to HashBin for a short link.")
-                    .multilineTextAlignment(.center)
-                Button("Save to HashBin for a short link") {
-                    model.startHashBinSave(app: request.app, url: request.url, copyLink: true)
-                }
-                .buttonStyle(.borderedProminent)
-                .accessibilityIdentifier("long.save")
-            } else {
-                Text("Some messengers and mail apps cut off links this long. For a short link, use the app's own Publish (Save to HashBin) button.")
-                    .multilineTextAlignment(.center)
+            Text("Some messengers and mail apps cut off links this long. Save to HashBin for a short link.")
+                .multilineTextAlignment(.center)
+            // Without a client ID this shows hashbin.publishNote (use the app's own Publish).
+            Button("Save to HashBin for a short link") {
+                model.startHashBinSave(app: request.app, url: request.url, copyLink: true)
             }
+            .buttonStyle(.borderedProminent)
+            .accessibilityIdentifier("long.save")
             Button("OK") { dismiss() }
         }
         .padding(24)
@@ -137,8 +133,12 @@ struct HashBinConfirmSheet: View {
 
     private var estimate: String {
         if !save.configLoaded { return "Estimating cost…" }
-        if let cents = save.estimateCents { return "Estimated cost: \(cents)¢ (capped at that)" }
-        return "Estimated cost: unknown (capped at \(HashBin.fallbackMaxCostCents)¢)"
+        if let cents = save.estimateCents { return "Estimated cost: \(dollars(cents))" }
+        return "Cost: up to \(dollars(model.config.hashbinMaxCostCents))"
+    }
+
+    private func dollars(_ cents: Int) -> String {
+        String(format: "$%d.%02d", cents / 100, cents % 100)
     }
 
     var body: some View {

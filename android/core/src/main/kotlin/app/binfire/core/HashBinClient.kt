@@ -231,18 +231,13 @@ class HashBinClient(
         }
 
         /**
-         * Estimated upload cost in cents for [sizeBytes]. Uses `price_cents_per_mb_month`
-         * from `/api/config` when present; otherwise HashBin's published base rate
-         * ($0.03 per GiB-month, one month, rounded up, minimum 1 cent).
+         * Estimated upload cost in cents for [sizeBytes], only when `/api/config`
+         * returns `price_cents_per_mb_month` (rounded up, minimum 1 cent). `null`
+         * otherwise: binfire never invents a price (`spec/hashbin.md`, "Cost").
          */
-        fun estimateCents(sizeBytes: Long, config: Map<String, Any?>?): Long {
-            val perMb = (config?.get("price_cents_per_mb_month") as? Double)?.takeIf { it >= 0 && it.isFinite() }
-            val cents = if (perMb != null) {
-                Math.ceil(sizeBytes / 1_000_000.0 * perMb - 1e-9)
-            } else {
-                Math.ceil(sizeBytes / (1024.0 * 1024 * 1024) * 3.0 - 1e-9)
-            }
-            return maxOf(1L, cents.toLong())
+        fun estimateCents(sizeBytes: Long, config: Map<String, Any?>?): Long? {
+            val perMb = (config?.get("price_cents_per_mb_month") as? Double)?.takeIf { it >= 0 && it.isFinite() } ?: return null
+            return maxOf(1L, Math.ceil(sizeBytes / 1_000_000.0 * perMb - 1e-9).toLong())
         }
 
         /** `max_upload_bytes` from `/api/config`, or `null`. */

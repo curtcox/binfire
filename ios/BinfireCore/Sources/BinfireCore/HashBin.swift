@@ -140,13 +140,10 @@ public enum HashBin {
 
     // MARK: - Cost
 
-    /// Used as `max_cost_cents` when HashBin's config gives no price to
-    /// estimate from. States are at most a few MiB, so real charges are a
-    /// cent or two; this only caps a surprise.
-    public static let fallbackMaxCostCents = 25
-
     /// HashBin's estimated cost for `bytes`, from `GET {api}/api/config`'s
-    /// `price_cents_per_mb_month` (one month, at least 1 cent), or nil.
+    /// `price_cents_per_mb_month` (one month, at least 1 cent), or nil when
+    /// HashBin publishes no price (then the UI shows "up to" the configured
+    /// `maxCostCents`; binfire never invents a price).
     public static func estimateCents(bytes: Int, config: HashBinServerConfig?) -> Int? {
         guard let price = config?.priceCentsPerMBMonth else { return nil }
         let mb = Double(bytes) / 1_000_000

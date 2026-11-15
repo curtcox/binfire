@@ -30,7 +30,7 @@ function overridden(): BinfireContext {
     ...defaultContext,
     config: {
       ...defaultContext.config,
-      hashbin: { api: api || base.api, content: content || base.content, clientId: clientId || base.clientId },
+      hashbin: { ...base, api: api || base.api, content: content || base.content, clientId: clientId || base.clientId },
     },
   };
 }

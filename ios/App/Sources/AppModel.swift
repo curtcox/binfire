@@ -334,7 +334,8 @@ final class AppModel: ObservableObject {
         Task {
             do {
                 if let max = save.serverConfig?.maxUploadBytes, save.bytes.count > max { throw BinfireError.tooLarge }
-                let maxCost = save.estimateCents ?? HashBin.fallbackMaxCostCents
+                // Always the configured cap, so HashBin refuses anything dearer.
+                let maxCost = config.hashbinMaxCostCents
                 if needsSignIn { try await signIn(hashbin) }
                 present(.loading("Saving to HashBin…"))
                 var result: UploadResult

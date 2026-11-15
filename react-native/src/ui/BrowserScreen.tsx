@@ -82,6 +82,12 @@ function AppWebView({
         // multiple windows; on iOS react-native-webview cannot, so Publish
         // falls back to the redirect flow (spec/hashbin.md).
         setSupportMultipleWindows
+        // iOS: an http(s) response WebKit can't show (or an attachment) is not
+        // rendered; its URL goes through the same policy as a blocked
+        // navigation (text sheet with Open in browser). HashBin's >512 KiB
+        // file hand-off is a blob: download, which react-native-webview does not
+        // report, so that fallback is unsupported in RN (spec/hashbin.md).
+        onFileDownload={e => onBlocked(e.nativeEvent.downloadUrl)}
         javaScriptCanOpenWindowsAutomatically
         allowsBackForwardNavigationGestures
         allowsInlineMediaPlayback

@@ -28,6 +28,6 @@ object DebugOverrides {
     /** [h] with any overrides applied (always [h] itself in release builds). */
     fun apply(h: BinfireConfig.HashBin): BinfireConfig.HashBin {
         if (!BuildConfig.DEBUG) return h
-        return BinfireConfig.HashBin(api ?: h.api, content ?: h.content, clientId ?: h.clientId)
+        return h.copy(api = api ?: h.api, content = content ?: h.content, clientId = clientId ?: h.clientId)
     }
 }

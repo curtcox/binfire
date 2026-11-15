@@ -91,10 +91,8 @@ fun Sheets(vm: BinfireViewModel) {
             )
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
                 TextButton(onClick = { vm.sheet = null }) { Text("Close") }
-                if (s.canSave) {
-                    Button(onClick = { vm.startHashBinSave(s.slug, s.url, copyLink = true) }, modifier = Modifier.testTag("long.save")) {
-                        Text("Save to HashBin")
-                    }
+                Button(onClick = { vm.startHashBinSave(s.slug, s.url, copyLink = true) }, modifier = Modifier.testTag("long.save")) {
+                    Text("Save to HashBin")
                 }
             }
         }
@@ -106,8 +104,10 @@ fun Sheets(vm: BinfireViewModel) {
             Text(
                 when {
                     tooLarge -> "This is larger than HashBin accepts (${formatBytes(s.maxUploadBytes!!)})."
-                    s.estimateCents == null -> "Estimating cost…"
-                    else -> "Estimated cost: ${formatCents(s.estimateCents)}. HashBin won't charge more than that."
+                    !s.configLoaded -> "Checking HashBin…"
+                    s.estimateCents != null ->
+                        "Estimated cost: ${formatCents(s.estimateCents)} (never more than ${formatCents(s.maxCostCents)})."
+                    else -> "Cost: up to ${formatCents(s.maxCostCents)}."
                 },
                 style = MaterialTheme.typography.bodyMedium,
             )
@@ -180,7 +180,7 @@ private fun formatBytes(n: Long): String = when {
     else -> String.format(java.util.Locale.ROOT, "%.1f MiB", n / (1024.0 * 1024))
 }
 
-private fun formatCents(c: Long): String = if (c < 100) "$c¢" else String.format(java.util.Locale.ROOT, "$%.2f", c / 100.0)
+private fun formatCents(c: Long): String = String.format(java.util.Locale.ROOT, "$%.2f", c / 100.0)
 
 /** Unregistered input: shown, never navigated. "Open in browser" hands an http(s) URL to the system. */
 @Composable

@@ -29,6 +29,7 @@ import {
   PublishNoteSheet,
   SaveSheet,
   SendSheet,
+  SheetHost,
   TextSheet,
 } from './Sheets';
 import { loadLibrary, storeLibrary } from './storage';
@@ -52,6 +53,8 @@ type Sheet =
       /** undefined while `/api/config` loads. */
       estimate?: number | null;
       maxUpload?: number;
+      /** Signing in: the auth session is up. */
+      busy?: boolean;
     }
   | { kind: 'hashbinBusy' }
   | { kind: 'hashbinResult'; link: string; copied: boolean }
@@ -73,7 +76,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   mismatch: "The document didn't match its ID (CID), so binfire won't open it.",
   failed: "Couldn't sign in to HashBin. Try again.",
   'insufficient-balance': 'Your HashBin balance is too low for this save. Add funds on hashbin.org and try again.',
-  'cost-exceeded': 'This save would cost more than the estimate, so HashBin did not charge you.',
+  'cost-exceeded': 'This save would cost more than the configured limit, so HashBin did not charge you.',
 };
 const SIZE_MESSAGES = {
   load: 'That document is too large to open.',
@@ -81,7 +84,11 @@ const SIZE_MESSAGES = {
 };
 
 function errorMessage(e: unknown, op: keyof typeof SIZE_MESSAGES): string {
-  if (!isBinfireError(e)) return op === 'save' ? 'Saving to HashBin failed.' : "Couldn't open that document.";
+  if (!isBinfireError(e)) {
+    // An unexpected platform error (e.g. the Keychain refused the tokens). Its message never holds token values.
+    const detail = e instanceof Error && e.message ? ` (${e.message.slice(0, 200)})` : '';
+    return (op === 'save' ? 'Saving to HashBin failed.' : "Couldn't open that document.") + detail;
+  }
   if (e.code === 'too-large') return SIZE_MESSAGES[op];
   return ERROR_MESSAGES[e.code] ?? e.code;
 }
@@ -308,7 +315,9 @@ export default function BinfireApp() {
   /** Native Save of the current state (spec/hashbin.md "What is saved for a state"). */
   const startSave = useCallback(
     (copy: boolean) => {
-      if (!active || !current || !hashbinClient) return;
+      if (!active || !current) return;
+      // Without a client ID, Native Save is off: point at the app's own Publish.
+      if (!hashbinClient) return setSheet({ kind: 'publishNote' });
       const what = saveBytes(current, ctx.config.limits.maxStateBytes);
       if (what.kind === 'cid') return showSaved(makeCidLink(what.cid, active, ctx), copy);
       if (what.kind === 'none') return setSheet({ kind: 'publishNote' });
@@ -327,20 +336,20 @@ export default function BinfireApp() {
   );
 
   const confirmSave = useCallback(async () => {
-    if (sheet?.kind !== 'hashbinConfirm' || !hashbinClient) return;
+    if (sheet?.kind !== 'hashbinConfirm' || sheet.busy || !hashbinClient) return;
     const { bytes, contentType, slug, copy, maxUpload } = sheet;
     const client = hashbinClient;
     if (maxUpload !== undefined && bytes.length > maxUpload) {
       setSheet({ kind: 'error', message: SIZE_MESSAGES.save });
       return;
     }
-    // max_cost_cents caps the charge at the estimate shown (at least one cent).
-    const cap = Math.max(1, sheet.estimate ?? estimateCostCents(bytes.length, null));
+    // Always the configured cap, never an estimate (spec/hashbin.md "Cost").
+    const cap = ctx.config.hashbin.maxCostCents;
     try {
       if (!(await client.accessToken())) {
-        // The system auth session presents over the app; get the sheet out of its way first.
-        setSheet(null);
-        await wait(PRESENT_DELAY_MS);
+        setSheet(s => (s?.kind === 'hashbinConfirm' ? { ...s, busy: true } : s));
+        // The system auth session presents over the confirm sheet, which stays
+        // up meanwhile; let the session's own UI finish dismissing afterwards.
         await client.signIn();
         await wait(PRESENT_DELAY_MS);
       }
@@ -411,52 +420,56 @@ export default function BinfireApp() {
           onRun={onRun}
         />
       </View>
-      {sheet?.kind === 'text' && <TextSheet text={sheet.text} onClose={() => setSheet(null)} />}
-      {sheet?.kind === 'error' && <ErrorSheet message={sheet.message} onClose={() => setSheet(null)} />}
-      {sheet?.kind === 'save' && (
-        <SaveSheet fallbackName={fallbackName} onSave={onSave} onClose={() => setSheet(null)} />
-      )}
-      {sheet?.kind === 'send' && (
-        <SendSheet
-          link={current ? makeLink(current, ctx) : null}
-          canSave={!!hashbinClient}
-          signedIn={sheet.signedIn}
-          onSave={startSave}
-          onSignOut={signOut}
-          onClose={() => setSheet(null)}
-        />
-      )}
-      {sheet?.kind === 'loading' && (
-        <LoadingSheet
-          onClose={() => {
-            loadSeq.current++;
-            setSheet(null);
-          }}
-        />
-      )}
-      {sheet?.kind === 'chooser' && (
-        <ChooserSheet
-          apps={sheet.apps}
-          matched={sheet.matched}
-          link={makeCidLink(sheet.cid, null, ctx)}
-          rawUrl={contentUrl(sheet.cid, ctx)}
-          onPick={app => openApp(app.slug, `${app.canonicalOrigin}#${sheet.cid}`)}
-          onClose={() => setSheet(null)}
-        />
-      )}
-      {sheet?.kind === 'hashbinConfirm' && (
-        <HashbinConfirmSheet
-          size={sheet.bytes.length}
-          estimate={sheet.estimate}
-          onOk={() => void confirmSave()}
-          onClose={() => setSheet(null)}
-        />
-      )}
-      {sheet?.kind === 'hashbinBusy' && <HashbinBusySheet />}
-      {sheet?.kind === 'hashbinResult' && (
-        <HashbinResultSheet link={sheet.link} copied={sheet.copied} onClose={() => setSheet(null)} />
-      )}
-      {sheet?.kind === 'publishNote' && <PublishNoteSheet onClose={() => setSheet(null)} />}
+      <SheetHost open={sheet !== null}>
+        {sheet?.kind === 'text' && <TextSheet text={sheet.text} onClose={() => setSheet(null)} />}
+        {sheet?.kind === 'error' && <ErrorSheet message={sheet.message} onClose={() => setSheet(null)} />}
+        {sheet?.kind === 'save' && (
+          <SaveSheet fallbackName={fallbackName} onSave={onSave} onClose={() => setSheet(null)} />
+        )}
+        {sheet?.kind === 'send' && (
+          <SendSheet
+            link={current ? makeLink(current, ctx) : null}
+            canSave={!!hashbinClient}
+            signedIn={sheet.signedIn}
+            onSave={startSave}
+            onSignOut={signOut}
+            onClose={() => setSheet(null)}
+          />
+        )}
+        {sheet?.kind === 'loading' && (
+          <LoadingSheet
+            onClose={() => {
+              loadSeq.current++;
+              setSheet(null);
+            }}
+          />
+        )}
+        {sheet?.kind === 'chooser' && (
+          <ChooserSheet
+            apps={sheet.apps}
+            matched={sheet.matched}
+            link={makeCidLink(sheet.cid, null, ctx)}
+            rawUrl={contentUrl(sheet.cid, ctx)}
+            onPick={app => openApp(app.slug, `${app.canonicalOrigin}#${sheet.cid}`)}
+            onClose={() => setSheet(null)}
+          />
+        )}
+        {sheet?.kind === 'hashbinConfirm' && (
+          <HashbinConfirmSheet
+            size={sheet.bytes.length}
+            estimate={sheet.estimate}
+            maxCostCents={ctx.config.hashbin.maxCostCents}
+            busy={!!sheet.busy}
+            onOk={() => void confirmSave()}
+            onClose={() => setSheet(null)}
+          />
+        )}
+        {sheet?.kind === 'hashbinBusy' && <HashbinBusySheet />}
+        {sheet?.kind === 'hashbinResult' && (
+          <HashbinResultSheet link={sheet.link} copied={sheet.copied} onClose={() => setSheet(null)} />
+        )}
+        {sheet?.kind === 'publishNote' && <PublishNoteSheet onClose={() => setSheet(null)} />}
+      </SheetHost>
     </SafeAreaProvider>
   );
 }

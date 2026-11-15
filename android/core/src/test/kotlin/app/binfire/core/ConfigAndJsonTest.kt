@@ -15,6 +15,7 @@ class ConfigAndJsonTest {
         assertEquals("binfire.app", bundled.linkDomain)
         assertEquals("app.binfire.android", bundled.ownScheme)
         assertEquals("app.binfire.android://oauth", bundled.oauthRedirect)
+        assertEquals(25L, bundled.hashbin.maxCostCents)
         val registry = Registry.parse(File(Fixtures.assetsDir, "apps.json").readText())
         assertEquals(Fixtures.registry.apps, registry.apps)
     }

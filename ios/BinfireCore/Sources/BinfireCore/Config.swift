@@ -44,6 +44,8 @@ public struct BinfireConfig: Equatable, Sendable {
     public var contentHost: String
     /// HashBin OAuth client ID (may be empty).
     public var hashbinClientId: String
+    /// `max_cost_cents` sent with every Native Save upload (`hashbin.maxCostCents`).
+    public var hashbinMaxCostCents: Int
     public var bleServiceUUID: String
     public var bleControlCharacteristicUUID: String
     public var bleDataCharacteristicUUID: String
@@ -57,6 +59,7 @@ public struct BinfireConfig: Equatable, Sendable {
                 hashbinAPI: String = "https://hashbin.org",
                 contentHost: String = "https://256t.us",
                 hashbinClientId: String = "",
+                hashbinMaxCostCents: Int = 25,
                 bleServiceUUID: String = "6b1f0001-5b6e-4d1a-9f2e-62696e666972",
                 bleControlCharacteristicUUID: String = "6b1f0002-5b6e-4d1a-9f2e-62696e666972",
                 bleDataCharacteristicUUID: String = "6b1f0003-5b6e-4d1a-9f2e-62696e666972",
@@ -69,6 +72,7 @@ public struct BinfireConfig: Equatable, Sendable {
         self.hashbinAPI = hashbinAPI
         self.contentHost = contentHost
         self.hashbinClientId = hashbinClientId
+        self.hashbinMaxCostCents = hashbinMaxCostCents
         self.bleServiceUUID = bleServiceUUID
         self.bleControlCharacteristicUUID = bleControlCharacteristicUUID
         self.bleDataCharacteristicUUID = bleDataCharacteristicUUID
@@ -109,6 +113,7 @@ public struct BinfireConfig: Equatable, Sendable {
             try str(h, "api", &c.hashbinAPI)
             try str(h, "content", &c.contentHost)
             try str(h, "clientId", &c.hashbinClientId)
+            try int(h, "maxCostCents", &c.hashbinMaxCostCents)
         }
         if let b = try object("ble") {
             try str(b, "serviceUuid", &c.bleServiceUUID)
