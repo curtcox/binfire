@@ -236,7 +236,9 @@ block('ios/project.yml', 'entitlements', [
   const path = 'react-native/app.json';
   const app = JSON.parse(readFileSync(join(root, path), 'utf8'));
   const e = app.expo;
-  e.scheme = [S, cfg.ids.reactNative];
+  // Own scheme first: expo-share-intent (and expo-linking's createURL) use the first
+  // scheme for self-addressed hand-offs, which must not reach another port.
+  e.scheme = [cfg.ids.reactNative, S];
   e.ios = { ...e.ios, bundleIdentifier: cfg.ids.reactNative, associatedDomains: [`applinks:${D}`, `webcredentials:${D}`],
     infoPlist: { ...(e.ios?.infoPlist ?? {}),
       CFBundleDocumentTypes: [{ CFBundleTypeName: 'binfire bundle', LSHandlerRank: 'Owner', LSItemContentTypes: ['app.binfire.bundle'] }],

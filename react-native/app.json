@@ -117,8 +117,8 @@
       "favicon": "./assets/favicon.png"
     },
     "scheme": [
-      "binfire",
-      "app.binfire.rn"
+      "app.binfire.rn",
+      "binfire"
     ],
     "plugins": [
       [
