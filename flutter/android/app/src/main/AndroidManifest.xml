@@ -72,6 +72,12 @@
             </intent-filter>
             <!-- <<< binfire:configure intent-filters -->
         </activity>
+        <!-- Native Save OAuth (flutter_web_auth_2): MainActivity forwards
+             <ownScheme>://oauth here by explicit intent, so it needs no filter. -->
+        <activity
+            android:name="com.linusu.flutter_web_auth_2.CallbackActivity"
+            android:exported="false"
+            android:taskAffinity="" />
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

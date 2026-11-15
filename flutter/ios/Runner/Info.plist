@@ -66,6 +66,12 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<!-- http only to local hosts: the debug mock HashBin (spec/hashbin.md, Development). -->
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
 	<key>FlutterDeepLinkingEnabled</key>
 	<false/>
 	<!-- >>> binfire:configure url-types -->
