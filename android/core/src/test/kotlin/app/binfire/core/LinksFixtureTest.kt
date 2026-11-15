@@ -14,7 +14,12 @@ class LinksFixtureTest {
         val base = Fixtures.config
         Links(
             Fixtures.registry,
-            base.copy(linkDomain = c.str("linkDomain"), scheme = c.str("scheme"), hashbin = base.hashbin.copy(content = c.str("content"))),
+            base.copy(
+                linkDomain = c.str("linkDomain"),
+                scheme = c.str("scheme"),
+                ownScheme = c.str("ownScheme"),
+                hashbin = base.hashbin.copy(content = c.str("content")),
+            ),
         )
     }
 

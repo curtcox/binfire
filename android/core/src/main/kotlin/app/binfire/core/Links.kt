@@ -46,7 +46,8 @@ sealed class Route {
  */
 class Links(val registry: Registry, val config: BinfireConfig) {
     private val domain = config.linkDomain.lowercase()
-    private val scheme = config.scheme.lowercase()
+    /** The public scheme and this port's own scheme, which route identically. */
+    private val customSchemes = setOf(config.scheme.lowercase(), config.ownScheme.lowercase()).filter { it.isNotEmpty() }.toSet()
     private val content = ParsedUrl.parse(config.hashbin.content)
 
     /** Routes [text] from paste, share, a tapped link, a scan, audio or a `url` transfer. */
@@ -75,7 +76,7 @@ class Links(val registry: Registry, val config: BinfireConfig) {
 
     private fun isLinkToken(token: String): Boolean =
         token.startsWith("https://", ignoreCase = true) || token.startsWith("http://", ignoreCase = true) ||
-            token.startsWith("$scheme://", ignoreCase = true) || Cid.isCid(token.removePrefix("#"))
+            customSchemes.any { token.startsWith("$it://", ignoreCase = true) } || Cid.isCid(token.removePrefix("#"))
 
     private fun route(text: String, allowShare: Boolean): Route {
         val t = trimAsciiWhitespace(text)
@@ -144,10 +145,10 @@ class Links(val registry: Registry, val config: BinfireConfig) {
     }
 
     private fun isBinfireLink(u: ParsedUrl): Boolean =
-        u.scheme == scheme || (u.scheme == "https" && u.host == domain && u.port == null && u.userinfo == null)
+        u.scheme in customSchemes || (u.scheme == "https" && u.host == domain && u.port == null && u.userinfo == null)
 
     private fun linkPath(u: ParsedUrl): String =
-        (if (u.scheme == scheme) u.host + u.path else u.path).trim('/')
+        (if (u.scheme in customSchemes) u.host + u.path else u.path).trim('/')
 
     private fun routeBinfireLink(u: ParsedUrl, allowShare: Boolean): Route {
         val path = linkPath(u)
@@ -177,7 +178,7 @@ class Links(val registry: Registry, val config: BinfireConfig) {
                 Route.OpenSite(cid)
             }
             // Custom scheme only: how share extensions hand text to the app. Not recursive.
-            path == "share" && u.scheme == scheme && allowShare -> {
+            path == "share" && u.scheme in customSchemes && allowShare -> {
                 val fragment = u.rawFragment ?: return Route.Error(BinfireError.BAD_LINK)
                 val text = QueryParams.parse(fragment, stripLeadingQuestionMark = true)["t"]
                     ?: return Route.Error(BinfireError.BAD_LINK)

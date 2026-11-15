@@ -14,8 +14,13 @@ data class BinfireConfig(
     val hashbin: HashBin,
     val ble: Ble,
     val limits: Limits,
-    /** OAuth redirect URI. When the JSON omits it, it is `<scheme>://oauth`, as `tools/configure.mjs` derives it. */
-    val oauthRedirect: String = "$scheme://oauth",
+    /**
+     * This port's private reverse-DNS scheme (its app ID, e.g. `app.binfire.android`).
+     * Several ports can claim [scheme] on one device, so binfire reaches itself through this one.
+     */
+    val ownScheme: String = "",
+    /** OAuth redirect URI: `<ownScheme>://oauth`, as `tools/configure.mjs` writes it. */
+    val oauthRedirect: String = "${ownScheme.ifEmpty { scheme }}://oauth",
 ) {
     /** HashBin endpoints. [content] is the CID content base, for example `https://256t.us`. */
     data class HashBin(val api: String, val content: String, val clientId: String = "")
@@ -47,6 +52,8 @@ data class BinfireConfig(
             val ble = root.obj("ble")
             val limits = root.obj("limits")
             val scheme = root.str("scheme")
+            // The runtime config has ownScheme; the repo config has it as ids.android.
+            val ownScheme = root["ownScheme"] as? String ?: root["ids"].asJsonObject()?.get("android") as? String ?: ""
             return BinfireConfig(
                 appName = root.str("appName"),
                 linkDomain = root.str("linkDomain"),
@@ -60,7 +67,8 @@ data class BinfireConfig(
                     maxSiteFiles = limits.long("maxSiteFiles"),
                     maxTransferBytes = limits.long("maxTransferBytes"),
                 ),
-                oauthRedirect = root["oauthRedirect"] as? String ?: "$scheme://oauth",
+                ownScheme = ownScheme,
+                oauthRedirect = root["oauthRedirect"] as? String ?: "${ownScheme.ifEmpty { scheme }}://oauth",
             )
         }
 
