@@ -22,13 +22,33 @@ struct LibraryView: View {
 
     var body: some View {
         VStack(spacing: 12) {
-            Text("binfire").font(.largeTitle.bold()).frame(maxWidth: .infinity, alignment: .leading)
+            HStack {
+                Text("binfire").font(.largeTitle.bold()).frame(maxWidth: .infinity, alignment: .leading)
+                if model.hashbin != nil { accountMenu }
+            }
             openBar
             tabBar
             content
         }
         .padding(.horizontal, 16)
         .padding(.top, 8)
+    }
+
+    /// HashBin account: sign out revokes the refresh token and clears the Keychain.
+    private var accountMenu: some View {
+        Menu {
+            if model.hashbinSignedIn {
+                Button(role: .destructive) { model.signOutHashBin() } label: {
+                    Label("Sign out of HashBin", systemImage: "rectangle.portrait.and.arrow.right")
+                }
+            } else {
+                Text("Not signed in to HashBin")
+            }
+        } label: { Label("Account", systemImage: "person.crop.circle") }
+            .labelStyle(.iconOnly)
+            .font(.title2)
+            .onAppear { model.refreshSignedIn() }
+            .accessibilityIdentifier("library.account")
     }
 
     private var openBar: some View {

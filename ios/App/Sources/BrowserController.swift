@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 import WebKit
 import BinfireCore
 
@@ -63,10 +64,8 @@ final class BrowserController: NSObject, ObservableObject, WKNavigationDelegate,
         if webView.url == nil, let u = URL(string: loadedURL) { webView.load(URLRequest(url: u)) } else { webView.reload() }
     }
 
-    /// The https link for the current state (`makeLink`).
-    var shareLink: String? {
-        model?.links.makeLink(currentURL.isEmpty ? loadedURL : currentURL)
-    }
+    /// The current state URL: the tracked main-frame URL, else the loaded one.
+    var stateURL: String { currentURL.isEmpty ? loadedURL : currentURL }
 
     private func belongsToApp(_ url: String) -> Bool {
         model?.registry.appForURL(url)?.slug == app.slug
@@ -89,6 +88,8 @@ final class BrowserController: NSObject, ObservableObject, WKNavigationDelegate,
     // MARK: WKNavigationDelegate
 
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction) async -> WKNavigationActionPolicy {
+        // `<a download>` (HashBin's >512 KiB file fallback): hand the file to the share sheet.
+        if navigationAction.shouldPerformDownload { return .download }
         // Sub-frames are the app's own business; new windows go to createWebViewWith.
         guard let frame = navigationAction.targetFrame, frame.isMainFrame else { return .allow }
         guard let url = navigationAction.request.url?.absoluteString, let model else { return .cancel }
@@ -100,6 +101,18 @@ final class BrowserController: NSObject, ObservableObject, WKNavigationDelegate,
             model.present(.text(url))
         }
         return .cancel
+    }
+
+    func webView(_ webView: WKWebView, decidePolicyFor navigationResponse: WKNavigationResponse) async -> WKNavigationResponsePolicy {
+        DownloadHandler.policy(for: navigationResponse)
+    }
+
+    func webView(_ webView: WKWebView, navigationAction: WKNavigationAction, didBecome download: WKDownload) {
+        download.delegate = DownloadHandler.shared
+    }
+
+    func webView(_ webView: WKWebView, navigationResponse: WKNavigationResponse, didBecome download: WKDownload) {
+        download.delegate = DownloadHandler.shared
     }
 
     // MARK: WKUIDelegate
@@ -144,6 +157,7 @@ final class PopupController: NSObject, Identifiable, WKNavigationDelegate, WKUID
     }
 
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction) async -> WKNavigationActionPolicy {
+        if navigationAction.shouldPerformDownload { return .download }
         guard let frame = navigationAction.targetFrame, frame.isMainFrame else { return .allow }
         let url = navigationAction.request.url?.absoluteString ?? ""
         if BrowserController.isPopupAllowed(url, config: config) { return .allow }
@@ -151,7 +165,59 @@ final class PopupController: NSObject, Identifiable, WKNavigationDelegate, WKUID
         return .cancel
     }
 
+    func webView(_ webView: WKWebView, decidePolicyFor navigationResponse: WKNavigationResponse) async -> WKNavigationResponsePolicy {
+        DownloadHandler.policy(for: navigationResponse)
+    }
+
+    func webView(_ webView: WKWebView, navigationAction: WKNavigationAction, didBecome download: WKDownload) {
+        download.delegate = DownloadHandler.shared
+    }
+
+    func webView(_ webView: WKWebView, navigationResponse: WKNavigationResponse, didBecome download: WKDownload) {
+        download.delegate = DownloadHandler.shared
+    }
+
     func webViewDidClose(_ webView: WKWebView) {
         opener?.closePopup()
+    }
+}
+
+/// WebView downloads (HashBin Publish's file fallback, or any app's export):
+/// saved to a temporary file, then offered in the share sheet (Save to Files, …).
+@MainActor
+final class DownloadHandler: NSObject, WKDownloadDelegate {
+    static let shared = DownloadHandler()
+    private var destinations: [ObjectIdentifier: URL] = [:]
+
+    /// Download responses the web view can't show or that ask to be saved.
+    static func policy(for response: WKNavigationResponse) -> WKNavigationResponsePolicy {
+        if !response.canShowMIMEType { return .download }
+        if let http = response.response as? HTTPURLResponse,
+           (http.value(forHTTPHeaderField: "Content-Disposition") ?? "").lowercased().hasPrefix("attachment") {
+            return .download
+        }
+        return .allow
+    }
+
+    func download(_ download: WKDownload, decideDestinationUsing response: URLResponse,
+                  suggestedFilename: String) async -> URL? {
+        let dir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("downloads", isDirectory: true)
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        guard (try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)) != nil else { return nil }
+        var name = (suggestedFilename as NSString).lastPathComponent
+        if name.isEmpty || name == "." || name == ".." { name = "download" }
+        let url = dir.appendingPathComponent(name)
+        destinations[ObjectIdentifier(download)] = url
+        return url
+    }
+
+    func downloadDidFinish(_ download: WKDownload) {
+        guard let url = destinations.removeValue(forKey: ObjectIdentifier(download)) else { return }
+        UIApplication.shared.presentShareSheet([url])
+    }
+
+    func download(_ download: WKDownload, didFailWithError error: Error, resumeData: Data?) {
+        destinations.removeValue(forKey: ObjectIdentifier(download))
     }
 }

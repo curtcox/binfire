@@ -33,6 +33,9 @@ targets:
         CFBundleDisplayName: binfire
         UILaunchScreen: {}
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+        # Plain http only to localhost (the DEBUG mock HashBin, spec/hashbin.md).
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
         # >>> binfire:configure info-properties
         CFBundleURLTypes:
           - CFBundleURLName: binfire

@@ -18,6 +18,13 @@ struct RootView: View {
             case .text(let text): TextSheet(text: text)
             case .error(let message): ErrorSheet(message: message)
             case .save(let request): SaveSheet(request: request)
+            case .loading(let message): LoadingSheet(message: message)
+            case .chooser(let request): ChooserSheet(request: request)
+            case .send(let request): SendSheet(request: request)
+            case .longNotice(let request): LongNoticeSheet(request: request)
+            case .hashbinConfirm(let save): HashBinConfirmSheet(save: save)
+            case .hashbinResult(let link): HashBinResultSheet(link: link)
+            case .publishNote(let appName): PublishNoteSheet(appName: appName)
             }
         }
         // Custom scheme links, files (Open in…) and, on some paths, Universal Links.

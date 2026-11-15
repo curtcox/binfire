@@ -32,17 +32,13 @@ struct BrowserView: View {
             Button { controller.reload() } label: { Label("Reload", systemImage: "arrow.clockwise") }
                 .labelStyle(.iconOnly)
                 .accessibilityIdentifier("web.reload")
-            Menu {
-                Button {
-                    if let link = controller.shareLink { UIPasteboard.general.string = link }
-                } label: { Label("Copy link", systemImage: "link") }
-                .disabled(controller.shareLink == nil)
+            Button {
+                model.present(.send(SaveRequest(app: controller.app.slug, url: controller.stateURL)))
             } label: { Label("Send", systemImage: "square.and.arrow.up") }
                 .labelStyle(.iconOnly)
                 .accessibilityIdentifier("web.send")
             Button {
-                let url = controller.currentURL.isEmpty ? controller.loadedURL : controller.currentURL
-                model.present(.save(SaveRequest(app: controller.app.slug, url: url)))
+                model.present(.save(SaveRequest(app: controller.app.slug, url: controller.stateURL)))
             } label: { Label("Save", systemImage: "bookmark") }
                 .labelStyle(.iconOnly)
                 .accessibilityIdentifier("web.save")
