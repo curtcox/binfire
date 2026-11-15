@@ -8,6 +8,12 @@ export type ErrorCode =
   | 'rate-limited'
   | 'http-error'
   | 'mismatch'
+  | 'network'
+  // hashbin.md (Native Save)
+  | 'failed'
+  | 'cancelled'
+  | 'insufficient-balance'
+  | 'cost-exceeded'
   // state.md (lz)
   | 'invalid'
   // links.md

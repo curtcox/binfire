@@ -6,6 +6,8 @@ describe('decideNavigation', () => {
     ['https://curtcox.github.io/PythonOnline/?run=0', true],
     ['https://python.hashbin.page/index.html', true],
     ['about:blank', true],
+    // Publish redirect fallback: a registered app URL whose state is `publish` loads without asking.
+    ['https://python.hashbin.page/#hashbin_publish=st&cid=AAAAAAAFaGVsbG8', true],
     ['https://hashbin.org/publish?x=1&mode=popup', true],
     ['https://HASHBIN.org/', true],
     ['http://hashbin.org/publish', false],

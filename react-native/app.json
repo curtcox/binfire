@@ -134,7 +134,9 @@
             "text/*"
           ]
         }
-      ]
+      ],
+      "expo-web-browser",
+      "expo-secure-store"
     ]
   }
 }

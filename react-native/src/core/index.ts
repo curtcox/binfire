@@ -14,3 +14,4 @@ export * from './ble';
 export * from './audio';
 export * from './library';
 export * from './navigation';
+export * from './hashbin';
