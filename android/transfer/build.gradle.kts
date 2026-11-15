@@ -12,4 +12,5 @@ dependencies {
 tasks.test {
     systemProperty("binfire.fixtures", rootDir.resolve("../shared/fixtures").absolutePath)
     systemProperty("binfire.config", rootDir.resolve("../config/binfire.config.json").absolutePath)
+    systemProperty("binfire.registry", rootDir.resolve("../shared/registry/apps.json").absolutePath)
 }

@@ -10,8 +10,12 @@ sealed class Route {
         override val action get() = "open-app"
     }
 
-    /** Fetch and verify [cid], then choose an app by document type unless [app] (a slug hint) is set. */
-    data class LoadCid(val cid: String, val app: String?) : Route() {
+    /**
+     * Fetch and verify [cid], then choose an app by document type unless [app] (a slug hint) is set.
+     * [run] is `false` for received content (`routeReceived`): the app then opens
+     * `withRunZero(canonicalOrigin + "#" + cid)`. `null` (not received) opens it as is.
+     */
+    data class LoadCid(val cid: String, val app: String?, val run: Boolean? = null) : Route() {
         override val action get() = "load-cid"
     }
 
@@ -33,7 +37,7 @@ sealed class Route {
     /** The route as the JSON object described in the spec. */
     fun toJson(): Map<String, Any?> = when (this) {
         is OpenApp -> linkedMapOf("action" to action, "app" to app, "url" to url, "state" to state.code, "run" to run, "view" to view)
-        is LoadCid -> linkedMapOf("action" to action, "cid" to cid, "app" to app)
+        is LoadCid -> linkedMapOf<String, Any?>("action" to action, "cid" to cid, "app" to app).also { m -> run?.let { m["run"] = it } }
         is OpenSite -> linkedMapOf("action" to action, "cid" to cid)
         is ShowText -> linkedMapOf("action" to action, "text" to text)
         is Error -> linkedMapOf("action" to action, "error" to error.code)
@@ -60,6 +64,20 @@ class Links(val registry: Registry, val config: BinfireConfig) {
      * not `show-text` wins. Otherwise `show-text` with the whole trimmed text.
      */
     fun routeShared(text: String): Route = routeShared(text, allowShare = true)
+
+    /**
+     * `routeReceived(text)`: for text that arrives over QR, BLE, audio or a received
+     * bundle. Received content never runs automatically: `open-app` URLs get
+     * `run=0` (and `run` is recomputed), and `load-cid` gets `run: false`.
+     */
+    fun routeReceived(text: String): Route = when (val r = route(text)) {
+        is Route.OpenApp -> {
+            val url = UrlState.withRunZero(r.url)
+            r.copy(url = url, run = UrlState.classify(url)?.run ?: false)
+        }
+        is Route.LoadCid -> r.copy(run = false)
+        else -> r
+    }
 
     private fun routeShared(text: String, allowShare: Boolean): Route {
         val whole = route(text, allowShare)
