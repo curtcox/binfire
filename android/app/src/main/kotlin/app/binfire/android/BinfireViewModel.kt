@@ -368,8 +368,13 @@ class BinfireViewModel(application: Application) : AndroidViewModel(application)
             override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
                 if (!request.isForMainFrame) return false
                 val url = request.url.toString()
-                if (url == "about:blank" || isHashBin(url) || registry.match(url)?.app?.slug == opener.app.slug) return false
-                sheet = Sheet.Text(url)
+                if (url == "about:blank" || isHashBin(url)) return false
+                // Anything else closes the popup. A return to a registered app (HashBin's redirect
+                // fallback, `#hashbin_publish=…`, state `publish`) loads in that app's browser without
+                // asking; other URLs go to the show-text sheet.
+                view.post { closePopup() }
+                val m = registry.match(url)
+                if (m != null) openApp(m.app.slug, url) else sheet = Sheet.Text(url)
                 return true
             }
         }
