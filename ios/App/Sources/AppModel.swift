@@ -94,6 +94,8 @@ final class AppModel: ObservableObject {
     private var loadTask: Task<Void, Never>?
     private var loadGeneration = 0
     private var presentGeneration = 0
+    private var pendingSheet: SheetItem?
+    private var sheetVisible = false
 
     init() {
         var config = (AppModel.resource("binfire.config", "json").flatMap { try? BinfireConfig.load(contentsOf: $0) })
@@ -161,25 +163,46 @@ final class AppModel: ObservableObject {
         }
     }
 
-    /// Shows a sheet, waiting for any sheet being dismissed first. A later
-    /// `present` or `dismissSheet` wins over a pending one.
+    /// Shows a sheet. When another sheet is up (or still presenting), it is
+    /// dismissed first and this one follows once SwiftUI reports the
+    /// dismissal (`sheetDidDismiss`), with a timer as a fallback for a sheet
+    /// that never appeared. A later `present` or `dismissSheet` wins.
     func present(_ item: SheetItem) {
         presentGeneration += 1
         let generation = presentGeneration
-        if sheet == nil {
+        if sheet == nil && !sheetVisible {
+            pendingSheet = nil
             sheet = item
-        } else {
-            sheet = nil
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { [weak self] in
-                guard let self, self.presentGeneration == generation else { return }
-                self.sheet = item
-            }
+            return
+        }
+        pendingSheet = item
+        sheet = nil
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+            guard let self, self.presentGeneration == generation, !self.sheetVisible,
+                  let pending = self.pendingSheet else { return }
+            self.pendingSheet = nil
+            self.sheet = pending
         }
     }
 
     func dismissSheet() {
         presentGeneration += 1
+        pendingSheet = nil
         sheet = nil
+    }
+
+    /// Sheet content appeared on screen.
+    func sheetDidAppear() { sheetVisible = true }
+
+    /// SwiftUI finished dismissing a sheet: show the one waiting, if any.
+    func sheetDidDismiss() {
+        sheetVisible = false
+        guard let pending = pendingSheet else { return }
+        pendingSheet = nil
+        DispatchQueue.main.async { [weak self] in
+            guard let self, self.sheet == nil else { return }
+            self.sheet = pending
+        }
     }
 
     static func message(for error: BinfireError) -> String {
@@ -302,12 +325,17 @@ final class AppModel: ObservableObject {
     /// Save on the confirm sheet: sign in if needed, upload, show the link.
     func confirmHashBinSave(_ save: HashBinSave) {
         guard let hashbin else { return }
-        dismissSheet()
+        // Sign in straight from the tap, over the confirm sheet, so the
+        // system's "Wants to Use … to Sign In" prompt appears at once.
+        let needsSignIn = !hashbinSignedIn
+        if !needsSignIn { dismissSheet() }
+        loadGeneration += 1
+        let generation = loadGeneration
         Task {
             do {
                 if let max = save.serverConfig?.maxUploadBytes, save.bytes.count > max { throw BinfireError.tooLarge }
                 let maxCost = save.estimateCents ?? HashBin.fallbackMaxCostCents
-                if !(await hashbin.isSignedIn) { try await signIn(hashbin) }
+                if needsSignIn { try await signIn(hashbin) }
                 present(.loading("Saving to HashBin…"))
                 var result: UploadResult
                 do {
@@ -319,11 +347,16 @@ final class AppModel: ObservableObject {
                     present(.loading("Saving to HashBin…"))
                     result = try await hashbin.upload(save.bytes, contentType: save.contentType, maxCostCents: maxCost)
                 }
+                // Cancel on the loading sheet abandons the result (an upload
+                // that already reached HashBin can't be undone).
+                guard generation == loadGeneration else { return refreshSignedIn() }
                 finishSave(cid: result.cid, app: save.app, copyLink: save.copyLink)
             } catch BinfireError.cancelled {
-                dismissSheet()
+                if generation == loadGeneration { dismissSheet() }
             } catch {
-                present(.error(AppModel.saveMessage(for: error as? BinfireError ?? .network)))
+                if generation == loadGeneration {
+                    present(.error(AppModel.saveMessage(for: error as? BinfireError ?? .network)))
+                }
             }
             refreshSignedIn()
         }

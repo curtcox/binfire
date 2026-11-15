@@ -13,7 +13,8 @@ struct RootView: View {
                 LibraryView()
             }
         }
-        .sheet(item: $model.sheet) { item in
+        .sheet(item: $model.sheet, onDismiss: { model.sheetDidDismiss() }) { item in
+            Group {
             switch item {
             case .text(let text): TextSheet(text: text)
             case .error(let message): ErrorSheet(message: message)
@@ -26,6 +27,8 @@ struct RootView: View {
             case .hashbinResult(let link): HashBinResultSheet(link: link)
             case .publishNote(let appName): PublishNoteSheet(appName: appName)
             }
+            }
+            .onAppear { model.sheetDidAppear() }
         }
         // Custom scheme links, files (Open in…) and, on some paths, Universal Links.
         .onOpenURL { url in model.openIncoming(url) }
