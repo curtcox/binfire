@@ -35,7 +35,7 @@ struct ChooserSheet: View {
                         let name = model.registry.app(slug: slug)?.name ?? slug
                         Button(name) {
                             if let app = model.registry.app(slug: slug) {
-                                model.openApp(slug: slug, url: app.canonicalOrigin + "#" + request.cid)
+                                model.openApp(slug: slug, url: request.url(in: app))
                             }
                         }
                         .accessibilityIdentifier("chooser.app.\(slug)")
@@ -83,6 +83,12 @@ struct SendSheet: View {
             .buttonStyle(.bordered)
             .disabled(model.links.makeLink(request.url) == nil)
             .accessibilityIdentifier("send.copy")
+            Button {
+                model.showQR(request)
+            } label: { Label("QR code", systemImage: "qrcode").frame(maxWidth: .infinity, alignment: .leading) }
+            .buttonStyle(.bordered)
+            .disabled(model.links.makeLink(request.url) == nil)
+            .accessibilityIdentifier("send.qr")
             if model.hashbin != nil {
                 Button {
                     model.startHashBinSave(app: request.app, url: request.url, copyLink: false)
@@ -93,7 +99,7 @@ struct SendSheet: View {
             Spacer()
         }
         .padding(20)
-        .presentationDetents([.fraction(0.3)])
+        .presentationDetents([.fraction(0.4)])
     }
 }
 

@@ -36,6 +36,8 @@ targets:
         # Plain http only to localhost (the DEBUG mock HashBin, spec/hashbin.md).
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true
+        # spec/qr.md: live QR scanning (scan from image needs no permission).
+        NSCameraUsageDescription: binfire uses the camera to scan QR codes.
         # >>> binfire:configure info-properties
         CFBundleURLTypes:
           - CFBundleURLName: binfire

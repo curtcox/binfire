@@ -27,6 +27,22 @@ const cameraDeniedMessage = 'Camera permission denied';
 /// Status shown when a picked image holds no QR code.
 const noQrInImageMessage = 'No QR code found in this image.';
 
+/// Status shown when a picked image file is over [maxScanImageBytes].
+const imageTooLargeMessage = 'This image is too large.';
+
+/// Largest image file scan from image reads (qr.md: bound before decoding).
+const maxScanImageBytes = 25 * 1024 * 1024;
+
+/// Longest side, in pixels, an image is decoded at where the decoder can
+/// downsample (the iOS Core Image fallback).
+const maxScanImageSide = 4096;
+
+/// Thrown by [decodeQrImage] for a file over [maxScanImageBytes].
+class ImageTooLargeException implements Exception {
+  /// Creates the exception.
+  const ImageTooLargeException();
+}
+
 /// Error shown for a received `site` bundle until M6.
 const packagedSitesLaterMessage = 'Packaged sites arrive in a later version.';
 
@@ -40,7 +56,8 @@ typedef ScanCameraBuilder = Widget Function(
 );
 
 /// Lets the user pick an image and decodes the QR codes in it. Returns `null`
-/// when the user cancelled, else the decoded texts in reported order.
+/// when the user cancelled, else the decoded texts in reported order. Throws
+/// [ImageTooLargeException] for an image file over [maxScanImageBytes].
 typedef ScanImagePicker = Future<List<String>?> Function();
 
 /// A user-facing message for a frame error code.
@@ -170,6 +187,8 @@ class _ScanSheetState extends State<ScanSheet> {
         return;
       }
       _onText(texts.first);
+    } on ImageTooLargeException {
+      if (mounted) setState(() => _status = imageTooLargeMessage);
     } catch (_) {
       if (mounted) setState(() => _status = "Couldn't read this image.");
     } finally {
@@ -264,15 +283,22 @@ const _imageChannel = MethodChannel('binfire/qr_image');
 
 /// Decodes the QR codes in the image at [path], in reported order.
 ///
-/// Uses mobile_scanner (Vision or ML Kit). Where it can't analyze files
-/// (the iOS Simulator), iOS falls back to Core Image's QR detector.
+/// A file over [maxScanImageBytes] is refused before it is read
+/// ([ImageTooLargeException]). Uses mobile_scanner (Vision or ML Kit), which
+/// takes only a path, so the file check is its bound. Where it can't analyze
+/// files (the iOS Simulator), iOS falls back to Core Image's QR detector,
+/// which decodes at most [maxScanImageSide] pixels on the longest side.
 Future<List<String>> decodeQrImage(String path, MobileScannerController scanner) async {
+  if (await File(path).length() > maxScanImageBytes) throw const ImageTooLargeException();
   try {
     final capture = await scanner.analyzeImage(path, formats: const [BarcodeFormat.qrCode]);
     return [for (final b in capture?.barcodes ?? const <Barcode>[]) if (b.rawValue != null) b.rawValue!];
   } catch (_) {
     if (!Platform.isIOS) rethrow;
-    final texts = await _imageChannel.invokeListMethod<String>('decode', {'path': path});
+    final texts = await _imageChannel.invokeListMethod<String>(
+      'decode',
+      {'path': path, 'maxBytes': maxScanImageBytes, 'maxSide': maxScanImageSide},
+    );
     return texts ?? const [];
   }
 }

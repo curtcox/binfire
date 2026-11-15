@@ -12,6 +12,7 @@ import 'package:binfire/ui/scan_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 
 import 'support/fake_hashbin.dart';
 import 'support/fixtures.dart';
@@ -239,6 +240,26 @@ void main() {
       await tester.pumpAndSettle();
       expect(byId('scan.sheet'), findsNothing);
       expect(c.currentApp!.currentUrl, 'https://python.hashbin.page/?run=0#AAAAAAAFaGVsbG8');
+    });
+
+    testWidgets('an image over 25 MiB is refused before decoding', (tester) async {
+      final c = controller();
+      await host(tester, (context) => startScan(context, c, camera: noCamera, pickImage: () async => throw const ImageTooLargeException()));
+      await tester.tap(find.text('From image'));
+      await tester.pumpAndSettle();
+      expect(status(tester), imageTooLargeMessage);
+      expect(byId('scan.sheet'), findsOneWidget);
+    });
+
+    test('decodeQrImage checks the file size before reading it', () async {
+      final dir = await Directory.systemTemp.createTemp('scan');
+      addTearDown(() => dir.delete(recursive: true));
+      final big = File('${dir.path}/big.png');
+      final raf = await big.open(mode: FileMode.write);
+      await raf.truncate(maxScanImageBytes + 1); // sparse: nothing to decode
+      await raf.close();
+      // The scanner is never reached, so no platform channel is needed.
+      expect(() => decodeQrImage(big.path, MobileScannerController(autoStart: false)), throwsA(isA<ImageTooLargeException>()));
     });
 
     testWidgets('Cancel closes the sheet', (tester) async {

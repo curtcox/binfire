@@ -13,6 +13,14 @@ struct ChooserRequest: Equatable {
     let cid: String
     /// The matching apps, or every app when none matched.
     let slugs: [String]
+    /// False for received content: the app opens with `run=0`.
+    var run = true
+
+    /// The URL that opens this document in `app`.
+    func url(in app: RegistryApp) -> String {
+        let url = app.canonicalOrigin + "#" + cid
+        return run ? url : Links.withRunZero(url)
+    }
 }
 
 /// A pending Native Save of `bytes` (the confirm sheet observes the estimate).
@@ -24,15 +32,18 @@ final class HashBinSave: ObservableObject, Identifiable, Equatable {
     let contentType: String
     /// Copy the `/c#` link when done (the long-link offer).
     let copyLink: Bool
+    /// Show the QR of the `/c#` link when done (the QR sheet's offer).
+    let showQR: Bool
     @Published var configLoaded = false
     @Published var estimateCents: Int?
     var serverConfig: HashBinServerConfig?
 
-    init(app: String, bytes: Data, contentType: String, copyLink: Bool) {
+    init(app: String, bytes: Data, contentType: String, copyLink: Bool, showQR: Bool) {
         self.app = app
         self.bytes = bytes
         self.contentType = contentType
         self.copyLink = copyLink
+        self.showQR = showQR
     }
 
     nonisolated static func == (a: HashBinSave, b: HashBinSave) -> Bool { a.id == b.id }
@@ -53,6 +64,10 @@ enum SheetItem: Identifiable, Equatable {
     case hashbinResult(String)
     /// binfire can't extract this state: use the app's own Publish.
     case publishNote(String)
+    /// Send → QR code (or the QR of a fresh `/c#` link).
+    case qr(QRRequest)
+    /// Library → Scan.
+    case scan
 
     var id: String {
         switch self {
@@ -66,6 +81,8 @@ enum SheetItem: Identifiable, Equatable {
         case .hashbinConfirm(let s): return "confirm:\(s.id)"
         case .hashbinResult(let l): return "result:\(l)"
         case .publishNote(let a): return "publishNote:\(a)"
+        case .qr(let r): return "qr:\(r.link.hashValue)"
+        case .scan: return "scan"
         }
     }
 }
@@ -96,6 +113,10 @@ final class AppModel: ObservableObject {
     private var presentGeneration = 0
     private var pendingSheet: SheetItem?
     private var sheetVisible = false
+    /// Verified documents by CID (received bundles), so they open without
+    /// the network. Small and in memory only.
+    private var cidCache: [String: Data] = [:]
+    private var cidCacheOrder: [String] = []
 
     init() {
         var config = (AppModel.resource("binfire.config", "json").flatMap { try? BinfireConfig.load(contentsOf: $0) })
@@ -156,8 +177,8 @@ final class AppModel: ObservableObject {
             present(.text(text))
         case let .error(e):
             present(.error(AppModel.message(for: e)))
-        case let .loadCID(cid, app):
-            loadCID(cid, hint: app)
+        case let .loadCID(cid, app, run):
+            loadCID(cid, hint: app, run: run)
         case .openSite:
             present(.error("Packaged sites are coming in M6."))
         }
@@ -241,18 +262,22 @@ final class AppModel: ObservableObject {
 
     // MARK: CID loading (cid.md "Opening a loaded document")
 
-    func loadCID(_ cid: String, hint: String?) {
+    func loadCID(_ cid: String, hint: String?, run: Bool = true) {
         loadTask?.cancel()
         loadGeneration += 1
         let generation = loadGeneration
         let config = config
+        if let bytes = cidCache[cid] {
+            openLoaded(cid: cid, bytes: bytes, hint: hint, run: run)
+            return
+        }
         present(.loading("Loading document…"))
         loadTask = Task { [weak self] in
             do {
                 let bytes = try await HashBin.loadCID(cid, limit: config.limits.maxStateBytes,
                                                       contentBase: config.contentHost, fetch: ContentFetcher.urlSession)
                 guard let self, generation == self.loadGeneration else { return }
-                self.openLoaded(cid: cid, bytes: bytes, hint: hint)
+                self.openLoaded(cid: cid, bytes: bytes, hint: hint, run: run)
             } catch {
                 guard let self, generation == self.loadGeneration, !Task.isCancelled else { return }
                 self.present(.error(AppModel.loadMessage(for: error as? BinfireError ?? .network)))
@@ -268,17 +293,41 @@ final class AppModel: ObservableObject {
         dismissSheet()
     }
 
-    private func openLoaded(cid: String, bytes: Data, hint: String?) {
+    private func openLoaded(cid: String, bytes: Data, hint: String?, run: Bool) {
         let apps: [RegistryApp]
         if let hint, let app = registry.app(slug: hint) {
             apps = [app]
         } else {
             apps = Envelope.documentType(bytes).map { registry.appsForDocumentType($0) } ?? []
         }
+        let request = ChooserRequest(cid: cid, slugs: (apps.isEmpty ? registry.apps : apps).map(\.slug), run: run)
         if apps.count == 1 {
-            openApp(slug: apps[0].slug, url: apps[0].canonicalOrigin + "#" + cid)
+            openApp(slug: apps[0].slug, url: request.url(in: apps[0]))
         } else {
-            present(.chooser(ChooserRequest(cid: cid, slugs: (apps.isEmpty ? registry.apps : apps).map(\.slug))))
+            present(.chooser(request))
+        }
+    }
+
+    private func cacheDocument(cid: String, bytes: Data) {
+        if cidCache[cid] == nil { cidCacheOrder.append(cid) }
+        cidCache[cid] = bytes
+        while cidCacheOrder.count > 8 { cidCache[cidCacheOrder.removeFirst()] = nil }
+    }
+
+    // MARK: received bundles (qr.md "Received bundles")
+
+    /// A payload that arrived complete over multi-frame QR (later BLE, audio).
+    func receiveBundle(_ payload: Data) {
+        switch ReceivedAction.from(payload: payload, links: links) {
+        case .route(let route):
+            handle(route)
+        case let .document(cid, bytes, app):
+            cacheDocument(cid: cid, bytes: bytes)
+            loadCID(cid, hint: app, run: false)
+        case .error(nil):
+            present(.error(ReceivedAction.siteMessage))
+        case .error(let error?):
+            present(.error("This transfer can't be opened (\(error.code))."))
         }
     }
 
@@ -299,7 +348,7 @@ final class AppModel: ObservableObject {
     // MARK: Native Save (hashbin.md)
 
     /// Save to HashBin for a browser's current state.
-    func startHashBinSave(app slug: String, url: String, copyLink: Bool) {
+    func startHashBinSave(app slug: String, url: String, copyLink: Bool, showQR: Bool = false) {
         let appName = registry.app(slug: slug)?.name ?? slug
         guard let hashbin else {
             present(.publishNote(appName))
@@ -307,11 +356,11 @@ final class AppModel: ObservableObject {
         }
         switch HashBin.saveBytes(url, limit: config.limits.maxStateBytes) {
         case .cid(let cid):
-            finishSave(cid: cid, app: slug, copyLink: copyLink)
+            finishSave(cid: cid, app: slug, copyLink: copyLink, showQR: showQR)
         case .none:
             present(.publishNote(appName))
         case let .upload(_, bytes, contentType):
-            let save = HashBinSave(app: slug, bytes: bytes, contentType: contentType, copyLink: copyLink)
+            let save = HashBinSave(app: slug, bytes: bytes, contentType: contentType, copyLink: copyLink, showQR: showQR)
             present(.hashbinConfirm(save))
             Task {
                 let server = await hashbin.serverConfig()
@@ -351,7 +400,7 @@ final class AppModel: ObservableObject {
                 // Cancel on the loading sheet abandons the result (an upload
                 // that already reached HashBin can't be undone).
                 guard generation == loadGeneration else { return refreshSignedIn() }
-                finishSave(cid: result.cid, app: save.app, copyLink: save.copyLink)
+                finishSave(cid: result.cid, app: save.app, copyLink: save.copyLink, showQR: save.showQR)
             } catch BinfireError.cancelled {
                 if generation == loadGeneration { dismissSheet() }
             } catch {
@@ -370,10 +419,10 @@ final class AppModel: ObservableObject {
         refreshSignedIn()
     }
 
-    private func finishSave(cid: String, app: String, copyLink: Bool) {
+    private func finishSave(cid: String, app: String, copyLink: Bool, showQR: Bool) {
         let link = links.makeCIDLink(cid, app: app)
         if copyLink { UIPasteboard.general.string = link }
-        present(.hashbinResult(link))
+        present(showQR ? .qr(QRRequest(app: app, stateURL: nil, link: link)) : .hashbinResult(link))
     }
 
     func signOutHashBin() {
@@ -403,6 +452,12 @@ final class AppModel: ObservableObject {
     }
 
     // MARK: Send
+
+    /// Send → QR code for a browser's current state.
+    func showQR(_ request: SaveRequest) {
+        guard let link = links.makeLink(request.url) else { return }
+        present(.qr(QRRequest(app: request.app, stateURL: request.url, link: link)))
+    }
 
     /// Send → Copy link: copies `makeLink`; a long link also gets the
     /// "Save to HashBin for a short link" notice.

@@ -1,19 +1,22 @@
 # Pick the most recently added photo in the system image picker, which is the
 # image the flow just added with addMedia. The picker is system UI, so this is
-# per OS, not per port. TODO(M4): confirm on iOS 26 PHPicker and Android 14's
-# photo picker; refine the selectors here, not in the flows.
+# per OS, not per port; refine the selectors here, not in the flows.
 appId: ${APP_ID}
 ---
 - runFlow:
     when:
       platform: iOS
     commands:
+      # iOS 26 PHPicker (checked on 26.5): a grid of cells with id PXGGridLayout-Info, newest
+      # first (label "Photo, <date>"). A "Private Access to Photos" banner can
+      # sit above the grid, so tap the first cell by id, not by point.
       - extendedWaitUntil:
-          visible: "Photos"
-          timeout: 10000
-          optional: true
+          visible:
+            id: "PXGGridLayout-Info"
+          timeout: 20000
       - tapOn:
-          point: "17%,30%"
+          id: "PXGGridLayout-Info"
+          index: 0
 # Android 14's photo picker opens as a half-height sheet ("Photos" / "Albums",
 # then a "Recent" grid, newest first), so a fixed point misses it. Each
 # thumbnail's accessibility label is "Photo taken on <date>": tap the first.

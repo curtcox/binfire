@@ -26,6 +26,8 @@ struct RootView: View {
             case .hashbinConfirm(let save): HashBinConfirmSheet(save: save)
             case .hashbinResult(let link): HashBinResultSheet(link: link)
             case .publishNote(let appName): PublishNoteSheet(appName: appName)
+            case .qr(let request): QRSheet(request: request)
+            case .scan: ScanSheet(model: model)
             }
             }
             .onAppear { model.sheetDidAppear() }

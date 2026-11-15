@@ -75,7 +75,13 @@ struct LibraryView: View {
                 }
             }
             .labelStyle(.iconOnly)
+            .fixedSize()
             .accessibilityIdentifier("open.paste")
+            Button { model.present(.scan) } label: { Label("Scan", systemImage: "qrcode.viewfinder") }
+                .labelStyle(.iconOnly)
+                .font(.title3)
+                .fixedSize()
+                .accessibilityIdentifier("open.scan")
         }
     }
 
