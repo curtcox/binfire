@@ -13,7 +13,7 @@ Legend: `[x]` done and verified · `[~]` partly done (see note) · `[ ]` not sta
 | M0 | Spec and scaffolding | [x] | [x] | [x] | [x] | [x] |
 | M1 | Browser core | [x] | [x] | [x] | [x] | [x] |
 | M2 | Links in | [x] | [x] | [x] | [x] | [~] |
-| M3 | HashBin | [ ] | [ ] | [ ] | [ ] | [ ] |
+| M3 | HashBin | [~] | [~] | [ ] | [ ] | [x] |
 | M4 | QR and camera | [ ] | [ ] | [ ] | [ ] | [ ] |
 | M5 | Send and files | [ ] | [ ] | [ ] | [ ] | [ ] |
 | M6 | Packaged sites | [ ] | [ ] | [ ] | [ ] | [ ] |
@@ -45,6 +45,15 @@ Run on 2026-11-14 after M2, one device at a time:
 
 Newest first. One line per meaningful step, with what was verified.
 
+- 2026-11-14: iOS and Android M3 implemented. iOS: 73 tests; hashbin-mock and
+  m1+m2 pass on iPhone 17 Pro; unsigned simulator builds can't write the
+  Keychain (-34018), so token persistence across launches is untested [d].
+  Android: 67 tests; sign-in → upload → result works against the mock, as do
+  a stored-token re-save, revoke, state mismatch, the chooser and not-found.
+  The Maestro flow is blocked on the emulator by Chrome's first-run "Welcome
+  to Chrome" screen in the Custom Tab: accepting Chrome's terms is the
+  owner's call. Spec: cost cap `hashbin.maxCostCents` (25) instead of
+  invented prices; mock flow hardened.
 - 2026-11-14: M3 started. The specs cover the CID load flow and chooser, the
   long-link offer, and debug-only overrides. `tools/mock-hashbin.mjs` is a
   local stand-in for hashbin.org and 256t.us (auto-approving OAuth with PKCE
@@ -157,4 +166,6 @@ See PLAN.md section 11. Placeholders in `config/binfire.config.json`:
 - `apple.teamId` is `TEAMID0000` (needed for a real AASA file, M2).
 - `android.sha256CertFingerprints` is empty (needed for `assetlinks.json`, M2).
 - `hashbin.clientId` is empty (needed for native OAuth Save, M3).
-- CI workflows have not run yet: nothing has been pushed to GitHub from this work.
+- Android emulator: Chrome's first-run screen (Terms of Service) blocks
+  Custom Tabs sign-in in the Maestro flow. The owner should clear it once on
+  Pixel_8_API_34, or approve accepting it.
