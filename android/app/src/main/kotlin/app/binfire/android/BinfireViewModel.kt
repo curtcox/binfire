@@ -21,6 +21,7 @@ import android.webkit.WebViewClient
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.referentialEqualityPolicy
 import androidx.compose.runtime.setValue
 import android.widget.Toast
 import androidx.browser.customtabs.CustomTabsIntent
@@ -147,7 +148,8 @@ class BinfireViewModel(application: Application) : AndroidViewModel(application)
         private set
 
     var screen by mutableStateOf<Screen>(Screen.Library)
-    var sheet by mutableStateOf<Sheet?>(null)
+    /** Referential equality: the async flows below check `sheet === theirSheet` to see if they were dismissed. */
+    var sheet by mutableStateOf<Sheet?>(null, referentialEqualityPolicy())
 
     /** The HashBin Publish popup (`window.open`), shown as a dialog. */
     var popup by mutableStateOf<WebView?>(null)
