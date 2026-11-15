@@ -93,8 +93,10 @@ Future<T> _behindSheet<T>(BuildContext context, String id, String label, Future<
 
 /// Performs a `load-cid` route: loads and verifies [cid], then opens the
 /// hinted or single matching app at `canonicalOrigin#cid`, or shows the
-/// chooser. Errors show the error sheet.
-Future<void> openCid(BuildContext context, BinfireController c, String cid, {String? hint}) async {
+/// chooser. Errors show the error sheet. With [run] false (received
+/// content, links.md `routeReceived`) the app opens at
+/// `withRunZero(canonicalOrigin#cid)`.
+Future<void> openCid(BuildContext context, BinfireController c, String cid, {String? hint, bool run = true}) async {
   final Uint8List bytes;
   try {
     bytes = await _behindSheet(context, Ids.loadingSheet, 'Loading from HashBin…', () => c.fetchCid(cid));
@@ -105,20 +107,28 @@ Future<void> openCid(BuildContext context, BinfireController c, String cid, {Str
   if (!context.mounted) return;
   final hinted = hint == null ? null : c.registry.bySlug(hint);
   if (hinted != null) {
-    c.openApp(hinted.slug, '${hinted.canonicalOrigin}#$cid');
+    c.openApp(hinted.slug, cidAppUrl(hinted, cid, run: run));
     return;
   }
   final type = documentType(bytes);
   final apps = type == null ? const <RegistryApp>[] : appsForDocumentType(c.registry, type);
   if (apps.length == 1) {
-    c.openApp(apps.single.slug, '${apps.single.canonicalOrigin}#$cid');
+    c.openApp(apps.single.slug, cidAppUrl(apps.single, cid, run: run));
     return;
   }
-  await showChooserSheet(context, c, cid, apps.isEmpty ? c.registry.apps : apps);
+  await showChooserSheet(context, c, cid, apps.isEmpty ? c.registry.apps : apps, run: run);
+}
+
+/// The URL that opens document [cid] in [app]: `canonicalOrigin#cid`, with
+/// `run=0` when [run] is false.
+String cidAppUrl(RegistryApp app, String cid, {bool run = true}) {
+  final url = '${app.canonicalOrigin}#$cid';
+  return run ? url : withRunZero(url);
 }
 
 /// The chooser: [apps], plus **Copy link** and **Open raw**.
-Future<void> showChooserSheet(BuildContext context, BinfireController c, String cid, List<RegistryApp> apps) {
+Future<void> showChooserSheet(BuildContext context, BinfireController c, String cid, List<RegistryApp> apps,
+    {bool run = true}) {
   return showModalBottomSheet<void>(
     context: context,
     showDragHandle: true,
@@ -139,7 +149,7 @@ Future<void> showChooserSheet(BuildContext context, BinfireController c, String 
                     title: Text(app.name),
                     onTap: () {
                       Navigator.pop(sheet);
-                      c.openApp(app.slug, '${app.canonicalOrigin}#$cid');
+                      c.openApp(app.slug, cidAppUrl(app, cid, run: run));
                     },
                   ),
                 ),
@@ -223,30 +233,33 @@ Future<void> copyLink(BuildContext context, BinfireController c, String slug) as
 /// **Save to HashBin** for [slug]'s current state: links an existing CID,
 /// uploads a `v1` document after confirmation and sign-in, or explains the
 /// app's own Publish. With [copyResult] the `/c#` link is also copied.
-Future<void> saveToHashbin(BuildContext context, BinfireController c, String slug, {bool copyResult = false}) async {
+/// Returns the `/c#` link, or `null` when nothing was saved. With
+/// [showResult] false the caller shows the link (the QR sheet does).
+Future<String?> saveToHashbin(BuildContext context, BinfireController c, String slug,
+    {bool copyResult = false, bool showResult = true}) async {
   final client = c.hashbin;
   final authenticate = c.authenticate;
   final o = c.openFor(slug);
-  if (client == null || authenticate == null || o == null) return;
+  if (client == null || authenticate == null || o == null) return null;
   final what = saveBytesFor(o.currentUrl, limits: c.config.limits);
   switch (what.kind) {
     case SaveKind.none:
       await showPublishNote(context);
-      return;
+      return null;
     case SaveKind.cid:
       final link = c.links.makeCidLink(what.cid!, slug);
       if (copyResult) await Clipboard.setData(ClipboardData(text: link));
-      if (context.mounted) await showHashbinResult(context, link);
-      return;
+      if (showResult && context.mounted) await showHashbinResult(context, link);
+      return link;
     case SaveKind.text:
     case SaveKind.json:
       break;
   }
   final bytes = what.bytes!;
-  if (!context.mounted) return;
+  if (!context.mounted) return null;
   final maxCost = c.config.hashbin.maxCostCents;
   final ok = await showHashbinConfirm(context, bytes.length, client.fetchConfig(), maxCostCents: maxCost);
-  if (ok != true || !context.mounted) return;
+  if (ok != true || !context.mounted) return null;
   final UploadResult result;
   try {
     result = await _behindSheet(
@@ -258,12 +271,13 @@ Future<void> saveToHashbin(BuildContext context, BinfireController c, String slu
   } on BinfireException catch (e) {
     c.hashbinChanged();
     if (e.code != ErrorCodes.cancelled && context.mounted) await showErrorSheet(context, hashbinErrorMessage(e.code));
-    return;
+    return null;
   }
   c.hashbinChanged();
   final link = c.links.makeCidLink(result.cid, slug);
   if (copyResult) await Clipboard.setData(ClipboardData(text: link));
-  if (context.mounted) await showHashbinResult(context, link);
+  if (showResult && context.mounted) await showHashbinResult(context, link);
+  return link;
 }
 
 /// Shows the size and cost and asks to save. The cost is the estimate when

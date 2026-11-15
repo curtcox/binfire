@@ -8,6 +8,7 @@ import '../core/core.dart';
 import 'binfire_controller.dart';
 import 'ids.dart';
 import 'route_actions.dart';
+import 'scan_ui.dart';
 
 const _previewChars = 160;
 
@@ -124,6 +125,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
                         ),
                       ),
                     ),
+                  ),
+                  withId(
+                    Ids.openScan,
+                    IconButton(onPressed: () => startScan(context, _c), tooltip: 'Scan', icon: const Icon(Icons.qr_code_scanner)),
                   ),
                   withId(
                     Ids.openPaste,

@@ -193,6 +193,15 @@ class BinfireController extends ChangeNotifier {
     return bytes;
   }
 
+  /// Caches verified document [bytes] by [cid], as a received `cid` bundle
+  /// does (qr.md, Received bundles). Bytes that don't match are ignored.
+  void cacheCid(String cid, Uint8List bytes) {
+    if (!verifyCid(cid, bytes)) return;
+    _cidCache.remove(cid);
+    if (_cidCache.length >= _cidCacheEntries) _cidCache.remove(_cidCache.keys.first);
+    _cidCache[cid] = bytes;
+  }
+
   /// The raw content URL for [cid] (`{content}/{cid}`).
   String contentUrl(String cid) {
     final base = config.hashbin.content;

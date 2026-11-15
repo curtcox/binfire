@@ -9,6 +9,7 @@ abstract final class Ids {
   static const openInput = 'open.input';
   static const openGo = 'open.go';
   static const openPaste = 'open.paste';
+  static const openScan = 'open.scan';
   static const tabApps = 'tab.apps';
   static const tabSaved = 'tab.saved';
   static const tabRecent = 'tab.recent';
@@ -38,6 +39,20 @@ abstract final class Ids {
 
   static const sendCopy = 'send.copy';
   static const sendHashbin = 'send.hashbin';
+  static const sendQr = 'send.qr';
+  static const qrSheet = 'qr.sheet';
+  static const qrImage = 'qr.image';
+  static const qrNote = 'qr.note';
+  static const qrHashbin = 'qr.hashbin';
+  static const qrMulti = 'qr.multi';
+  static const qrExport = 'qr.export';
+  static const qrFrames = 'qr.frames';
+  static const qrFrameIndex = 'qr.frameIndex';
+  static const scanSheet = 'scan.sheet';
+  static const scanCamera = 'scan.camera';
+  static const scanImage = 'scan.image';
+  static const scanStatus = 'scan.status';
+  static const scanCancel = 'scan.cancel';
   static const longNotice = 'long.notice';
   static const longSave = 'long.save';
   static const hashbinConfirm = 'hashbin.confirm';

@@ -21,6 +21,9 @@ class FakeHashbin {
   /// `price_cents_per_mb_month` served by `/api/config`, omitted when null.
   num? price = 1;
 
+  /// `max_upload_bytes` served by `/api/config`.
+  int maxUpload = 100;
+
   String token(String p) => '$p${n++}';
 
   Map<String, Object?> issue() {
@@ -71,7 +74,7 @@ class FakeHashbin {
       return json(200, {});
     }
     if (req.url.path == '/api/config') {
-      return json(200, {'max_upload_bytes': 100, if (price != null) 'price_cents_per_mb_month': price});
+      return json(200, {'max_upload_bytes': maxUpload, if (price != null) 'price_cents_per_mb_month': price});
     }
     if (req.url.path == '/api/content') {
       final auth = req.headers['authorization'] ?? '';

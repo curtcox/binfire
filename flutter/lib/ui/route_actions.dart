@@ -28,7 +28,7 @@ Future<void> performRoute(BuildContext context, BinfireController controller, Li
     case RouteAction.error:
       await showErrorSheet(context, routeErrorMessage(route.error!));
     case RouteAction.loadCid:
-      await openCid(context, controller, route.cid!, hint: route.app);
+      await openCid(context, controller, route.cid!, hint: route.app, run: route.run ?? true);
     case RouteAction.openSite:
       await showErrorSheet(context, 'Packaged sites are coming in M6.');
   }

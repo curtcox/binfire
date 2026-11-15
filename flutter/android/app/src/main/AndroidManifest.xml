@@ -1,4 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- QR scanning (mobile_scanner adds the CAMERA permission). Scan from
+         image works without a camera, so the camera is optional. -->
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
     <application
         android:label="binfire"
         android:name="${applicationName}"

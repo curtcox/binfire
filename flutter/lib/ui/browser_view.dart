@@ -11,6 +11,7 @@ import 'binfire_controller.dart';
 import 'downloads.dart';
 import 'hashbin_flow.dart';
 import 'ids.dart';
+import 'qr_ui.dart';
 import 'sheets.dart';
 
 /// What a main-frame navigation inside an app browser may do.
@@ -181,11 +182,13 @@ class _AppBrowserState extends State<AppBrowser> implements BrowserHandle {
                   onSelected: (v) {
                     if (v == 'link') copyLink(context, _c, _slug);
                     if (v == 'hashbin') saveToHashbin(context, _c, _slug);
+                    if (v == 'qr') showQrSheet(context, _c, _slug);
                   },
                   itemBuilder: (context) => [
                     PopupMenuItem(value: 'link', child: withId(Ids.sendCopy, const Text('Copy link'))),
                     if (_c.canSaveToHashbin)
                       PopupMenuItem(value: 'hashbin', child: withId(Ids.sendHashbin, const Text('Save to HashBin'))),
+                    PopupMenuItem(value: 'qr', child: withId(Ids.sendQr, const Text('QR code'))),
                   ],
                 ),
               ),
