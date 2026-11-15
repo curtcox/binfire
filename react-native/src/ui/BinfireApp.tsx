@@ -4,24 +4,59 @@ import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import * as Linking from 'expo-linking';
 import { useShareIntent } from 'expo-share-intent';
-import { BackHandler, StyleSheet, View } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
+import { BackHandler, Platform, StyleSheet, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { defaultContext, type RegistryApp } from '../core/config';
+import { type RegistryApp } from '../core/config';
+import { documentType } from '../core/envelope';
+import { isBinfireError } from '../core/errors';
+import { contentUrl, estimateCostCents, isOAuthCallback, loadCid, saveBytes } from '../core/hashbin';
 import { addRecent, addSaved, removeSaved, type Library } from '../core/library';
-import { makeLink, route, routeShared, withoutRun, type Route } from '../core/links';
+import { makeCidLink, makeLink, route, routeShared, withoutRun, type Route } from '../core/links';
 import { parseUrl } from '../core/url';
-import { appForUrl } from '../core/registry';
+import { appForSlug, appForUrl, appsForDocumentType } from '../core/registry';
 import { classifyState } from '../core/state';
 import { BrowserScreen, type BrowserState } from './BrowserScreen';
 import { LibraryScreen } from './LibraryScreen';
-import { ErrorSheet, SaveSheet, SendSheet, TextSheet } from './Sheets';
+import { appContext, contentFetch, hashbinClient } from './hashbinPlatform';
+import {
+  ChooserSheet,
+  ErrorSheet,
+  HashbinBusySheet,
+  HashbinConfirmSheet,
+  HashbinResultSheet,
+  LoadingSheet,
+  PublishNoteSheet,
+  SaveSheet,
+  SendSheet,
+  TextSheet,
+} from './Sheets';
 import { loadLibrary, storeLibrary } from './storage';
 import { colors } from './theme';
 
-const ctx = defaultContext;
+const ctx = appContext;
 
 type Sheet =
-  { kind: 'text'; text: string } | { kind: 'error'; message: string } | { kind: 'save' } | { kind: 'send' } | null;
+  | { kind: 'text'; text: string }
+  | { kind: 'error'; message: string }
+  | { kind: 'save' }
+  | { kind: 'send'; signedIn: boolean }
+  | { kind: 'loading' }
+  | { kind: 'chooser'; cid: string; apps: readonly RegistryApp[]; matched: boolean }
+  | {
+      kind: 'hashbinConfirm';
+      bytes: Uint8Array;
+      contentType: string;
+      slug: string;
+      copy: boolean;
+      /** undefined while `/api/config` loads. */
+      estimate?: number | null;
+      maxUpload?: number;
+    }
+  | { kind: 'hashbinBusy' }
+  | { kind: 'hashbinResult'; link: string; copied: boolean }
+  | { kind: 'publishNote' }
+  | null;
 
 const ERROR_MESSAGES: Record<string, string> = {
   'too-large': 'That text is too large to open.',
@@ -29,7 +64,31 @@ const ERROR_MESSAGES: Record<string, string> = {
   'bad-link': 'That binfire link is malformed.',
   'unknown-link': "That binfire link isn't one binfire understands.",
   'invalid-cid': "That link's document ID (CID) isn't valid.",
+  // CID load (spec/cid.md) and HashBin save (spec/hashbin.md).
+  network: "Couldn't reach HashBin. Check your connection and try again.",
+  'not-found': 'That document was not found. It may have expired or been deleted.',
+  unavailable: 'That document is unavailable (removed after a dispute).',
+  'rate-limited': 'HashBin is limiting requests for that document. Try again later.',
+  'http-error': 'HashBin returned an error. Try again later.',
+  mismatch: "The document didn't match its ID (CID), so binfire won't open it.",
+  failed: "Couldn't sign in to HashBin. Try again.",
+  'insufficient-balance': 'Your HashBin balance is too low for this save. Add funds on hashbin.org and try again.',
+  'cost-exceeded': 'This save would cost more than the estimate, so HashBin did not charge you.',
 };
+const SIZE_MESSAGES = {
+  load: 'That document is too large to open.',
+  save: 'That document is too large to save to HashBin.',
+};
+
+function errorMessage(e: unknown, op: keyof typeof SIZE_MESSAGES): string {
+  if (!isBinfireError(e)) return op === 'save' ? 'Saving to HashBin failed.' : "Couldn't open that document.";
+  if (e.code === 'too-large') return SIZE_MESSAGES[op];
+  return ERROR_MESSAGES[e.code] ?? e.code;
+}
+
+const wait = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms));
+/** Lets a dismissing iOS sheet finish before another view controller is presented. */
+const PRESENT_DELAY_MS = Platform.OS === 'ios' ? 600 : 50;
 
 /**
  * expo-share-intent's iOS hand-off URL (`<scheme>://dataUrl=…`); its hook handles it.
@@ -88,6 +147,27 @@ export default function BinfireApp() {
     [recordVisit],
   );
 
+  // Each load gets a number; closing the loading sheet abandons the current one.
+  const loadSeq = useRef(0);
+  const loadDocument = useCallback(
+    async (cid: string, hint: string | null) => {
+      const seq = ++loadSeq.current;
+      setSheet({ kind: 'loading' });
+      try {
+        const bytes = await loadCid(cid, ctx.config.limits.maxStateBytes, contentFetch, ctx);
+        if (seq !== loadSeq.current) return;
+        const hinted = hint ? appForSlug(hint, ctx.registry) : null;
+        const type = documentType(bytes);
+        const apps = hinted ? [hinted] : type ? appsForDocumentType(type, ctx.registry) : [];
+        if (apps.length === 1) openApp(apps[0].slug, `${apps[0].canonicalOrigin}#${cid}`);
+        else setSheet({ kind: 'chooser', cid, apps: apps.length ? apps : ctx.registry.apps, matched: apps.length > 0 });
+      } catch (e) {
+        if (seq === loadSeq.current) setSheet({ kind: 'error', message: errorMessage(e, 'load') });
+      }
+    },
+    [openApp],
+  );
+
   const handleRoute = useCallback(
     (r: Route) => {
       switch (r.action) {
@@ -101,10 +181,7 @@ export default function BinfireApp() {
             message: ERROR_MESSAGES[r.error] ?? r.error,
           });
         case 'load-cid':
-          return setSheet({
-            kind: 'error',
-            message: 'Opening HashBin documents by CID is coming in M3.',
-          });
+          return void loadDocument(r.cid, r.app);
         case 'open-site':
           return setSheet({
             kind: 'error',
@@ -112,7 +189,7 @@ export default function BinfireApp() {
           });
       }
     },
-    [openApp],
+    [openApp, loadDocument],
   );
 
   const openText = useCallback((text: string) => handleRoute(route(text, ctx)), [handleRoute]);
@@ -125,6 +202,8 @@ export default function BinfireApp() {
       const scheme = parsed?.scheme;
       // expo-share-intent's own hand-off from the iOS Share Extension; the hook below handles it.
       if (isShareHandoff(url)) return;
+      // The OAuth redirect belongs to the auth session (Android also delivers it as a link).
+      if (isOAuthCallback(url, ctx)) return;
       if (scheme === 'file' || scheme === 'content') {
         setSheet({ kind: 'error', message: 'Opening .binfire files is coming in M5.' });
         return;
@@ -145,6 +224,7 @@ export default function BinfireApp() {
     const pending = Linking.getLinkingURL();
     if (pending) {
       if (!isShareHandoff(pending)) Linking.clearInitialURL();
+      // (openIncomingUrl ignores an OAuth redirect.)
       openIncomingRef.current(pending);
     } else {
       Linking.getInitialURL().then(
@@ -220,6 +300,72 @@ export default function BinfireApp() {
     [active, current],
   );
 
+  const showSaved = useCallback((link: string, copy: boolean) => {
+    if (copy) Clipboard.setStringAsync(link).catch(() => undefined);
+    setSheet({ kind: 'hashbinResult', link, copied: copy });
+  }, []);
+
+  /** Native Save of the current state (spec/hashbin.md "What is saved for a state"). */
+  const startSave = useCallback(
+    (copy: boolean) => {
+      if (!active || !current || !hashbinClient) return;
+      const what = saveBytes(current, ctx.config.limits.maxStateBytes);
+      if (what.kind === 'cid') return showSaved(makeCidLink(what.cid, active, ctx), copy);
+      if (what.kind === 'none') return setSheet({ kind: 'publishNote' });
+      const { bytes } = what;
+      setSheet({ kind: 'hashbinConfirm', bytes, contentType: what.contentType, slug: active, copy });
+      hashbinClient.apiConfig().then(cfg => {
+        const maxUpload = typeof cfg?.max_upload_bytes === 'number' ? cfg.max_upload_bytes : undefined;
+        setSheet(s =>
+          s?.kind === 'hashbinConfirm' && s.bytes === bytes
+            ? { ...s, estimate: estimateCostCents(bytes.length, cfg), maxUpload }
+            : s,
+        );
+      });
+    },
+    [active, current, showSaved],
+  );
+
+  const confirmSave = useCallback(async () => {
+    if (sheet?.kind !== 'hashbinConfirm' || !hashbinClient) return;
+    const { bytes, contentType, slug, copy, maxUpload } = sheet;
+    const client = hashbinClient;
+    if (maxUpload !== undefined && bytes.length > maxUpload) {
+      setSheet({ kind: 'error', message: SIZE_MESSAGES.save });
+      return;
+    }
+    // max_cost_cents caps the charge at the estimate shown (at least one cent).
+    const cap = Math.max(1, sheet.estimate ?? estimateCostCents(bytes.length, null));
+    try {
+      if (!(await client.accessToken())) {
+        // The system auth session presents over the app; get the sheet out of its way first.
+        setSheet(null);
+        await wait(PRESENT_DELAY_MS);
+        await client.signIn();
+        await wait(PRESENT_DELAY_MS);
+      }
+      setSheet({ kind: 'hashbinBusy' });
+      const result = await client.save(bytes, contentType, cap);
+      showSaved(makeCidLink(result.cid, slug, ctx), copy);
+    } catch (e) {
+      if (isBinfireError(e, 'cancelled')) setSheet(null);
+      else setSheet({ kind: 'error', message: errorMessage(e, 'save') });
+    }
+  }, [sheet, showSaved]);
+
+  const openSend = useCallback(() => {
+    setSheet({ kind: 'send', signedIn: false });
+    hashbinClient?.isSignedIn().then(
+      signedIn => setSheet(s => (s?.kind === 'send' ? { ...s, signedIn } : s)),
+      () => undefined,
+    );
+  }, []);
+
+  const signOut = useCallback(() => {
+    hashbinClient?.signOut().catch(() => undefined);
+    setSheet(s => (s?.kind === 'send' ? { ...s, signedIn: false } : s));
+  }, []);
+
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
       if (sheet) {
@@ -261,7 +407,7 @@ export default function BinfireApp() {
           onBlocked={onBlocked}
           onLibrary={() => setScreen('library')}
           onSave={() => setSheet({ kind: 'save' })}
-          onSend={() => setSheet({ kind: 'send' })}
+          onSend={openSend}
           onRun={onRun}
         />
       </View>
@@ -271,8 +417,46 @@ export default function BinfireApp() {
         <SaveSheet fallbackName={fallbackName} onSave={onSave} onClose={() => setSheet(null)} />
       )}
       {sheet?.kind === 'send' && (
-        <SendSheet link={current ? makeLink(current, ctx) : null} onClose={() => setSheet(null)} />
+        <SendSheet
+          link={current ? makeLink(current, ctx) : null}
+          canSave={!!hashbinClient}
+          signedIn={sheet.signedIn}
+          onSave={startSave}
+          onSignOut={signOut}
+          onClose={() => setSheet(null)}
+        />
       )}
+      {sheet?.kind === 'loading' && (
+        <LoadingSheet
+          onClose={() => {
+            loadSeq.current++;
+            setSheet(null);
+          }}
+        />
+      )}
+      {sheet?.kind === 'chooser' && (
+        <ChooserSheet
+          apps={sheet.apps}
+          matched={sheet.matched}
+          link={makeCidLink(sheet.cid, null, ctx)}
+          rawUrl={contentUrl(sheet.cid, ctx)}
+          onPick={app => openApp(app.slug, `${app.canonicalOrigin}#${sheet.cid}`)}
+          onClose={() => setSheet(null)}
+        />
+      )}
+      {sheet?.kind === 'hashbinConfirm' && (
+        <HashbinConfirmSheet
+          size={sheet.bytes.length}
+          estimate={sheet.estimate}
+          onOk={() => void confirmSave()}
+          onClose={() => setSheet(null)}
+        />
+      )}
+      {sheet?.kind === 'hashbinBusy' && <HashbinBusySheet />}
+      {sheet?.kind === 'hashbinResult' && (
+        <HashbinResultSheet link={sheet.link} copied={sheet.copied} onClose={() => setSheet(null)} />
+      )}
+      {sheet?.kind === 'publishNote' && <PublishNoteSheet onClose={() => setSheet(null)} />}
     </SafeAreaProvider>
   );
 }

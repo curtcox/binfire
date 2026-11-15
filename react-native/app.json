@@ -40,7 +40,11 @@
             }
           }
         ],
-        "LSSupportsOpeningDocumentsInPlace": false
+        "LSSupportsOpeningDocumentsInPlace": false,
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": false,
+          "NSAllowsLocalNetworking": true
+        }
       }
     },
     "android": {

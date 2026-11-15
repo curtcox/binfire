@@ -1,18 +1,24 @@
-// Modal sheets: show text, error, save name, send menu (spec/ui.md "Sheets").
+// Modal sheets: show text, error, save name, send menu, CID loading and
+// chooser, and the HashBin save sheets (spec/ui.md "Sheets").
 import * as Clipboard from 'expo-clipboard';
 import { useState, type ReactNode } from 'react';
 import {
+  ActivityIndicator,
   KeyboardAvoidingView,
   Linking,
   Modal,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { utf8Length } from '../core/bytes';
+import type { RegistryApp } from '../core/config';
+import { LONG_LINK_BYTES } from '../core/hashbin';
 import { parseUrl } from '../core/url';
 import { colors, common } from './theme';
 
@@ -133,34 +139,246 @@ export function SaveSheet({
   );
 }
 
-/** The send menu. M1 has only Copy link; QR, file and nearby come later. */
-export function SendSheet({ link, onClose }: { link: string | null; onClose: () => void }) {
+function copyText(text: string, done: () => void) {
+  Clipboard.setStringAsync(text).then(done, () => undefined);
+}
+
+/** A plain menu row. */
+function MenuItem({ testID, label, onPress, disabled }: { testID: string; label: string; onPress: () => void; disabled?: boolean }) {
+  return (
+    <Pressable
+      testID={testID}
+      style={[common.ghostButton, styles.menuItem, disabled && styles.disabled]}
+      disabled={disabled}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+    >
+      <Text style={common.ghostButtonText}>{label}</Text>
+    </Pressable>
+  );
+}
+
+/**
+ * The send menu: Copy link (with the long-link notice past `LONG_LINK_BYTES`),
+ * Save to HashBin when a client ID is configured, and Sign out of HashBin.
+ */
+export function SendSheet({
+  link,
+  canSave,
+  signedIn,
+  onSave,
+  onSignOut,
+  onClose,
+}: {
+  link: string | null;
+  /** A client ID is configured (Native Save is available). */
+  canSave: boolean;
+  signedIn: boolean;
+  /** Runs Native Save; `copy` copies the resulting `/c#` link. */
+  onSave: (copy: boolean) => void;
+  onSignOut: () => void;
+  onClose: () => void;
+}) {
   const [copied, setCopied] = useState(false);
+  const long = !!link && utf8Length(link) > LONG_LINK_BYTES;
   return (
     <Sheet testID="send.sheet" onClose={onClose}>
       <Text style={styles.title}>Send</Text>
-      <Pressable
-        testID="send.copyLink"
-        style={[common.ghostButton, styles.menuItem]}
+      <MenuItem
+        testID="send.copy"
+        label={copied ? 'Link copied' : 'Copy link'}
         disabled={!link}
-        onPress={() => {
-          if (link)
-            Clipboard.setStringAsync(link).then(
-              () => setCopied(true),
-              () => undefined,
-            );
-        }}
-      >
-        <Text style={common.ghostButtonText}>{copied ? 'Link copied' : 'Copy link'}</Text>
-      </Pressable>
+        onPress={() => link && copyText(link, () => setCopied(true))}
+      />
       {link && (
         <Text style={styles.muted} numberOfLines={2}>
           {link}
         </Text>
       )}
+      {copied && long && (
+        <View testID="long.notice" style={styles.notice}>
+          <Text style={styles.body}>
+            {canSave
+              ? 'This link is long, and some messengers and mail apps cut long links off. Save to HashBin for a short link.'
+              : "This link is long, and some messengers and mail apps cut long links off. The app's own Publish button makes a short link."}
+          </Text>
+          {canSave && (
+            <Pressable testID="long.save" style={common.button} onPress={() => onSave(true)} accessibilityRole="button">
+              <Text style={common.buttonText}>Save to HashBin</Text>
+            </Pressable>
+          )}
+        </View>
+      )}
+      {canSave && <MenuItem testID="send.hashbin" label="Save to HashBin" onPress={() => onSave(false)} />}
+      {canSave && signedIn && <MenuItem testID="hashbin.signOut" label="Sign out of HashBin" onPress={onSignOut} />}
       <View style={styles.row}>
         <Pressable style={common.ghostButton} onPress={onClose}>
           <Text style={common.ghostButtonText}>Done</Text>
+        </Pressable>
+      </View>
+    </Sheet>
+  );
+}
+
+/** Shown while a CID is fetched and verified. Closing it abandons the load. */
+export function LoadingSheet({ onClose }: { onClose: () => void }) {
+  return (
+    <Sheet testID="loading.sheet" onClose={onClose}>
+      <View style={styles.busyRow}>
+        <ActivityIndicator color={colors.accent} />
+        <Text style={styles.body}>Loading document…</Text>
+      </View>
+      <View style={styles.row}>
+        <Pressable style={common.ghostButton} onPress={onClose}>
+          <Text style={common.ghostButtonText}>Cancel</Text>
+        </Pressable>
+      </View>
+    </Sheet>
+  );
+}
+
+/** Which app opens a loaded document, plus Copy link and Open raw. */
+export function ChooserSheet({
+  apps,
+  matched,
+  link,
+  rawUrl,
+  onPick,
+  onClose,
+}: {
+  apps: readonly RegistryApp[];
+  /** True when `apps` are the apps for this document type (several); false when none matched. */
+  matched: boolean;
+  link: string;
+  rawUrl: string;
+  onPick: (app: RegistryApp) => void;
+  onClose: () => void;
+}) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <Sheet testID="chooser.sheet" onClose={onClose}>
+      <Text style={styles.title}>Open with</Text>
+      <Text style={styles.body}>
+        {matched ? 'Several apps can open this document.' : "binfire couldn't tell which app made this document."}
+      </Text>
+      <ScrollView style={styles.list} contentContainerStyle={styles.listContent}>
+        {apps.map(app => (
+          <MenuItem key={app.slug} testID={`chooser.app.${app.slug}`} label={app.name} onPress={() => onPick(app)} />
+        ))}
+      </ScrollView>
+      <View style={styles.row}>
+        <Pressable testID="chooser.copy" style={common.ghostButton} onPress={() => copyText(link, () => setCopied(true))}>
+          <Text style={common.ghostButtonText}>{copied ? 'Copied' : 'Copy link'}</Text>
+        </Pressable>
+        <Pressable
+          testID="chooser.raw"
+          style={common.ghostButton}
+          onPress={() => {
+            Linking.openURL(rawUrl).catch(() => undefined);
+            onClose();
+          }}
+        >
+          <Text style={common.ghostButtonText}>Open raw</Text>
+        </Pressable>
+        <Pressable style={common.ghostButton} onPress={onClose}>
+          <Text style={common.ghostButtonText}>Cancel</Text>
+        </Pressable>
+      </View>
+    </Sheet>
+  );
+}
+
+function formatBytes(n: number): string {
+  if (n < 1024) return `${n} bytes`;
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KiB`;
+  return `${(n / 1024 / 1024).toFixed(1)} MiB`;
+}
+
+/** Size and estimated cost, then Save/Cancel. `estimate` is undefined while loading, null if unknown. */
+export function HashbinConfirmSheet({
+  size,
+  estimate,
+  onOk,
+  onClose,
+}: {
+  size: number;
+  estimate: number | null | undefined;
+  onOk: () => void;
+  onClose: () => void;
+}) {
+  const cost =
+    estimate === undefined
+      ? 'Estimating cost…'
+      : estimate === null
+        ? 'Estimated cost unknown'
+        : estimate === 0
+          ? 'Estimated cost: free'
+          : `Estimated cost: up to ${estimate}¢ (charged to your HashBin balance)`;
+  return (
+    <Sheet testID="hashbin.confirm" onClose={onClose}>
+      <Text style={styles.title}>Save to HashBin</Text>
+      <Text testID="hashbin.size" style={styles.body}>
+        {`Size: ${formatBytes(size)}`}
+      </Text>
+      <Text testID="hashbin.cost" style={styles.muted}>
+        {cost}
+      </Text>
+      <View style={styles.row}>
+        <Pressable testID="hashbin.ok" style={common.button} onPress={onOk} accessibilityRole="button">
+          <Text style={common.buttonText}>Save</Text>
+        </Pressable>
+        <Pressable testID="hashbin.cancel" style={common.ghostButton} onPress={onClose} accessibilityRole="button">
+          <Text style={common.ghostButtonText}>Cancel</Text>
+        </Pressable>
+      </View>
+    </Sheet>
+  );
+}
+
+export function HashbinBusySheet() {
+  return (
+    <Sheet testID="hashbin.busy" onClose={() => undefined}>
+      <View style={styles.busyRow}>
+        <ActivityIndicator color={colors.accent} />
+        <Text style={styles.body}>Saving to HashBin…</Text>
+      </View>
+    </Sheet>
+  );
+}
+
+/** The `/c#` link of a saved document. */
+export function HashbinResultSheet({ link, copied, onClose }: { link: string; copied: boolean; onClose: () => void }) {
+  const [isCopied, setCopied] = useState(copied);
+  return (
+    <Sheet testID="hashbin.result" onClose={onClose}>
+      <Text style={styles.title}>Saved to HashBin</Text>
+      <Text testID="hashbin.link" style={styles.value} selectable>
+        {link}
+      </Text>
+      <View style={styles.row}>
+        <Pressable testID="hashbin.copy" style={common.button} onPress={() => copyText(link, () => setCopied(true))}>
+          <Text style={common.buttonText}>{isCopied ? 'Link copied' : 'Copy link'}</Text>
+        </Pressable>
+        <Pressable style={common.ghostButton} onPress={onClose}>
+          <Text style={common.ghostButtonText}>Done</Text>
+        </Pressable>
+      </View>
+    </Sheet>
+  );
+}
+
+/** For states binfire can't extract: the app's own Publish makes the link. */
+export function PublishNoteSheet({ onClose }: { onClose: () => void }) {
+  return (
+    <Sheet testID="hashbin.publishNote" onClose={onClose}>
+      <Text style={styles.title}>{"Use the app's Publish"}</Text>
+      <Text style={styles.body}>
+        {"binfire can't read this app's document from its link. Use the app's own Publish (Save to HashBin) button to get a short link."}
+      </Text>
+      <View style={styles.row}>
+        <Pressable style={common.button} onPress={onClose}>
+          <Text style={common.buttonText}>OK</Text>
         </Pressable>
       </View>
     </Sheet>
@@ -190,4 +408,9 @@ const styles = StyleSheet.create({
   muted: { fontSize: 13, color: colors.muted },
   row: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
   menuItem: { alignItems: 'flex-start' },
+  disabled: { opacity: 0.5 },
+  notice: { gap: 8, padding: 12, borderRadius: 8, backgroundColor: colors.banner },
+  busyRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 8 },
+  list: { maxHeight: 320 },
+  listContent: { gap: 8 },
 });
