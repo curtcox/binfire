@@ -140,7 +140,8 @@
         }
       ],
       "expo-web-browser",
-      "expo-secure-store"
+      "expo-secure-store",
+      "./plugins/with-mock-cleartext"
     ]
   }
 }

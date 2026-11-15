@@ -13,8 +13,8 @@ Legend: `[x]` done and verified · `[~]` partly done (see note) · `[ ]` not sta
 | M0 | Spec and scaffolding | [x] | [x] | [x] | [x] | [x] |
 | M1 | Browser core | [x] | [x] | [x] | [x] | [x] |
 | M2 | Links in | [x] | [x] | [x] | [x] | [~] |
-| M3 | HashBin | [~] | [~] | [ ] | [~] | [x] |
-| M4 | QR and camera | [ ] | [ ] | [ ] | [ ] | [ ] |
+| M3 | HashBin | [x] | [x] | [x] | [x] | [x] |
+| M4 | QR and camera | [ ] | [ ] | [ ] | [ ] | [x] |
 | M5 | Send and files | [ ] | [ ] | [ ] | [ ] | [ ] |
 | M6 | Packaged sites | [ ] | [ ] | [ ] | [ ] | [ ] |
 | M7 | Nearby | [ ] | [ ] | [ ] | [ ] | [ ] |
@@ -23,28 +23,45 @@ Legend: `[x]` done and verified · `[~]` partly done (see note) · `[ ]` not sta
 
 ## Latest verification
 
-Run on 2026-11-14 after M2, one device at a time:
+Run on 2026-11-15 after M3, one device at a time, against
+`tools/mock-hashbin.mjs` (Android via `adb reverse tcp:8787 tcp:8787`):
 
-- `node tools/check.mjs`: all unit tests pass (as of M1; each port re-ran its own after M2).
-- Maestro m1+m2 suite (5 flows: open-paste, unregistered, save-state, run-banner, deep-link):
+- Unit tests: iOS 74, Android core+transfer pass, Flutter 820, RN 808
+  (+ `tsc`), tools 17.
+- Maestro: hashbin-mock (m3) plus the m1+m2 suite (open-paste, unregistered,
+  save-state, run-banner, deep-link):
 
 | Port | iOS simulator | Android emulator (Pixel_8_API_34) |
 | --- | --- | --- |
-| iOS | 5/5 (iPhone 17 Pro) | – |
-| Android | – | 5/5 |
-| Flutter | 5/5 (iPhone Air) | 5/5 |
-| React Native | 5/5 (iPhone 17, Release) | 5/5 twice in a row (Release) |
+| iOS | 6/6 (iPhone 17 Pro) | – |
+| Android | – | 6/6 |
+| Flutter | 6/6 (iPhone Air) | 6/6 |
+| React Native | 6/6 (iPhone 17, Release) | 6/6 (Release; hashbin-mock twice in a row) |
 
-- Android share-in (adb SEND with a binfire link inside text): opens the app in
-  all three Android-capable ports.
-- Not verified [d]: the iOS share extensions from the real share sheet
-  (needs signing / App Group for RN); Universal Links and App Links
-  verification (owner team ID and fingerprints); live `binfire.app`.
+- Known test-only flakes: Maestro `inputText` sometimes drops keystrokes on a
+  just-booted simulator, and iOS 26's "Wants to Use … to Sign In" prompt can
+  stall Maestro's XCTest driver under load. Re-runs pass.
+- Not verified [d]: real hashbin.org (no client ID yet); token persistence
+  across launches on iOS/RN (unsigned simulator builds can't use the
+  Keychain, -34018, so tokens are kept in memory for the run); revoke,
+  refresh and the 402/409/413 paths only in unit tests; the iOS share
+  extensions from the real share sheet; Universal Links / App Links
+  verification (owner IDs); live `binfire.app`.
 
 ## Log
 
 Newest first. One line per meaningful step, with what was verified.
 
+- 2026-11-15: **M3 done in all four ports** (table above). RN Android:
+  Release builds blocked cleartext to the mock ("Couldn't reach HashBin"
+  after the redirect); `react-native/plugins/with-mock-cleartext.js` adds a
+  localhost-only network security config, and only when prebuilt with a
+  localhost `EXPO_PUBLIC_HASHBIN_*` URL, matching the debug-only configs of
+  the native and Flutter ports. The emulator's Chrome first-run screen was
+  accepted with the owner's approval (usage reporting off, no account, no
+  notifications). M4 spec landed first (e3e2897): ScanSession,
+  `routeReceived`, multi-frame send, QR/scan UI IDs, scan fixtures, QR test
+  PNGs and three m4 flows.
 - 2026-11-15: RN M3 on iOS (iPhone 17, Release, built with the
   `EXPO_PUBLIC_HASHBIN_*` mock overrides): hashbin-mock and m1+m2 (5 flows)
   pass; a save, then copying the `/c#` link and pasting it back, loads and
@@ -175,9 +192,11 @@ Newest first. One line per meaningful step, with what was verified.
 
 ## Next up
 
-1. M3 (HashBin): verified CID load and `/c` routing by envelope type, native
-   OAuth Save (client ID placeholder → can't complete against hashbin.org),
-   Publish popup compatibility, oversize-state → HashBin offer.
+1. M4 (QR and camera) in all four ports: Send → QR code (plans, export,
+   multi-frame), scanner sheet (live camera on devices, scan from image
+   everywhere), ScanSession and received bundles. Flows: qr-show, qr-multi,
+   scan-image (`subflows/pick-latest-image.yaml` is a first guess at the
+   system photo pickers).
 
 ## Open questions and owner inputs
 
@@ -186,6 +205,6 @@ See PLAN.md section 11. Placeholders in `config/binfire.config.json`:
 - `apple.teamId` is `TEAMID0000` (needed for a real AASA file, M2).
 - `android.sha256CertFingerprints` is empty (needed for `assetlinks.json`, M2).
 - `hashbin.clientId` is empty (needed for native OAuth Save, M3).
-- Android emulator: Chrome's first-run screen (Terms of Service) blocks
-  Custom Tabs sign-in in the Maestro flow. The owner should clear it once on
-  Pixel_8_API_34, or approve accepting it.
+- iOS ATS: every port ships `NSAllowsLocalNetworking` (plain http to local
+  hosts only, also in store builds). Making it debug-only is a possible
+  cross-port change; decide before M9.
