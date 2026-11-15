@@ -45,6 +45,15 @@ Run on 2026-11-14 after M2, one device at a time:
 
 Newest first. One line per meaningful step, with what was verified.
 
+- 2026-11-15: Flutter M3 on iOS (e54e121): reads `hashbin.maxCostCents` and
+  always sends it as `max_cost_cents` (the invented 100¢ fallback is gone);
+  the confirm sheet shows the estimate only when `/api/config` has a price,
+  else "Cost: up to $0.25"; `long.save` is always shown (publish note without
+  a client ID). 820 tests. On the iPhone Air with the mock dart-defines:
+  hashbin-mock and m1+m2 (5 flows) pass. The first hashbin-mock run right
+  after booting the simulator failed at `web.view` (the typed URL arrived
+  mangled, so it opened as "Not a binfire app"); the re-run passed. Flutter
+  Android not re-run for M3 here.
 - 2026-11-14: iOS and Android M3 implemented. iOS: 73 tests; hashbin-mock and
   m1+m2 pass on iPhone 17 Pro; unsigned simulator builds can't write the
   Keychain (-34018), so token persistence across launches is untested [d].
