@@ -13,6 +13,7 @@ enum class BinfireError(val code: String) {
     RATE_LIMITED("rate-limited"),
     HTTP_ERROR("http-error"),
     MISMATCH("mismatch"),
+    NETWORK("network"),
 
     // state.md (lz)
     INVALID("invalid"),

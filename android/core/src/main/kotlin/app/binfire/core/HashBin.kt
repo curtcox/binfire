@@ -40,6 +40,12 @@ sealed class SaveBytes {
 
 /** Pure helpers for HashBin Native Save (`spec/hashbin.md`). */
 object HashBin {
+    /** Links longer than this many UTF-8 bytes get the long-link offer (`spec/hashbin.md`). */
+    const val LONG_LINK_BYTES = 2000L
+
+    /** True when [link] is longer than [LONG_LINK_BYTES] UTF-8 bytes. */
+    fun isLongLink(link: String): Boolean = Utf8.length(link) > LONG_LINK_BYTES
+
     /** PKCE S256 challenge: `base64url(SHA-256(ascii(verifier)))`. */
     fun pkceChallenge(verifier: String): String =
         Base64Url.encode(MessageDigest.getInstance("SHA-256").digest(verifier.toByteArray(Charsets.US_ASCII)))
