@@ -1,0 +1,46 @@
+# M3: native Save to HashBin against tools/mock-hashbin.mjs.
+# Needs: `node tools/mock-hashbin.mjs 8787` on the host; on Android also
+# `adb reverse tcp:8787 tcp:8787`. iOS/Android read the overrides from these
+# launch arguments (debug builds only); Flutter and React Native builds must be
+# made with the compile-time overrides (spec/hashbin.md "Development").
+appId: ${APP_ID}
+tags: [m3]
+---
+- launchApp:
+    clearState: true
+    arguments:
+      hashbinApi: "http://localhost:8787"
+      hashbinContent: "http://localhost:8787"
+      hashbinClientId: "app_mock"
+- extendedWaitUntil:
+    visible:
+      id: open.input
+    timeout: 20000
+- tapOn:
+    id: open.input
+- inputText: "https://python.hashbin.page/#v1.EQBwTglgdgLgFAHWAZwIYDcCmATABAIwE8DoAzCMTJASmCA"
+- tapOn:
+    id: open.go
+- assertVisible:
+    id: web.view
+- tapOn:
+    id: web.send
+- tapOn:
+    id: send.hashbin
+- assertVisible:
+    id: hashbin.confirm
+- tapOn:
+    id: hashbin.ok
+# iOS asks before ASWebAuthenticationSession opens ("… Wants to Use … to Sign In").
+- runFlow:
+    when:
+      visible: "Continue"
+    commands:
+      - tapOn: "Continue"
+- extendedWaitUntil:
+    visible:
+      id: hashbin.result
+    timeout: 30000
+- assertVisible:
+    id: hashbin.link
+    text: ".*binfire.app/c.*"

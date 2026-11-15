@@ -19,4 +19,5 @@ tagged `offline` don't.
 | `unregistered.yaml` | M1 | An unregistered URL shows the text sheet and is not opened |
 | `save-state.yaml` | M1 | Save a named state, which then appears first in Saved |
 | `run-banner.yaml` | M1 | `run=0` shows the Run banner |
-| `deep-link.yaml` | M2 | A `binfire://a/<slug>` link opens the app |
+| `deep-link.yaml` | M2 | A `<own scheme>://a/<slug>` link opens the app |
+| `hashbin-mock.yaml` | M3 | Native Save against `tools/mock-hashbin.mjs` (start it first; Android also needs `adb reverse tcp:8787 tcp:8787`) |

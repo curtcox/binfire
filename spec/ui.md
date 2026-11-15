@@ -45,6 +45,13 @@ follow each platform's conventions.
 | Save name | `save.name`, `save.confirm`, `save.cancel` |
 | Error | `error.sheet`, `error.message`, `error.ok` |
 | QR display (M4) | `qr.sheet`, `qr.image`, `qr.hashbin` |
+| Send menu (M1/M3) | `send.copy` (Copy link), `send.hashbin` (Save to HashBin, shown only when a client ID is configured) |
+| Long-link notice (M3) | `long.notice`, `long.save` |
+| HashBin confirm (M3): size, estimated cost, Save/Cancel | `hashbin.confirm`, `hashbin.size`, `hashbin.ok`, `hashbin.cancel` |
+| HashBin result (M3): the `/c#` link | `hashbin.result`, `hashbin.link`, `hashbin.copy` |
+| HashBin "use the app's Publish" note, for states binfire can't extract | `hashbin.publishNote` |
+| CID chooser (M3) | `chooser.sheet`, `chooser.app.<slug>`, `chooser.copy`, `chooser.raw` |
+| Loading (CID fetch) | `loading.sheet` |
 
 Accessibility: each tagged list row exposes **one** accessible label that
 includes both its title and subtitle (Maestro matches text on the tagged node
