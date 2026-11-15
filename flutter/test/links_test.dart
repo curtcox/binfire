@@ -40,6 +40,18 @@ void main() {
     }
   });
 
+  group('routeReceived', () {
+    for (final c in objects(f['routeReceived'])) {
+      test('${c['input']}', () {
+        final got = links.routeReceived(c['input'] as String).toJson();
+        final want = c['expect'] as Map<String, Object?>;
+        for (final key in want.keys) {
+          expect(got[key], want[key], reason: key);
+        }
+      });
+    }
+  });
+
   group('withoutRun fixture', () {
     for (final c in objects(f['withoutRun'])) {
       test('${c['url']}', () => expect(withoutRun(c['url'] as String), c['result']));

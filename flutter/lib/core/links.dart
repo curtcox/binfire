@@ -61,6 +61,7 @@ class LinkRoute {
     this.error,
     this.linkKind,
     this.viaCustomScheme = false,
+    this.run,
   });
 
   /// What to do.
@@ -90,6 +91,11 @@ class LinkRoute {
   /// Whether the binfire link used the custom scheme rather than `https`.
   final bool viaCustomScheme;
 
+  /// `false` for a `load-cid` route from [Links.routeReceived]: the document
+  /// opens at `withRunZero(canonicalOrigin#cid)`. `null` otherwise. For
+  /// `open-app`, see [state].
+  final bool? run;
+
   /// The route as the spec's JSON object, with only this action's fields.
   Map<String, Object?> toJson() => switch (action) {
         RouteAction.openApp => {
@@ -100,7 +106,7 @@ class LinkRoute {
             'run': state!.run,
             'view': state!.view,
           },
-        RouteAction.loadCid => {'action': action.code, 'cid': cid, 'app': app},
+        RouteAction.loadCid => {'action': action.code, 'cid': cid, 'app': app, if (run != null) 'run': run},
         RouteAction.openSite => {'action': action.code, 'cid': cid},
         RouteAction.showText => {'action': action.code, 'text': text},
         RouteAction.error => {'action': action.code, 'error': error},
@@ -147,6 +153,38 @@ class Links {
       }
     }
     return LinkRoute._(RouteAction.showText, text: _trimAsciiWhitespace(text));
+  }
+
+  /// Routes text received over QR, BLE, audio or a bundle (links.md,
+  /// `routeReceived`): received content never runs automatically.
+  LinkRoute routeReceived(String text) {
+    final r = route(text);
+    switch (r.action) {
+      case RouteAction.openApp:
+        final url = withRunZero(r.url!);
+        final s = classifyState(url);
+        return LinkRoute._(
+          RouteAction.openApp,
+          app: r.app,
+          url: url,
+          state: StateInfo(state: r.state!.state, run: s.run, view: r.state!.view, cid: r.state!.cid, bytes: s.bytes),
+          linkKind: r.linkKind,
+          viaCustomScheme: r.viaCustomScheme,
+        );
+      case RouteAction.loadCid:
+        return LinkRoute._(
+          RouteAction.loadCid,
+          cid: r.cid,
+          app: r.app,
+          linkKind: r.linkKind,
+          viaCustomScheme: r.viaCustomScheme,
+          run: false,
+        );
+      case RouteAction.openSite:
+      case RouteAction.showText:
+      case RouteAction.error:
+        return r;
+    }
   }
 
   LinkRoute _route(String input, {required bool allowShare}) {

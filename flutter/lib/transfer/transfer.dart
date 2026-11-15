@@ -3,3 +3,4 @@ library;
 
 export 'bundle.dart';
 export 'frames.dart';
+export 'scan.dart';
