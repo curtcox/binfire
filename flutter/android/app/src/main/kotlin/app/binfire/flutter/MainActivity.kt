@@ -8,8 +8,9 @@ import org.json.JSONObject
 import java.net.URLEncoder
 
 /**
- * Hands shared text (ACTION_SEND) to Dart as a `<scheme>://share#t=<text>`
+ * Hands shared text (ACTION_SEND) to Dart as a `<ownScheme>://share#t=<text>`
  * link (spec/links.md), so every way in goes through app_links and route().
+ * The private scheme always reaches this app, even with other ports installed.
  */
 class MainActivity : FlutterActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -30,10 +31,10 @@ class MainActivity : FlutterActivity() {
         return Intent(Intent.ACTION_VIEW, Uri.parse(link))
     }
 
-    /** The custom scheme from the bundled runtime config. */
+    /** The private scheme (`ownScheme`) from the bundled runtime config. */
     private fun scheme(): String? = try {
         assets.open("flutter_assets/assets/binfire/binfire.config.json").use {
-            JSONObject(it.readBytes().toString(Charsets.UTF_8)).getString("scheme")
+            JSONObject(it.readBytes().toString(Charsets.UTF_8)).optString("ownScheme").ifEmpty { null }
         }
     } catch (e: Exception) {
         null

@@ -2,7 +2,7 @@ import UIKit
 import UniformTypeIdentifiers
 
 /// Share Extension: collects the shared text or URL and hands it to binfire
-/// as `<scheme>://share#t=<text>` (spec/links.md), which the app routes with
+/// as `<ownScheme>://share#t=<text>` (spec/links.md), which the app routes with
 /// `routeShared`. No UI, no App Group: the text travels in the link.
 class ShareViewController: UIViewController {
   override func viewDidAppear(_ animated: Bool) {
@@ -40,13 +40,17 @@ class ShareViewController: UIViewController {
     return parts.joined(separator: " ")
   }
 
-  /// `<scheme>://share#t=<text>`, using the host app's first URL scheme
-  /// (written by tools/configure.mjs into the app's Info.plist).
+  /// `<ownScheme>://share#t=<text>`. The private scheme is the host app's
+  /// bundle ID, registered by tools/configure.mjs in the app's Info.plist, so
+  /// the text reaches this app even when other binfire ports claim `binfire`.
   private func shareLink(for text: String) -> URL? {
     let hostURL = Bundle.main.bundleURL.deletingLastPathComponent().deletingLastPathComponent()
     guard
-      let types = Bundle(url: hostURL)?.object(forInfoDictionaryKey: "CFBundleURLTypes") as? [[String: Any]],
-      let scheme = (types.first?["CFBundleURLSchemes"] as? [String])?.first
+      let host = Bundle(url: hostURL),
+      let hostID = host.bundleIdentifier,
+      let types = host.object(forInfoDictionaryKey: "CFBundleURLTypes") as? [[String: Any]],
+      let scheme = types.flatMap({ $0["CFBundleURLSchemes"] as? [String] ?? [] })
+        .first(where: { $0.caseInsensitiveCompare(hostID) == .orderedSame })
     else { return nil }
     var allowed = CharacterSet.alphanumerics
     allowed.insert(charactersIn: "-_.!~*'()")

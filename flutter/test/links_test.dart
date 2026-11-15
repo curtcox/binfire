@@ -10,6 +10,7 @@ void main() {
     BinfireConfig(
       linkDomain: cfg['linkDomain'] as String,
       scheme: cfg['scheme'] as String,
+      ownScheme: cfg['ownScheme'] as String,
       hashbin: HashbinConfig(content: cfg['content'] as String),
     ),
     sharedRegistry(),

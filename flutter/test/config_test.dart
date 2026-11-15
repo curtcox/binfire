@@ -8,6 +8,7 @@ void main() {
     final cfg = BinfireConfig.parse(File(BinfireConfig.assetPath).readAsStringSync());
     expect(cfg.linkDomain, isNotEmpty);
     expect(cfg.scheme, isNotEmpty);
+    expect(cfg.ownScheme, 'app.binfire.flutter');
     expect(cfg.hashbin.content, startsWith('https://'));
     expect(cfg.ble, isNotNull);
     expect(cfg.limits.maxTransferBytes, greaterThan(0));

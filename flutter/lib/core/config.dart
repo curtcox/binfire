@@ -100,6 +100,7 @@ class BinfireConfig {
     this.appName = 'binfire',
     required this.linkDomain,
     required this.scheme,
+    this.ownScheme = '',
     required this.hashbin,
     this.ble,
     this.limits = BinfireLimits.defaults,
@@ -133,6 +134,7 @@ class BinfireConfig {
       appName: str(json, 'appName', def: 'binfire'),
       linkDomain: str(json, 'linkDomain'),
       scheme: str(json, 'scheme'),
+      ownScheme: str(json, 'ownScheme', def: ''),
       hashbin: HashbinConfig(
         api: str(hashbin, 'api', def: ''),
         content: str(hashbin, 'content'),
@@ -163,8 +165,12 @@ class BinfireConfig {
   /// The `https` link host `D` (links.md).
   final String linkDomain;
 
-  /// The custom URL scheme `S` (links.md), without `:`.
+  /// The public custom URL scheme `S` (links.md), without `:`.
   final String scheme;
+
+  /// This port's private reverse-DNS scheme `O` (its app ID), or empty when
+  /// not configured. Used for the OAuth redirect and share hand-off.
+  final String ownScheme;
 
   /// HashBin endpoints.
   final HashbinConfig hashbin;

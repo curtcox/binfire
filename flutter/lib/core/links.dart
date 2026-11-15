@@ -132,13 +132,16 @@ class Links {
   LinkRoute routeShared(String text) {
     final whole = _route(text, allowShare: false);
     if (whole.action != RouteAction.showText) return whole;
-    final scheme = '${config.scheme.toLowerCase()}://';
+    final schemes = [config.scheme, config.ownScheme]
+        .where((s) => s.isNotEmpty)
+        .map((s) => '${s.toLowerCase()}://')
+        .toList();
     for (final raw in text.split(RegExp('[\t\n\f\r ]+'))) {
       final token = _stripToken(raw);
       if (token.isEmpty) continue;
       final lower = token.toLowerCase();
       final bare = token.startsWith('#') ? token.substring(1) : token;
-      if (lower.startsWith('https://') || lower.startsWith('http://') || lower.startsWith(scheme) || isCid(bare)) {
+      if (lower.startsWith('https://') || lower.startsWith('http://') || schemes.any(lower.startsWith) || isCid(bare)) {
         final r = _route(token, allowShare: false);
         if (r.action != RouteAction.showText) return r;
       }
@@ -165,7 +168,7 @@ class Links {
     if (u == null) return LinkRoute._(RouteAction.showText, text: text);
 
     // 3. binfire links.
-    final custom = u.scheme == config.scheme.toLowerCase();
+    final custom = _isOwnOrPublicScheme(u.scheme);
     final https = u.scheme == 'https' && u.host == config.linkDomain.toLowerCase() && u.port == null;
     if (custom || https) return _routeLink(custom ? '${u.host}${u.path}' : u.path, u, custom, allowShare);
 
@@ -186,6 +189,11 @@ class Links {
     // 6. Anything else.
     return LinkRoute._(RouteAction.showText, text: text);
   }
+
+  /// Whether lower-case [scheme] is `S` or this port's `O` (links.md).
+  bool _isOwnOrPublicScheme(String scheme) =>
+      scheme == config.scheme.toLowerCase() ||
+      (config.ownScheme.isNotEmpty && scheme == config.ownScheme.toLowerCase());
 
   LinkRoute _routeLink(String rawPath, ParsedUrl u, bool custom, bool allowShare) {
     var start = 0;
