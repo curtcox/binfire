@@ -7,6 +7,7 @@ export 'cid.dart';
 export 'config.dart';
 export 'envelope.dart';
 export 'hashbin.dart';
+export 'hashbin_client.dart';
 export 'errors.dart';
 export 'links.dart';
 export 'lz.dart';

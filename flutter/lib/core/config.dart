@@ -183,4 +183,27 @@ class BinfireConfig {
 
   /// OAuth redirect URI.
   final String oauthRedirect;
+
+  /// The Native Save redirect URI: [oauthRedirect], or `<ownScheme>://oauth`.
+  String get redirectUri => oauthRedirect.isNotEmpty ? oauthRedirect : (ownScheme.isEmpty ? '' : '$ownScheme://oauth');
+
+  /// A copy with the non-empty HashBin values replaced (hashbin.md,
+  /// Development). The app applies this only in debug builds.
+  BinfireConfig withHashbinOverrides({String api = '', String content = '', String clientId = ''}) {
+    if (api.isEmpty && content.isEmpty && clientId.isEmpty) return this;
+    return BinfireConfig(
+      appName: appName,
+      linkDomain: linkDomain,
+      scheme: scheme,
+      ownScheme: ownScheme,
+      hashbin: HashbinConfig(
+        api: api.isEmpty ? hashbin.api : api,
+        content: content.isEmpty ? hashbin.content : content,
+        clientId: clientId.isEmpty ? hashbin.clientId : clientId,
+      ),
+      ble: ble,
+      limits: limits,
+      oauthRedirect: oauthRedirect,
+    );
+  }
 }

@@ -31,6 +31,16 @@ abstract final class ErrorCodes {
   static const rateLimited = 'rate-limited';
   static const httpError = 'http-error';
   static const mismatch = 'mismatch';
+  static const network = 'network';
+
+  // hashbin.md (Native Save)
+  static const insufficientBalance = 'insufficient-balance';
+  static const costExceeded = 'cost-exceeded';
+  static const cancelled = 'cancelled';
+  static const failed = 'failed';
+
+  /// Not signed in, or the sign-in expired or was revoked (sign in again).
+  static const unauthorized = 'unauthorized';
 
   // state.md (lz)
   static const invalid = 'invalid';
