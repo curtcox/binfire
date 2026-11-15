@@ -1,5 +1,5 @@
 // Root UI: library and browsers, with every input going through route().
-import { randomUUID } from 'expo-crypto';
+import { getRandomBytes, randomUUID } from 'expo-crypto';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import * as Linking from 'expo-linking';
@@ -10,14 +10,18 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { type RegistryApp } from '../core/config';
 import { documentType } from '../core/envelope';
 import { isBinfireError } from '../core/errors';
+import { cidLength } from '../core/cid';
 import { contentUrl, estimateCostCents, isOAuthCallback, loadCid, saveBytes } from '../core/hashbin';
 import { addRecent, addSaved, removeSaved, type Library } from '../core/library';
-import { makeCidLink, makeLink, route, routeShared, withoutRun, type Route } from '../core/links';
+import { makeCidLink, makeLink, route, routeReceived, routeShared, withoutRun, withRunZero, type Route } from '../core/links';
 import { parseUrl } from '../core/url';
 import { appForSlug, appForUrl, appsForDocumentType } from '../core/registry';
 import { classifyState } from '../core/state';
+import { decodeBundle } from '../transfer/bundle';
+import { multiFrameQrTexts } from '../transfer/scan';
 import { BrowserScreen, type BrowserState } from './BrowserScreen';
 import { LibraryScreen } from './LibraryScreen';
+import { QrFramesSheet, QrSheet, ScanSheet, type ScanOutcome } from './QrSheets';
 import { appContext, contentFetch, hashbinClient } from './hashbinPlatform';
 import {
   ChooserSheet,
@@ -43,13 +47,15 @@ type Sheet =
   | { kind: 'save' }
   | { kind: 'send'; signedIn: boolean }
   | { kind: 'loading' }
-  | { kind: 'chooser'; cid: string; apps: readonly RegistryApp[]; matched: boolean }
+  | { kind: 'chooser'; cid: string; apps: readonly RegistryApp[]; matched: boolean; run: boolean }
   | {
       kind: 'hashbinConfirm';
       bytes: Uint8Array;
       contentType: string;
       slug: string;
       copy: boolean;
+      /** Show the QR of the saved link (the QR sheet's Save to HashBin). */
+      qr: boolean;
       /** undefined while `/api/config` loads. */
       estimate?: number | null;
       maxUpload?: number;
@@ -59,6 +65,10 @@ type Sheet =
   | { kind: 'hashbinBusy' }
   | { kind: 'hashbinResult'; link: string; copied: boolean }
   | { kind: 'publishNote' }
+  /** `url`: the raw app URL behind `text`, for multi-frame QR (null for a saved `/c#` link). */
+  | { kind: 'qr'; text: string; url: string | null }
+  | { kind: 'qrFrames'; texts: string[] }
+  | { kind: 'scan' }
   | null;
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -78,6 +88,11 @@ const ERROR_MESSAGES: Record<string, string> = {
   'insufficient-balance': 'Your HashBin balance is too low for this save. Add funds on hashbin.org and try again.',
   'cost-exceeded': 'This save would cost more than the configured limit, so HashBin did not charge you.',
 };
+const BUNDLE_MESSAGES: Record<string, string> = {
+  'bad-magic': "That transfer isn't a binfire bundle.",
+  'bad-bundle': 'That transfer is damaged or not a valid binfire bundle.',
+  'too-large': 'That transfer is too large to open.',
+};
 const SIZE_MESSAGES = {
   load: 'That document is too large to open.',
   save: 'That document is too large to save to HashBin.',
@@ -91,6 +106,32 @@ function errorMessage(e: unknown, op: keyof typeof SIZE_MESSAGES): string {
   }
   if (e.code === 'too-large') return SIZE_MESSAGES[op];
   return ERROR_MESSAGES[e.code] ?? e.code;
+}
+
+/**
+ * Verified documents by CID (spec/cid.md), e.g. from a received `cid`
+ * bundle, so they open without the network. In memory, bounded; M6 makes
+ * the cache durable.
+ */
+const CID_CACHE_MAX_BYTES = 32 * 1024 * 1024;
+const cidCache = new Map<string, Uint8Array>();
+function cacheCid(cid: string, bytes: Uint8Array): void {
+  cidCache.delete(cid);
+  if (bytes.length > CID_CACHE_MAX_BYTES) return;
+  cidCache.set(cid, bytes);
+  let total = 0;
+  for (const b of cidCache.values()) total += b.length;
+  for (const [key, b] of cidCache) {
+    if (total <= CID_CACHE_MAX_BYTES) break;
+    cidCache.delete(key);
+    total -= b.length;
+  }
+}
+
+/** Where a loaded document opens: `canonicalOrigin#cid`, with `run=0` when received. */
+function documentUrl(app: RegistryApp, cid: string, run: boolean): string {
+  const url = `${app.canonicalOrigin}#${cid}`;
+  return run ? url : withRunZero(url);
 }
 
 const wait = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms));
@@ -156,18 +197,27 @@ export default function BinfireApp() {
 
   // Each load gets a number; closing the loading sheet abandons the current one.
   const loadSeq = useRef(0);
+  /** `run: false` (received content) opens with `run=0` (spec/links.md routeReceived). */
   const loadDocument = useCallback(
-    async (cid: string, hint: string | null) => {
+    async (cid: string, hint: string | null, run: boolean) => {
       const seq = ++loadSeq.current;
       setSheet({ kind: 'loading' });
       try {
-        const bytes = await loadCid(cid, ctx.config.limits.maxStateBytes, contentFetch, ctx);
+        const limit = ctx.config.limits.maxStateBytes;
+        const cached = cidCache.get(cid);
+        let bytes: Uint8Array;
+        if (cached && cidLength(cid) <= limit) bytes = cached;
+        else {
+          bytes = await loadCid(cid, limit, contentFetch, ctx);
+          cacheCid(cid, bytes);
+        }
         if (seq !== loadSeq.current) return;
         const hinted = hint ? appForSlug(hint, ctx.registry) : null;
         const type = documentType(bytes);
         const apps = hinted ? [hinted] : type ? appsForDocumentType(type, ctx.registry) : [];
-        if (apps.length === 1) openApp(apps[0].slug, `${apps[0].canonicalOrigin}#${cid}`);
-        else setSheet({ kind: 'chooser', cid, apps: apps.length ? apps : ctx.registry.apps, matched: apps.length > 0 });
+        if (apps.length === 1) openApp(apps[0].slug, documentUrl(apps[0], cid, run));
+        else
+          setSheet({ kind: 'chooser', cid, apps: apps.length ? apps : ctx.registry.apps, matched: apps.length > 0, run });
       } catch (e) {
         if (seq === loadSeq.current) setSheet({ kind: 'error', message: errorMessage(e, 'load') });
       }
@@ -188,7 +238,7 @@ export default function BinfireApp() {
             message: ERROR_MESSAGES[r.error] ?? r.error,
           });
         case 'load-cid':
-          return void loadDocument(r.cid, r.app);
+          return void loadDocument(r.cid, r.app, r.run !== false);
         case 'open-site':
           return setSheet({
             kind: 'error',
@@ -197,6 +247,37 @@ export default function BinfireApp() {
       }
     },
     [openApp, loadDocument],
+  );
+
+  /** A complete received bundle (spec/qr.md "Received bundles"). */
+  const openReceivedBundle = useCallback(
+    (payload: Uint8Array) => {
+      let bundle;
+      try {
+        bundle = decodeBundle(payload, ctx.config.limits);
+      } catch (e) {
+        const code = isBinfireError(e) ? e.code : 'bad-bundle';
+        setSheet({ kind: 'error', message: BUNDLE_MESSAGES[code] ?? ERROR_MESSAGES[code] ?? code });
+        return;
+      }
+      if (bundle.kind === 'url') return handleRoute(routeReceived(bundle.url!, ctx));
+      if (bundle.kind === 'cid') {
+        const doc = bundle.entries.find(e => e.cid === bundle.cid);
+        if (doc) cacheCid(doc.cid, doc.bytes);
+        return void loadDocument(bundle.cid!, bundle.app ?? null, false);
+      }
+      setSheet({ kind: 'error', message: 'Packaged sites arrive in a later version.' });
+    },
+    [handleRoute, loadDocument],
+  );
+
+  const onScanOutcome = useCallback(
+    (outcome: ScanOutcome) => {
+      setSheet(null);
+      if (outcome.kind === 'route') handleRoute(outcome.route);
+      else openReceivedBundle(outcome.payload);
+    },
+    [handleRoute, openReceivedBundle],
   );
 
   const openText = useCallback((text: string) => handleRoute(route(text, ctx)), [handleRoute]);
@@ -307,22 +388,24 @@ export default function BinfireApp() {
     [active, current],
   );
 
-  const showSaved = useCallback((link: string, copy: boolean) => {
+  const showSaved = useCallback((link: string, copy: boolean, qr: boolean) => {
     if (copy) Clipboard.setStringAsync(link).catch(() => undefined);
-    setSheet({ kind: 'hashbinResult', link, copied: copy });
+    // From the QR sheet: show the QR of the short `/c#` link.
+    if (qr) setSheet({ kind: 'qr', text: link, url: null });
+    else setSheet({ kind: 'hashbinResult', link, copied: copy });
   }, []);
 
   /** Native Save of the current state (spec/hashbin.md "What is saved for a state"). */
   const startSave = useCallback(
-    (copy: boolean) => {
+    (copy: boolean, qr = false) => {
       if (!active || !current) return;
       // Without a client ID, Native Save is off: point at the app's own Publish.
       if (!hashbinClient) return setSheet({ kind: 'publishNote' });
       const what = saveBytes(current, ctx.config.limits.maxStateBytes);
-      if (what.kind === 'cid') return showSaved(makeCidLink(what.cid, active, ctx), copy);
+      if (what.kind === 'cid') return showSaved(makeCidLink(what.cid, active, ctx), copy, qr);
       if (what.kind === 'none') return setSheet({ kind: 'publishNote' });
       const { bytes } = what;
-      setSheet({ kind: 'hashbinConfirm', bytes, contentType: what.contentType, slug: active, copy });
+      setSheet({ kind: 'hashbinConfirm', bytes, contentType: what.contentType, slug: active, copy, qr });
       hashbinClient.apiConfig().then(cfg => {
         const maxUpload = typeof cfg?.max_upload_bytes === 'number' ? cfg.max_upload_bytes : undefined;
         setSheet(s =>
@@ -337,7 +420,7 @@ export default function BinfireApp() {
 
   const confirmSave = useCallback(async () => {
     if (sheet?.kind !== 'hashbinConfirm' || sheet.busy || !hashbinClient) return;
-    const { bytes, contentType, slug, copy, maxUpload } = sheet;
+    const { bytes, contentType, slug, copy, qr, maxUpload } = sheet;
     const client = hashbinClient;
     if (maxUpload !== undefined && bytes.length > maxUpload) {
       setSheet({ kind: 'error', message: SIZE_MESSAGES.save });
@@ -355,7 +438,7 @@ export default function BinfireApp() {
       }
       setSheet({ kind: 'hashbinBusy' });
       const result = await client.save(bytes, contentType, cap);
-      showSaved(makeCidLink(result.cid, slug, ctx), copy);
+      showSaved(makeCidLink(result.cid, slug, ctx), copy, qr);
     } catch (e) {
       if (isBinfireError(e, 'cancelled')) setSheet(null);
       else setSheet({ kind: 'error', message: errorMessage(e, 'save') });
@@ -405,6 +488,7 @@ export default function BinfireApp() {
           onOpenText={openText}
           onPasteText={openShared}
           onOpenApp={openTile}
+          onScan={() => setSheet({ kind: 'scan' })}
           onDeleteSaved={id => setLibrary(lib => removeSaved(lib, id))}
         />
         <BrowserScreen
@@ -432,6 +516,10 @@ export default function BinfireApp() {
             canSave={!!hashbinClient}
             signedIn={sheet.signedIn}
             onSave={startSave}
+            onQr={() => {
+              const link = current ? makeLink(current, ctx) : null;
+              if (link) setSheet({ kind: 'qr', text: link, url: current! });
+            }}
             onSignOut={signOut}
             onClose={() => setSheet(null)}
           />
@@ -450,7 +538,7 @@ export default function BinfireApp() {
             matched={sheet.matched}
             link={makeCidLink(sheet.cid, null, ctx)}
             rawUrl={contentUrl(sheet.cid, ctx)}
-            onPick={app => openApp(app.slug, `${app.canonicalOrigin}#${sheet.cid}`)}
+            onPick={app => openApp(app.slug, documentUrl(app, sheet.cid, sheet.run))}
             onClose={() => setSheet(null)}
           />
         )}
@@ -469,6 +557,19 @@ export default function BinfireApp() {
           <HashbinResultSheet link={sheet.link} copied={sheet.copied} onClose={() => setSheet(null)} />
         )}
         {sheet?.kind === 'publishNote' && <PublishNoteSheet onClose={() => setSheet(null)} />}
+        {sheet?.kind === 'qr' && (
+          <QrSheet
+            text={sheet.text}
+            canMulti={sheet.url !== null}
+            onHashbin={() => startSave(false, true)}
+            onMulti={() => {
+              if (sheet.url) setSheet({ kind: 'qrFrames', texts: multiFrameQrTexts(sheet.url, getRandomBytes(8)) });
+            }}
+            onClose={() => setSheet(null)}
+          />
+        )}
+        {sheet?.kind === 'qrFrames' && <QrFramesSheet texts={sheet.texts} onClose={() => setSheet(null)} />}
+        {sheet?.kind === 'scan' && <ScanSheet ctx={ctx} onOutcome={onScanOutcome} onClose={() => setSheet(null)} />}
       </SheetHost>
     </SafeAreaProvider>
   );

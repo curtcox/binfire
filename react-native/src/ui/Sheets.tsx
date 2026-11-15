@@ -36,8 +36,8 @@ export function SheetHost({ open, children }: { open: boolean; children: ReactNo
     <Modal transparent animationType="slide" onRequestClose={() => closeRef.current()} visible>
       {/* Android apps run edge-to-edge (RN 0.88), so the window does not resize for the
           keyboard and the sheet must pad itself on both platforms. */}
-      <KeyboardAvoidingView style={styles.root} behavior="padding">
-        <Pressable style={styles.scrim} onPress={() => closeRef.current()} accessible={false} />
+      <KeyboardAvoidingView style={sheetStyles.root} behavior="padding">
+        <Pressable style={sheetStyles.scrim} onPress={() => closeRef.current()} accessible={false} />
         <SheetCloseRef.Provider value={closeRef}>{children}</SheetCloseRef.Provider>
       </KeyboardAvoidingView>
     </Modal>
@@ -45,14 +45,14 @@ export function SheetHost({ open, children }: { open: boolean; children: ReactNo
 }
 
 /** One sheet's panel inside `SheetHost`; `onClose` handles the scrim and Android back. */
-function Sheet({ testID, onClose, children }: { testID: string; onClose: () => void; children: ReactNode }) {
+export function Sheet({ testID, onClose, children }: { testID: string; onClose: () => void; children: ReactNode }) {
   const insets = useSafeAreaInsets();
   const closeRef = useContext(SheetCloseRef);
   useLayoutEffect(() => {
     if (closeRef) closeRef.current = onClose;
   }, [closeRef, onClose]);
   return (
-    <View testID={testID} style={[styles.sheet, { paddingBottom: 16 + insets.bottom }]}>
+    <View testID={testID} style={[sheetStyles.sheet, { paddingBottom: 16 + insets.bottom }]}>
       {children}
     </View>
   );
@@ -67,12 +67,12 @@ export function TextSheet({ text, onClose }: { text: string; onClose: () => void
   const [copied, setCopied] = useState(false);
   return (
     <Sheet testID="text.sheet" onClose={onClose}>
-      <Text style={styles.title}>Not a binfire app</Text>
-      <Text style={styles.body}>binfire only opens registered apps. You can open this in your browser or copy it.</Text>
-      <Text testID="text.value" style={styles.value} selectable numberOfLines={8}>
+      <Text style={sheetStyles.title}>Not a binfire app</Text>
+      <Text style={sheetStyles.body}>binfire only opens registered apps. You can open this in your browser or copy it.</Text>
+      <Text testID="text.value" style={sheetStyles.value} selectable numberOfLines={8}>
         {text.length > PREVIEW_CHARS ? text.slice(0, PREVIEW_CHARS) + '…' : text}
       </Text>
-      <View style={styles.row}>
+      <View style={sheetStyles.row}>
         {isWeb && (
           <Pressable
             testID="text.openBrowser"
@@ -108,11 +108,11 @@ export function TextSheet({ text, onClose }: { text: string; onClose: () => void
 export function ErrorSheet({ message, onClose }: { message: string; onClose: () => void }) {
   return (
     <Sheet testID="error.sheet" onClose={onClose}>
-      <Text style={styles.title}>{"Can't open that"}</Text>
-      <Text testID="error.message" style={styles.body}>
+      <Text style={sheetStyles.title}>{"Can't open that"}</Text>
+      <Text testID="error.message" style={sheetStyles.body}>
         {message}
       </Text>
-      <View style={styles.row}>
+      <View style={sheetStyles.row}>
         <Pressable testID="error.ok" style={common.button} onPress={onClose}>
           <Text style={common.buttonText}>OK</Text>
         </Pressable>
@@ -135,7 +135,7 @@ export function SaveSheet({
   const confirm = () => onSave(name.trim() || fallbackName);
   return (
     <Sheet testID="save.sheet" onClose={onClose}>
-      <Text style={styles.title}>Save state</Text>
+      <Text style={sheetStyles.title}>Save state</Text>
       <TextInput
         testID="save.name"
         style={common.input}
@@ -147,7 +147,7 @@ export function SaveSheet({
         onSubmitEditing={confirm}
         maxLength={200}
       />
-      <View style={styles.row}>
+      <View style={sheetStyles.row}>
         <Pressable testID="save.confirm" style={common.button} onPress={confirm}>
           <Text style={common.buttonText}>Save</Text>
         </Pressable>
@@ -164,11 +164,11 @@ function copyText(text: string, done: () => void) {
 }
 
 /** A plain menu row. */
-function MenuItem({ testID, label, onPress, disabled }: { testID: string; label: string; onPress: () => void; disabled?: boolean }) {
+export function MenuItem({ testID, label, onPress, disabled }: { testID: string; label: string; onPress: () => void; disabled?: boolean }) {
   return (
     <Pressable
       testID={testID}
-      style={[common.ghostButton, styles.menuItem, disabled && styles.disabled]}
+      style={[common.ghostButton, sheetStyles.menuItem, disabled && sheetStyles.disabled]}
       disabled={disabled}
       onPress={onPress}
       accessibilityRole="button"
@@ -188,6 +188,7 @@ export function SendSheet({
   canSave,
   signedIn,
   onSave,
+  onQr,
   onSignOut,
   onClose,
 }: {
@@ -197,6 +198,8 @@ export function SendSheet({
   signedIn: boolean;
   /** Runs Native Save; `copy` copies the resulting `/c#` link. */
   onSave: (copy: boolean) => void;
+  /** Opens the QR sheet for `link`. */
+  onQr: () => void;
   onSignOut: () => void;
   onClose: () => void;
 }) {
@@ -204,7 +207,7 @@ export function SendSheet({
   const long = !!link && utf8Length(link) > LONG_LINK_BYTES;
   return (
     <Sheet testID="send.sheet" onClose={onClose}>
-      <Text style={styles.title}>Send</Text>
+      <Text style={sheetStyles.title}>Send</Text>
       <MenuItem
         testID="send.copy"
         label={copied ? 'Link copied' : 'Copy link'}
@@ -212,13 +215,13 @@ export function SendSheet({
         onPress={() => link && copyText(link, () => setCopied(true))}
       />
       {link && (
-        <Text style={styles.muted} numberOfLines={2}>
+        <Text style={sheetStyles.muted} numberOfLines={2}>
           {link}
         </Text>
       )}
       {copied && long && (
-        <View testID="long.notice" style={styles.notice}>
-          <Text style={styles.body}>
+        <View testID="long.notice" style={sheetStyles.notice}>
+          <Text style={sheetStyles.body}>
             This link is long, and some messengers and mail apps cut long links off. Save to HashBin for a short link.
           </Text>
           <Pressable testID="long.save" style={common.button} onPress={() => onSave(true)} accessibilityRole="button">
@@ -226,9 +229,10 @@ export function SendSheet({
           </Pressable>
         </View>
       )}
+      <MenuItem testID="send.qr" label="QR code" disabled={!link} onPress={onQr} />
       {canSave && <MenuItem testID="send.hashbin" label="Save to HashBin" onPress={() => onSave(false)} />}
       {canSave && signedIn && <MenuItem testID="hashbin.signOut" label="Sign out of HashBin" onPress={onSignOut} />}
-      <View style={styles.row}>
+      <View style={sheetStyles.row}>
         <Pressable style={common.ghostButton} onPress={onClose}>
           <Text style={common.ghostButtonText}>Done</Text>
         </Pressable>
@@ -241,11 +245,11 @@ export function SendSheet({
 export function LoadingSheet({ onClose }: { onClose: () => void }) {
   return (
     <Sheet testID="loading.sheet" onClose={onClose}>
-      <View style={styles.busyRow}>
+      <View style={sheetStyles.busyRow}>
         <ActivityIndicator color={colors.accent} />
-        <Text style={styles.body}>Loading document…</Text>
+        <Text style={sheetStyles.body}>Loading document…</Text>
       </View>
-      <View style={styles.row}>
+      <View style={sheetStyles.row}>
         <Pressable style={common.ghostButton} onPress={onClose}>
           <Text style={common.ghostButtonText}>Cancel</Text>
         </Pressable>
@@ -274,16 +278,16 @@ export function ChooserSheet({
   const [copied, setCopied] = useState(false);
   return (
     <Sheet testID="chooser.sheet" onClose={onClose}>
-      <Text style={styles.title}>Open with</Text>
-      <Text style={styles.body}>
+      <Text style={sheetStyles.title}>Open with</Text>
+      <Text style={sheetStyles.body}>
         {matched ? 'Several apps can open this document.' : "binfire couldn't tell which app made this document."}
       </Text>
-      <ScrollView style={styles.list} contentContainerStyle={styles.listContent}>
+      <ScrollView style={sheetStyles.list} contentContainerStyle={sheetStyles.listContent}>
         {apps.map(app => (
           <MenuItem key={app.slug} testID={`chooser.app.${app.slug}`} label={app.name} onPress={() => onPick(app)} />
         ))}
       </ScrollView>
-      <View style={styles.row}>
+      <View style={sheetStyles.row}>
         <Pressable testID="chooser.copy" style={common.ghostButton} onPress={() => copyText(link, () => setCopied(true))}>
           <Text style={common.ghostButtonText}>{copied ? 'Copied' : 'Copy link'}</Text>
         </Pressable>
@@ -339,17 +343,17 @@ export function HashbinConfirmSheet({
           : `Estimated cost: up to ${estimate}¢ (charged to your HashBin balance)`;
   return (
     <Sheet testID="hashbin.confirm" onClose={onClose}>
-      <Text style={styles.title}>Save to HashBin</Text>
-      <Text testID="hashbin.size" style={styles.body}>
+      <Text style={sheetStyles.title}>Save to HashBin</Text>
+      <Text testID="hashbin.size" style={sheetStyles.body}>
         {`Size: ${formatBytes(size)}`}
       </Text>
-      <Text testID="hashbin.cost" style={styles.muted}>
+      <Text testID="hashbin.cost" style={sheetStyles.muted}>
         {cost}
       </Text>
-      <View style={styles.row}>
+      <View style={sheetStyles.row}>
         <Pressable
           testID="hashbin.ok"
-          style={[common.button, busy && styles.disabled]}
+          style={[common.button, busy && sheetStyles.disabled]}
           disabled={busy}
           onPress={onOk}
           accessibilityRole="button"
@@ -367,9 +371,9 @@ export function HashbinConfirmSheet({
 export function HashbinBusySheet() {
   return (
     <Sheet testID="hashbin.busy" onClose={() => undefined}>
-      <View style={styles.busyRow}>
+      <View style={sheetStyles.busyRow}>
         <ActivityIndicator color={colors.accent} />
-        <Text style={styles.body}>Saving to HashBin…</Text>
+        <Text style={sheetStyles.body}>Saving to HashBin…</Text>
       </View>
     </Sheet>
   );
@@ -380,11 +384,11 @@ export function HashbinResultSheet({ link, copied, onClose }: { link: string; co
   const [isCopied, setCopied] = useState(copied);
   return (
     <Sheet testID="hashbin.result" onClose={onClose}>
-      <Text style={styles.title}>Saved to HashBin</Text>
-      <Text testID="hashbin.link" style={styles.value} selectable>
+      <Text style={sheetStyles.title}>Saved to HashBin</Text>
+      <Text testID="hashbin.link" style={sheetStyles.value} selectable>
         {link}
       </Text>
-      <View style={styles.row}>
+      <View style={sheetStyles.row}>
         <Pressable testID="hashbin.copy" style={common.button} onPress={() => copyText(link, () => setCopied(true))}>
           <Text style={common.buttonText}>{isCopied ? 'Link copied' : 'Copy link'}</Text>
         </Pressable>
@@ -400,11 +404,11 @@ export function HashbinResultSheet({ link, copied, onClose }: { link: string; co
 export function PublishNoteSheet({ onClose }: { onClose: () => void }) {
   return (
     <Sheet testID="hashbin.publishNote" onClose={onClose}>
-      <Text style={styles.title}>{"Use the app's Publish"}</Text>
-      <Text style={styles.body}>
+      <Text style={sheetStyles.title}>{"Use the app's Publish"}</Text>
+      <Text style={sheetStyles.body}>
         {"binfire can't read this app's document from its link. Use the app's own Publish (Save to HashBin) button to get a short link."}
       </Text>
-      <View style={styles.row}>
+      <View style={sheetStyles.row}>
         <Pressable style={common.button} onPress={onClose}>
           <Text style={common.buttonText}>OK</Text>
         </Pressable>
@@ -413,7 +417,7 @@ export function PublishNoteSheet({ onClose }: { onClose: () => void }) {
   );
 }
 
-const styles = StyleSheet.create({
+export const sheetStyles = StyleSheet.create({
   root: { flex: 1, justifyContent: 'flex-end' },
   scrim: { ...StyleSheet.absoluteFill, backgroundColor: colors.scrim },
   sheet: {

@@ -141,7 +141,24 @@
       ],
       "expo-web-browser",
       "expo-secure-store",
-      "./plugins/with-mock-cleartext"
+      "./plugins/with-mock-cleartext",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "binfire uses the camera to scan QR codes.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false,
+          "barcodeScannerEnabled": true
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": false,
+          "cameraPermission": "binfire uses the camera to scan QR codes.",
+          "microphonePermission": false
+        }
+      ]
     ]
   }
 }

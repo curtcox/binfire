@@ -31,6 +31,8 @@ export interface LibraryScreenProps {
   onPasteText: (text: string) => void;
   onOpenApp: (app: RegistryApp) => void;
   onDeleteSaved: (id: string) => void;
+  /** Opens the scan sheet. */
+  onScan: () => void;
 }
 
 export function LibraryScreen({
@@ -40,6 +42,7 @@ export function LibraryScreen({
   onPasteText,
   onOpenApp,
   onDeleteSaved,
+  onScan,
 }: LibraryScreenProps) {
   const insets = useSafeAreaInsets();
   const [input, setInput] = useState('');
@@ -88,6 +91,9 @@ export function LibraryScreen({
         </Pressable>
         <Pressable testID="open.paste" style={common.ghostButton} onPress={paste} accessibilityLabel="Paste">
           <Text style={common.ghostButtonText}>Paste</Text>
+        </Pressable>
+        <Pressable testID="open.scan" style={common.ghostButton} onPress={onScan} accessibilityLabel="Scan">
+          <Text style={common.ghostButtonText}>Scan</Text>
         </Pressable>
       </View>
 
