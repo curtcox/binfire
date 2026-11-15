@@ -91,15 +91,30 @@ export const httpTransport: HttpTransport = async req => {
   }
 };
 
-/** Tokens live only in the Keychain (after first unlock, this device only) or Keystore. */
+/**
+ * Tokens live only in the Keychain (after first unlock, this device only) or
+ * Keystore. `HashBinClient` also keeps them in memory for this process, so a
+ * session still works when the store refuses access (an unsigned simulator
+ * build has no keychain entitlement: errSecMissingEntitlement, -34018): a
+ * failed read counts as signed out and a failed write keeps the tokens for
+ * this run only, as on iOS. Nothing else persists them.
+ */
 const tokenStore: TokenStore = {
-  get: () => SecureStore.getItemAsync(TOKENS_KEY),
+  get: () => SecureStore.getItemAsync(TOKENS_KEY).catch(storeFailed('read', null)),
   set: value =>
     SecureStore.setItemAsync(TOKENS_KEY, value, {
       keychainAccessible: SecureStore.AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY,
-    }),
-  delete: () => SecureStore.deleteItemAsync(TOKENS_KEY),
+    }).catch(storeFailed('write', undefined)),
+  delete: () => SecureStore.deleteItemAsync(TOKENS_KEY).catch(storeFailed('delete', undefined)),
 };
+
+function storeFailed<T>(op: string, fallback: T): (e: unknown) => T {
+  return e => {
+    // The error names the failing call and OSStatus, never the token value.
+    if (__DEV__) console.warn(`binfire: secure store ${op} failed; tokens kept for this run only`, e);
+    return fallback;
+  };
+}
 
 const authSession: AuthSession = async (url, redirectUri) => {
   const result = await WebBrowser.openAuthSessionAsync(url, redirectUri);

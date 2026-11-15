@@ -13,7 +13,7 @@ Legend: `[x]` done and verified · `[~]` partly done (see note) · `[ ]` not sta
 | M0 | Spec and scaffolding | [x] | [x] | [x] | [x] | [x] |
 | M1 | Browser core | [x] | [x] | [x] | [x] | [x] |
 | M2 | Links in | [x] | [x] | [x] | [x] | [~] |
-| M3 | HashBin | [~] | [~] | [ ] | [ ] | [x] |
+| M3 | HashBin | [~] | [~] | [ ] | [~] | [x] |
 | M4 | QR and camera | [ ] | [ ] | [ ] | [ ] | [ ] |
 | M5 | Send and files | [ ] | [ ] | [ ] | [ ] | [ ] |
 | M6 | Packaged sites | [ ] | [ ] | [ ] | [ ] | [ ] |
@@ -45,6 +45,17 @@ Run on 2026-11-14 after M2, one device at a time:
 
 Newest first. One line per meaningful step, with what was verified.
 
+- 2026-11-15: RN M3 on iOS (iPhone 17, Release, built with the
+  `EXPO_PUBLIC_HASHBIN_*` mock overrides): hashbin-mock and m1+m2 (5 flows)
+  pass; a save, then copying the `/c#` link and pasting it back, loads and
+  verifies the CID from the mock and opens Python with `#cid`. Fixed: the
+  secure-store token store now tolerates Keychain errors like iOS's
+  (unsigned simulator builds get -34018; tokens stay in memory for the run),
+  so persistence across launches is untested [d]. ATS: no change, because the
+  Expo template already sets `NSAllowsLocalNetworking`. Flake seen: one run's
+  XCTest driver hung on `isScreenStatic` under the iOS "Wants to Use
+  localhost to Sign In" prompt; the re-run passed. RN Android not re-run for
+  M3 here.
 - 2026-11-15: Flutter M3 on iOS (e54e121): reads `hashbin.maxCostCents` and
   always sends it as `max_cost_cents` (the invented 100¢ fallback is gone);
   the confirm sheet shows the estimate only when `/api/config` has a price,
