@@ -605,7 +605,12 @@ const images = [
   ['text-hello.png', 'hello world'],
   ...threeFrames.map((f, i) => [`frame-${i}.png`, bf1(f)]),
 ].map(([file, value]) => { writeFileSync(join(qrDir, file), qrPng(value)); return { file, text: value }; });
-console.log('wrote qr/*.png');
+// Maestro's addMedia only reads files inside its workspace (maestro/), so the
+// flows get their own copies.
+const mediaDir = join(root, 'maestro', 'media');
+mkdirSync(mediaDir, { recursive: true });
+for (const { file } of images) writeFileSync(join(mediaDir, file), readFileSync(join(qrDir, file)));
+console.log('wrote qr/*.png and maestro/media/*.png');
 
 write('qr.json', { thresholds: { okMax: 858, denseMax: 2953 },
   plans: [0, 1, 500, 857, 858, 859, 2000, 2952, 2953, 2954, 100000].map(bytes => ({ bytes, plan: bytes <= 858 ? 'ok' : bytes <= 2953 ? 'dense' : 'too-long' })),

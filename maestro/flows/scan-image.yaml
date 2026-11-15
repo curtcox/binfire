@@ -4,7 +4,7 @@ tags: [m4]
 # Scan from image: a QR of a binfire link opens the app with run=0 (received
 # content never runs automatically), so the Run banner shows.
 - addMedia:
-    - "../../shared/fixtures/qr/link-python.png"
+    - "../media/link-python.png"  # generated copy of shared/fixtures/qr/link-python.png
 - runFlow: ../subflows/launch-clean.yaml
 - tapOn: {id: open.scan}
 - assertVisible: {id: scan.sheet}

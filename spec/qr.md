@@ -53,6 +53,16 @@ camera permission needed. If an image holds several codes, the first
 reported is used. If it holds none, the status shows "No QR code found in
 this image."
 
+Bound the image before decoding it (PLAN §10):
+
+- A file larger than 25 MiB is refused before it is read: `scan.status`
+  shows "This image is too large."
+- Where the platform can decode at a target size (`CGImageSource`
+  thumbnails, `ImageDecoder.setTargetSize` / `inSampleSize`, …), decode
+  with the longest side at most 4096 pixels. Where the scanner library only
+  takes a file path (`mobile_scanner.analyzeImage`, `scanFromURLAsync`), the
+  25 MiB file check is enough.
+
 ### Scan session (`ScanSession.accept(text)`)
 
 Every decoded text, live or from an image, goes to one `ScanSession`, which
@@ -114,7 +124,9 @@ Fixture `qr.json` `scans`:
               | { "kind": "route", "route": { … as in links.json route … } } ] }]
 ```
 
-Each case runs one fresh `ScanSession`, feeding `texts` in order. Every
+The frames in these cases use small chunks (for example 50 or 4 bytes) so
+that they fit in test QR images. A receiver accepts any chunk size; only the
+sender uses 512. Each case runs one fresh `ScanSession`, feeding `texts` in order. Every
 text's result must match `results` at the same index, comparing only the
 fields present.
 
@@ -157,4 +169,6 @@ Maestro's `addMedia` and by any port test that decodes images:
 | `text-hello.png` | `hello world` |
 | `frame-<i>.png` | the frames of the `qr.json` scan case "three-frame url bundle" |
 
-`qr.json` `images` lists each file with its text.
+`qr.json` `images` lists each file with its text. The generator also copies
+the PNGs to `maestro/media/`, because Maestro's `addMedia` only reads files
+inside its workspace.
