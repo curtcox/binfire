@@ -45,6 +45,12 @@ Run on 2026-11-14 after M2, one device at a time:
 
 Newest first. One line per meaningful step, with what was verified.
 
+- 2026-11-14: M3 started. The specs cover the CID load flow and chooser, the
+  long-link offer, and debug-only overrides. `tools/mock-hashbin.mjs` is a
+  local stand-in for hashbin.org and 256t.us (auto-approving OAuth with PKCE
+  and refresh rotation, upload, content) so Native Save can be tested end to
+  end before the real client ID exists. New Maestro flow: hashbin-mock.yaml.
+  Four fresh port agents are running M3.
 - 2026-11-14: **M2 done in all four ports** (Shared stays [~] until
   `binfire.app` is hosted). Private per-port schemes are adopted everywhere;
   RN lists its own scheme first so expo-share-intent hands off in-port
