@@ -4,7 +4,12 @@ import XCTest
 final class ConfigTests: XCTestCase {
     func testLoadsRuntimeConfig() throws {
         let c = try BinfireConfig.load(contentsOf: Fixtures.repoRoot.appendingPathComponent("ios/App/Resources/binfire.config.json"))
-        XCTAssertEqual(c, BinfireConfig.default)
+        XCTAssertEqual(c.ownScheme, "app.binfire.ios")
+        XCTAssertEqual(c.oauthRedirect, "app.binfire.ios://oauth")
+        var expected = BinfireConfig.default
+        expected.ownScheme = c.ownScheme
+        expected.oauthRedirect = c.oauthRedirect
+        XCTAssertEqual(c, expected)
     }
 
     func testLoadsRepoConfig() throws {

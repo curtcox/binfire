@@ -39,6 +39,7 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>binfire</string>
+				<string>app.binfire.ios</string>
 			</array>
 		</dict>
 	</array>

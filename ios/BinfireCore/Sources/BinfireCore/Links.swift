@@ -48,6 +48,12 @@ public struct Links: Sendable {
 
     // MARK: route
 
+    /// The public scheme `S` and this port's own scheme `O` (lowercased);
+    /// route treats them identically.
+    var customSchemes: [String] {
+        [config.scheme.lowercased(), config.ownScheme.lowercased()].filter { !$0.isEmpty }
+    }
+
     /// Routes any input text (paste, share, scan, audio, transfer `url`).
     public func route(_ text: String) -> Route { routeWithSource(text).route }
 
@@ -58,13 +64,13 @@ public struct Links: Sendable {
     private func routeShared(_ text: String, allowShare: Bool) -> Route {
         let whole = routeWithSource(text, allowShare: allowShare).route
         guard case .showText = whole else { return whole }
-        let scheme = config.scheme.lowercased() + "://"
+        let schemes = customSchemes.map { $0 + "://" }
         let ws: Set<Character> = [" ", "\t", "\n", "\r", "\u{0C}", "\r\n"]
         for raw in text.split(whereSeparator: { ws.contains($0) }) {
             let token = Links.stripSharedToken(String(raw))
             let lower = token.lowercased()
             let bare = token.hasPrefix("#") ? String(token.dropFirst()) : token
-            guard lower.hasPrefix("https://") || lower.hasPrefix("http://") || lower.hasPrefix(scheme)
+            guard lower.hasPrefix("https://") || lower.hasPrefix("http://") || schemes.contains(where: lower.hasPrefix)
                     || CID.isCID(bare) else { continue }
             let r = routeWithSource(token, allowShare: allowShare).route
             if case .showText = r { continue }
@@ -109,8 +115,7 @@ public struct Links: Sendable {
         guard let url = URLParts(input) else { return (.showText(input), .other) }
 
         // 3. binfire links.
-        let scheme = config.scheme.lowercased()
-        if url.scheme == scheme {
+        if customSchemes.contains(url.scheme) {
             let path = url.hasAuthority ? url.host + url.path : url.path
             return (binfireLink(input, path: path, isScheme: true, allowShare: allowShare), .schemeLink)
         }

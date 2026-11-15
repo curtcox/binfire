@@ -3,7 +3,7 @@ import UniformTypeIdentifiers
 import BinfireCore
 
 /// Share Extension: takes one shared URL or text and hands it to the app as
-/// `<scheme>://share#t=<encodeURIComponent(text)>`. The app routes it with
+/// `<ownScheme>://share#t=<encodeURIComponent(text)>`. The app routes it with
 /// `routeShared` (spec/links.md, `share`).
 final class ShareViewController: UIViewController {
     private var sharedText: String?
@@ -83,8 +83,11 @@ final class ShareViewController: UIViewController {
     }
 
     @objc private func openTapped() {
+        // Hand off via this port's own scheme: several binfire builds on one
+        // device may all claim the public scheme (spec/links.md "Schemes").
+        let scheme = config.ownScheme.isEmpty ? config.scheme : config.ownScheme
         guard let text = sharedText,
-              let url = URL(string: "\(config.scheme)://share#t=" + Links.encodeURIComponent(text)) else { return }
+              let url = URL(string: "\(scheme)://share#t=" + Links.encodeURIComponent(text)) else { return }
         _ = openViaResponderChain(url)
         extensionContext?.completeRequest(returningItems: nil)
     }

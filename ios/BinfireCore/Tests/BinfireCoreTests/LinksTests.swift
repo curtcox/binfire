@@ -8,7 +8,8 @@ final class LinksTests: XCTestCase {
     override func setUpWithError() throws {
         fixture = try Fixtures.load("links.json")
         let cfg = try XCTUnwrap(fixture["config"] as? [String: String])
-        let config = BinfireConfig(linkDomain: cfg["linkDomain"]!, scheme: cfg["scheme"]!, contentHost: cfg["content"]!)
+        let config = BinfireConfig(linkDomain: cfg["linkDomain"]!, scheme: cfg["scheme"]!,
+                                   ownScheme: cfg["ownScheme"] ?? "", contentHost: cfg["content"]!)
         links = Links(config: config, registry: try Fixtures.registry())
     }
 

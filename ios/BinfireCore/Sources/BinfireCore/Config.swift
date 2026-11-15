@@ -32,8 +32,12 @@ public struct BinfireConfig: Equatable, Sendable {
     public var appName: String
     /// `D` in links.md: the https host of binfire links (`binfire.app`).
     public var linkDomain: String
-    /// `S` in links.md: the custom URL scheme (`binfire`).
+    /// `S` in links.md: the public custom URL scheme (`binfire`).
     public var scheme: String
+    /// `O` in links.md: this port's private reverse-DNS scheme (its app ID,
+    /// e.g. `app.binfire.ios`). Empty when not configured. Used for the
+    /// OAuth redirect, share-extension hand-off and UI tests.
+    public var ownScheme: String
     /// HashBin API base URL.
     public var hashbinAPI: String
     /// HashBin content base URL (`https://256t.us`), used for `/<CID>` links and loading.
@@ -49,6 +53,7 @@ public struct BinfireConfig: Equatable, Sendable {
     public init(appName: String = "binfire",
                 linkDomain: String = "binfire.app",
                 scheme: String = "binfire",
+                ownScheme: String = "",
                 hashbinAPI: String = "https://hashbin.org",
                 contentHost: String = "https://256t.us",
                 hashbinClientId: String = "",
@@ -60,6 +65,7 @@ public struct BinfireConfig: Equatable, Sendable {
         self.appName = appName
         self.linkDomain = linkDomain
         self.scheme = scheme
+        self.ownScheme = ownScheme
         self.hashbinAPI = hashbinAPI
         self.contentHost = contentHost
         self.hashbinClientId = hashbinClientId
@@ -97,6 +103,7 @@ public struct BinfireConfig: Equatable, Sendable {
         try str(o, "appName", &c.appName)
         try str(o, "linkDomain", &c.linkDomain)
         try str(o, "scheme", &c.scheme)
+        try str(o, "ownScheme", &c.ownScheme)
         try str(o, "oauthRedirect", &c.oauthRedirect)
         if let h = try object("hashbin") {
             try str(h, "api", &c.hashbinAPI)
@@ -116,6 +123,7 @@ public struct BinfireConfig: Equatable, Sendable {
             try int(l, "maxTransferBytes", &c.limits.maxTransferBytes)
         }
         c.scheme = c.scheme.lowercased()
+        c.ownScheme = c.ownScheme.lowercased()
         self = c
     }
 
