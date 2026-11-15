@@ -10,6 +10,16 @@ public enum BinfireError: String, Error, Sendable, CaseIterable, CustomStringCon
     case rateLimited = "rate-limited"
     case httpError = "http-error"
     case mismatch = "mismatch"
+    case network = "network"
+    // hashbin.md (Native Save)
+    case insufficientBalance = "insufficient-balance"
+    case costExceeded = "cost-exceeded"
+    /// The sign-in failed (state mismatch, no code, token exchange error).
+    case failed = "failed"
+    /// The user cancelled or denied the sign-in.
+    case cancelled = "cancelled"
+    /// No usable tokens (never signed in, expired, revoked): sign in again.
+    case signedOut = "signed-out"
     // state.md (lz)
     case invalid = "invalid"
     // links.md
