@@ -1,0 +1,15 @@
+appId: ${APP_ID}
+tags: [m4]
+---
+# A small state shows one QR (plan "ok"): no multi-frame or HashBin offer.
+- runFlow: ../subflows/launch-clean.yaml
+- tapOn: {id: open.input}
+- inputText: "https://binfire.app/a/python#AAAAAAAFaGVsbG8"
+- tapOn: {id: open.go}
+- assertVisible: {id: web.view}
+- tapOn: {id: web.send}
+- tapOn: {id: send.qr}
+- assertVisible: {id: qr.sheet}
+- assertVisible: {id: qr.image}
+- assertVisible: {id: qr.export}
+- assertNotVisible: {id: qr.multi}

@@ -44,8 +44,9 @@ follow each platform's conventions.
 | Show text (unregistered input) | `text.sheet`, `text.value`, `text.openBrowser`, `text.copy` |
 | Save name | `save.name`, `save.confirm`, `save.cancel` |
 | Error | `error.sheet`, `error.message`, `error.ok` |
-| QR display (M4) | `qr.sheet`, `qr.image`, `qr.hashbin` |
-| Send menu (M1/M3) | `send.copy` (Copy link), `send.hashbin` (Save to HashBin, shown only when a client ID is configured) |
+| QR display (M4) | `qr.sheet`, `qr.image`, `qr.note`, `qr.hashbin`, `qr.multi`, `qr.export`; multi-frame `qr.frames`, `qr.frameIndex` (qr.md) |
+| Scan (M4) | `scan.sheet`, `scan.camera`, `scan.image`, `scan.status`, `scan.cancel` (qr.md) |
+| Send menu (M1/M3/M4) | `send.copy` (Copy link), `send.hashbin` (Save to HashBin, shown only when a client ID is configured), `send.qr` (QR code) |
 | Long-link notice (M3) | `long.notice`, `long.save` |
 | HashBin confirm (M3): size, estimated cost, Save/Cancel | `hashbin.confirm`, `hashbin.size`, `hashbin.ok`, `hashbin.cancel` |
 | HashBin result (M3): the `/c#` link | `hashbin.result`, `hashbin.link`, `hashbin.copy` |

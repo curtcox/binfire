@@ -1,0 +1,26 @@
+# Pick the most recently added photo in the system image picker, which is the
+# image the flow just added with addMedia. The picker is system UI, so this is
+# per OS, not per port. TODO(M4): confirm on iOS 26 PHPicker and Android 14's
+# photo picker; refine the selectors here, not in the flows.
+appId: ${APP_ID}
+---
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      - extendedWaitUntil:
+          visible: "Photos"
+          timeout: 10000
+          optional: true
+      - tapOn:
+          point: "17%,30%"
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - extendedWaitUntil:
+          visible: ".*(Photos|Recent|Images).*"
+          timeout: 10000
+          optional: true
+      - tapOn:
+          point: "17%,30%"

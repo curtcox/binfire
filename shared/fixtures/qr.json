@@ -49,5 +49,310 @@
       "bytes": 100000,
       "plan": "too-long"
     }
+  ],
+  "maxFrameText": 851,
+  "scans": [
+    {
+      "name": "link",
+      "texts": [
+        "https://binfire.app/a/python#AAAAAAAFaGVsbG8"
+      ],
+      "results": [
+        {
+          "kind": "route",
+          "route": {
+            "action": "open-app",
+            "app": "python",
+            "url": "https://python.hashbin.page/?run=0#AAAAAAAFaGVsbG8",
+            "state": "cid",
+            "run": false,
+            "view": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "plain text is shown, never opened",
+      "texts": [
+        "  hello world \n"
+      ],
+      "results": [
+        {
+          "kind": "route",
+          "route": {
+            "action": "show-text",
+            "text": "hello world"
+          }
+        }
+      ]
+    },
+    {
+      "name": "bare cid",
+      "texts": [
+        "AAAAAABBuDCGzYSU5VcIrX7Ngt-0vKG9ph7Lt8rwxolnkC5wk0Xl2DBet6wNWIr8bLt1FhqpyMfg6phr2DPa_l4czTc0Wg"
+      ],
+      "results": [
+        {
+          "kind": "route",
+          "route": {
+            "action": "load-cid",
+            "cid": "AAAAAABBuDCGzYSU5VcIrX7Ngt-0vKG9ph7Lt8rwxolnkC5wk0Xl2DBet6wNWIr8bLt1FhqpyMfg6phr2DPa_l4czTc0Wg",
+            "app": null,
+            "run": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "three-frame url bundle",
+      "texts": [
+        "BF1:QkYBAFFRUVFRUVFRAAAAAgAAAAMAAABkAAAAll5BQUFBQUFDV3FWMmNDWVdkQXRpZ01vY3Y4R0t2WkNtSXp6RkVGQk9VaTZFQXVITk0tSUtwS0R4dVZiZUhDbWw2QkZUTUMwdGlpV1k0TFAzLUtRcUVwanIzR1ZhUHRRQkZBSlJ3R01zQVRWSkFTbUNBIiwibmFtZSI6IlFSIHRlc3QiLCJlbnRyaWVzIjpbXX0",
+        "BF1:QkYBAFFRUVFRUVFRAAAAAAAAAAMAAAAAAAAAll5BQUFBQUFDV3FWMmNDWVdkQXRpZ01vY3Y4R0t2WkNtSXp6RkVGQk9VaTZFQXVITk0tSUtwS0R4dVZiZUhDbWw2QkZUTUMwdGlpV1k0TFAzLUtRcUVwanIzR1ZhUHRRQkZCMQAAAI57ImtpbmQiOiJ1cmwiLCJ1cmwiOiJodHRwczovL3B5dGhvbi5oYXNoYmk",
+        "BF1:QkYBAFFRUVFRUVFRAAAAAAAAAAMAAAAAAAAAll5BQUFBQUFDV3FWMmNDWVdkQXRpZ01vY3Y4R0t2WkNtSXp6RkVGQk9VaTZFQXVITk0tSUtwS0R4dVZiZUhDbWw2QkZUTUMwdGlpV1k0TFAzLUtRcUVwanIzR1ZhUHRRQkZCMQAAAI57ImtpbmQiOiJ1cmwiLCJ1cmwiOiJodHRwczovL3B5dGhvbi5oYXNoYmk",
+        "BF1:QkYBAFFRUVFRUVFRAAAAAQAAAAMAAAAyAAAAll5BQUFBQUFDV3FWMmNDWVdkQXRpZ01vY3Y4R0t2WkNtSXp6RkVGQk9VaTZFQXVITk0tSUtwS0R4dVZiZUhDbWw2QkZUTUMwdGlpV1k0TFAzLUtRcUVwanIzR1ZhUHRRbi5wYWdlLyN2MS5FUUJ3VGdsZ2RnTGdGQUhXQUN3S1lCdDBIc0FFQXpNTEFXeHdFTWM"
+      ],
+      "results": [
+        {
+          "kind": "progress",
+          "received": 1,
+          "count": 3
+        },
+        {
+          "kind": "progress",
+          "received": 2,
+          "count": 3
+        },
+        {
+          "kind": "progress",
+          "received": 2,
+          "count": 3
+        },
+        {
+          "kind": "bundle",
+          "payloadB64": "QkZCMQAAAI57ImtpbmQiOiJ1cmwiLCJ1cmwiOiJodHRwczovL3B5dGhvbi5oYXNoYmluLnBhZ2UvI3YxLkVRQndUZ2xnZGdMZ0ZBSFdBQ3dLWUJ0MEhzQUVBek1MQVd4d0VNY0JGQUpSd0dNc0FUVkpBU21DQSIsIm5hbWUiOiJRUiB0ZXN0IiwiZW50cmllcyI6W119"
+        }
+      ]
+    },
+    {
+      "name": "sender restarted with a new id",
+      "texts": [
+        "BF1:QkYBAFFRUVFRUVFRAAAAAAAAAAMAAAAAAAAAll5BQUFBQUFDV3FWMmNDWVdkQXRpZ01vY3Y4R0t2WkNtSXp6RkVGQk9VaTZFQXVITk0tSUtwS0R4dVZiZUhDbWw2QkZUTUMwdGlpV1k0TFAzLUtRcUVwanIzR1ZhUHRRQkZCMQAAAI57ImtpbmQiOiJ1cmwiLCJ1cmwiOiJodHRwczovL3B5dGhvbi5oYXNoYmk",
+        "BF1:QkYBAGJiYmJiYmJiAAAAAAAAAAMAAAAAAAAAll5BQUFBQUFDV3FWMmNDWVdkQXRpZ01vY3Y4R0t2WkNtSXp6RkVGQk9VaTZFQXVITk0tSUtwS0R4dVZiZUhDbWw2QkZUTUMwdGlpV1k0TFAzLUtRcUVwanIzR1ZhUHRRQkZCMQAAAI57ImtpbmQiOiJ1cmwiLCJ1cmwiOiJodHRwczovL3B5dGhvbi5oYXNoYmk",
+        "BF1:QkYBAGJiYmJiYmJiAAAAAQAAAAMAAAAyAAAAll5BQUFBQUFDV3FWMmNDWVdkQXRpZ01vY3Y4R0t2WkNtSXp6RkVGQk9VaTZFQXVITk0tSUtwS0R4dVZiZUhDbWw2QkZUTUMwdGlpV1k0TFAzLUtRcUVwanIzR1ZhUHRRbi5wYWdlLyN2MS5FUUJ3VGdsZ2RnTGdGQUhXQUN3S1lCdDBIc0FFQXpNTEFXeHdFTWM",
+        "BF1:QkYBAGJiYmJiYmJiAAAAAgAAAAMAAABkAAAAll5BQUFBQUFDV3FWMmNDWVdkQXRpZ01vY3Y4R0t2WkNtSXp6RkVGQk9VaTZFQXVITk0tSUtwS0R4dVZiZUhDbWw2QkZUTUMwdGlpV1k0TFAzLUtRcUVwanIzR1ZhUHRRQkZBSlJ3R01zQVRWSkFTbUNBIiwibmFtZSI6IlFSIHRlc3QiLCJlbnRyaWVzIjpbXX0"
+      ],
+      "results": [
+        {
+          "kind": "progress",
+          "received": 1,
+          "count": 3
+        },
+        {
+          "kind": "progress",
+          "received": 1,
+          "count": 3
+        },
+        {
+          "kind": "progress",
+          "received": 2,
+          "count": 3
+        },
+        {
+          "kind": "bundle",
+          "payloadB64": "QkZCMQAAAI57ImtpbmQiOiJ1cmwiLCJ1cmwiOiJodHRwczovL3B5dGhvbi5oYXNoYmluLnBhZ2UvI3YxLkVRQndUZ2xnZGdMZ0ZBSFdBQ3dLWUJ0MEhzQUVBek1MQVd4d0VNY0JGQUpSd0dNc0FUVkpBU21DQSIsIm5hbWUiOiJRUiB0ZXN0IiwiZW50cmllcyI6W119"
+        }
+      ]
+    },
+    {
+      "name": "whitespace around a frame",
+      "texts": [
+        "  BF1:QkYBAHNzc3Nzc3NzAAAAAQAAAAMAAAAEAAAAChZBQUFBQUFBS01ERXlNelExTmpjNE9RNDU2Nw\n"
+      ],
+      "results": [
+        {
+          "kind": "progress",
+          "received": 1,
+          "count": 3
+        }
+      ]
+    },
+    {
+      "name": "bad base64url keeps the transfer",
+      "texts": [
+        "BF1:QkYBAHNzc3Nzc3NzAAAAAAAAAAMAAAAAAAAAChZBQUFBQUFBS01ERXlNelExTmpjNE9RMDEyMw",
+        "BF1:@@@",
+        "BF1:QkYBAHNzc3Nzc3NzAAAAAQAAAAMAAAAEAAAAChZBQUFBQUFBS01ERXlNelExTmpjNE9RNDU2Nw=",
+        "BF1:QkYBAHNzc3Nzc3NzAAAAAQAAAAMAAAAEAAAAChZBQUFBQUFBS01ERXlNelExTmpjNE9RNDU2Nw"
+      ],
+      "results": [
+        {
+          "kind": "progress",
+          "received": 1,
+          "count": 3
+        },
+        {
+          "kind": "frame-error",
+          "error": "bad-frame"
+        },
+        {
+          "kind": "frame-error",
+          "error": "bad-frame"
+        },
+        {
+          "kind": "progress",
+          "received": 2,
+          "count": 3
+        }
+      ]
+    },
+    {
+      "name": "frame text too long",
+      "texts": [
+        "BF1:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+      ],
+      "results": [
+        {
+          "kind": "frame-error",
+          "error": "bad-frame"
+        }
+      ]
+    },
+    {
+      "name": "not a frame",
+      "texts": [
+        "BF1:WFktbm90LWEtZnJhbWU"
+      ],
+      "results": [
+        {
+          "kind": "frame-error",
+          "error": "bad-magic"
+        }
+      ]
+    },
+    {
+      "name": "wrong version",
+      "texts": [
+        "BF1:QkYCAHNzc3Nzc3NzAAAAAAAAAAMAAAAAAAAAChZBQUFBQUFBS01ERXlNelExTmpjNE9RMDEyMw"
+      ],
+      "results": [
+        {
+          "kind": "frame-error",
+          "error": "bad-version"
+        }
+      ]
+    },
+    {
+      "name": "inconsistent duplicate drops the transfer",
+      "texts": [
+        "BF1:QkYBAHNzc3Nzc3NzAAAAAAAAAAMAAAAAAAAAChZBQUFBQUFBS01ERXlNelExTmpjNE9RMDEyMw",
+        "BF1:QkYBAHNzc3Nzc3NzAAAAAAAAAAMAAAAAAAAAChZBQUFBQUFBS01ERXlNelExTmpjNE9RMDEyMg",
+        "BF1:QkYBAHNzc3Nzc3NzAAAAAQAAAAMAAAAEAAAAChZBQUFBQUFBS01ERXlNelExTmpjNE9RNDU2Nw"
+      ],
+      "results": [
+        {
+          "kind": "progress",
+          "received": 1,
+          "count": 3
+        },
+        {
+          "kind": "frame-error",
+          "error": "inconsistent"
+        },
+        {
+          "kind": "progress",
+          "received": 1,
+          "count": 3
+        }
+      ]
+    },
+    {
+      "name": "mismatch when complete",
+      "texts": [
+        "BF1:QkYBAHR0dHR0dHR0AAAAAAAAAAMAAAAAAAAAChZBQUFBQUFBS01ERXlNelExTmpjNE9RMDEyMw",
+        "BF1:QkYBAHR0dHR0dHR0AAAAAQAAAAMAAAAEAAAAChZBQUFBQUFBS01ERXlNelExTmpjNE9RNDU2Nw",
+        "BF1:QkYBAHR0dHR0dHR0AAAAAgAAAAMAAAAIAAAAChZBQUFBQUFBS01ERXlNelExTmpjNE9RODg"
+      ],
+      "results": [
+        {
+          "kind": "progress",
+          "received": 1,
+          "count": 3
+        },
+        {
+          "kind": "progress",
+          "received": 2,
+          "count": 3
+        },
+        {
+          "kind": "frame-error",
+          "error": "mismatch"
+        }
+      ]
+    },
+    {
+      "name": "too large",
+      "texts": [
+        "BF1:QkYBAAAAAAAAAAD_AAAAAAAAAAEAAAAADIAAAF5BQUFNZ0FBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB"
+      ],
+      "results": [
+        {
+          "kind": "frame-error",
+          "error": "too-large"
+        }
+      ]
+    },
+    {
+      "name": "a link during a transfer",
+      "texts": [
+        "BF1:QkYBAHNzc3Nzc3NzAAAAAAAAAAMAAAAAAAAAChZBQUFBQUFBS01ERXlNelExTmpjNE9RMDEyMw",
+        "https://binfire.app/a/python#AAAAAAAFaGVsbG8",
+        "BF1:QkYBAHNzc3Nzc3NzAAAAAQAAAAMAAAAEAAAAChZBQUFBQUFBS01ERXlNelExTmpjNE9RNDU2Nw"
+      ],
+      "results": [
+        {
+          "kind": "progress",
+          "received": 1,
+          "count": 3
+        },
+        {
+          "kind": "route",
+          "route": {
+            "action": "open-app",
+            "app": "python",
+            "url": "https://python.hashbin.page/?run=0#AAAAAAAFaGVsbG8",
+            "state": "cid",
+            "run": false,
+            "view": null
+          }
+        },
+        {
+          "kind": "progress",
+          "received": 2,
+          "count": 3
+        }
+      ]
+    }
+  ],
+  "images": [
+    {
+      "file": "link-python.png",
+      "text": "https://binfire.app/a/python#AAAAAAAFaGVsbG8"
+    },
+    {
+      "file": "text-hello.png",
+      "text": "hello world"
+    },
+    {
+      "file": "frame-0.png",
+      "text": "BF1:QkYBAFFRUVFRUVFRAAAAAAAAAAMAAAAAAAAAll5BQUFBQUFDV3FWMmNDWVdkQXRpZ01vY3Y4R0t2WkNtSXp6RkVGQk9VaTZFQXVITk0tSUtwS0R4dVZiZUhDbWw2QkZUTUMwdGlpV1k0TFAzLUtRcUVwanIzR1ZhUHRRQkZCMQAAAI57ImtpbmQiOiJ1cmwiLCJ1cmwiOiJodHRwczovL3B5dGhvbi5oYXNoYmk"
+    },
+    {
+      "file": "frame-1.png",
+      "text": "BF1:QkYBAFFRUVFRUVFRAAAAAQAAAAMAAAAyAAAAll5BQUFBQUFDV3FWMmNDWVdkQXRpZ01vY3Y4R0t2WkNtSXp6RkVGQk9VaTZFQXVITk0tSUtwS0R4dVZiZUhDbWw2QkZUTUMwdGlpV1k0TFAzLUtRcUVwanIzR1ZhUHRRbi5wYWdlLyN2MS5FUUJ3VGdsZ2RnTGdGQUhXQUN3S1lCdDBIc0FFQXpNTEFXeHdFTWM"
+    },
+    {
+      "file": "frame-2.png",
+      "text": "BF1:QkYBAFFRUVFRUVFRAAAAAgAAAAMAAABkAAAAll5BQUFBQUFDV3FWMmNDWVdkQXRpZ01vY3Y4R0t2WkNtSXp6RkVGQk9VaTZFQXVITk0tSUtwS0R4dVZiZUhDbWw2QkZUTUMwdGlpV1k0TFAzLUtRcUVwanIzR1ZhUHRRQkZBSlJ3R01zQVRWSkFTbUNBIiwibmFtZSI6IlFSIHRlc3QiLCJlbnRyaWVzIjpbXX0"
+    }
   ]
 }

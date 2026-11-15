@@ -525,6 +525,109 @@
       "link": null
     }
   ],
+  "routeReceived": [
+    {
+      "input": "https://binfire.app/a/python#AAAAAAAFaGVsbG8",
+      "expect": {
+        "action": "open-app",
+        "app": "python",
+        "url": "https://python.hashbin.page/?run=0#AAAAAAAFaGVsbG8",
+        "state": "cid",
+        "run": false,
+        "view": null
+      }
+    },
+    {
+      "input": "https://binfire.app/a/python?run=1#v1.abc",
+      "expect": {
+        "action": "open-app",
+        "app": "python",
+        "url": "https://python.hashbin.page/?run=1#v1.abc",
+        "state": "v1",
+        "run": true,
+        "view": null
+      }
+    },
+    {
+      "input": "https://binfire.app/a/python?run=0",
+      "expect": {
+        "action": "open-app",
+        "app": "python",
+        "url": "https://python.hashbin.page/?run=0",
+        "state": "none",
+        "run": false,
+        "view": null
+      }
+    },
+    {
+      "input": "https://python.hashbin.page/?view=code#v1.abc",
+      "expect": {
+        "action": "open-app",
+        "app": "python",
+        "url": "https://python.hashbin.page/?view=code&run=0#v1.abc",
+        "state": "v1",
+        "run": false,
+        "view": "code"
+      }
+    },
+    {
+      "input": "  https://sheets.hashbin.page/#a?b \n",
+      "expect": {
+        "action": "open-app",
+        "app": "sheets",
+        "url": "https://sheets.hashbin.page/?run=0#a?b",
+        "state": "fragment",
+        "run": false,
+        "view": null
+      }
+    },
+    {
+      "input": "AAAAAABBuDCGzYSU5VcIrX7Ngt-0vKG9ph7Lt8rwxolnkC5wk0Xl2DBet6wNWIr8bLt1FhqpyMfg6phr2DPa_l4czTc0Wg",
+      "expect": {
+        "action": "load-cid",
+        "cid": "AAAAAABBuDCGzYSU5VcIrX7Ngt-0vKG9ph7Lt8rwxolnkC5wk0Xl2DBet6wNWIr8bLt1FhqpyMfg6phr2DPa_l4czTc0Wg",
+        "app": null,
+        "run": false
+      }
+    },
+    {
+      "input": "https://binfire.app/c?app=python#AAAAAABBuDCGzYSU5VcIrX7Ngt-0vKG9ph7Lt8rwxolnkC5wk0Xl2DBet6wNWIr8bLt1FhqpyMfg6phr2DPa_l4czTc0Wg",
+      "expect": {
+        "action": "load-cid",
+        "cid": "AAAAAABBuDCGzYSU5VcIrX7Ngt-0vKG9ph7Lt8rwxolnkC5wk0Xl2DBet6wNWIr8bLt1FhqpyMfg6phr2DPa_l4czTc0Wg",
+        "app": "python",
+        "run": false
+      }
+    },
+    {
+      "input": "https://binfire.app/s#AAAAAABBuDCGzYSU5VcIrX7Ngt-0vKG9ph7Lt8rwxolnkC5wk0Xl2DBet6wNWIr8bLt1FhqpyMfg6phr2DPa_l4czTc0Wg",
+      "expect": {
+        "action": "open-site",
+        "cid": "AAAAAABBuDCGzYSU5VcIrX7Ngt-0vKG9ph7Lt8rwxolnkC5wk0Xl2DBet6wNWIr8bLt1FhqpyMfg6phr2DPa_l4czTc0Wg"
+      }
+    },
+    {
+      "input": "https://binfire.app/a/nosuch",
+      "expect": {
+        "action": "error",
+        "error": "unknown-app"
+      }
+    },
+    {
+      "input": "hello world",
+      "expect": {
+        "action": "show-text",
+        "text": "hello world"
+      }
+    },
+    {
+      "input": "https://evil.example/#v1.abc",
+      "expect": {
+        "action": "show-text",
+        "text": "https://evil.example/#v1.abc"
+      }
+    }
+  ],
   "withRunZero": [
     {
       "url": "https://python.hashbin.page/#v1.abc",

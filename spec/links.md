@@ -170,6 +170,17 @@ the raw query:
 
 Nothing else in the URL changes.
 
+## `routeReceived(text)` → Route
+
+Used for text that arrives over QR, BLE, audio or a received bundle. It is
+`route(text)`, then:
+
+- `open-app`: `url` becomes `withRunZero(url)`, and `run` is recomputed
+  from the new URL (`classifyState`). `state` and `view` are unchanged.
+- `load-cid`: add `run: false`. When the document opens in an app (directly,
+  or after the chooser), the URL is `withRunZero(canonicalOrigin + "#" + cid)`.
+- Other actions are unchanged.
+
 ## `withoutRun(url)` → string
 
 Used by the **Run** button. It removes every `run` key (and its value) from the
@@ -184,7 +195,8 @@ are left, the `?` is dropped too. The fragment never changes.
   "makeLink": [{ "url": "…", "link": "…" }],
   "withRunZero": [{ "url": "…", "result": "…" }],
   "withoutRun":  [{ "url": "…", "result": "…" }],
-  "routeShared": [{ "input": "…", "expect": { … as in route … } }] }
+  "routeShared": [{ "input": "…", "expect": { … as in route … } }],
+  "routeReceived": [{ "input": "…", "expect": { … as in route … } }] }
 ```
 
 Fields that don't apply to an action are left out of `expect`, and ports

@@ -10,10 +10,11 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const read = p => JSON.parse(readFileSync(join(root, p), 'utf8'));
 
 test('fixtures are up to date with the generator', () => {
-  const before = Object.fromEntries(readdirSync(join(root, 'shared/fixtures')).map(f => [f, readFileSync(join(root, 'shared/fixtures', f), 'utf8')]));
+  const files = readdirSync(join(root, 'shared/fixtures'), { recursive: true, withFileTypes: true }).filter(d => d.isFile()).map(d => join(d.parentPath, d.name));
+  const before = Object.fromEntries(files.map(f => [f, readFileSync(f)]));
   const r = spawnSync('node', ['tools/gen-fixtures.mjs'], { cwd: root, encoding: 'utf8' });
   assert.equal(r.status, 0, r.stderr);
-  for (const [f, text] of Object.entries(before)) assert.equal(readFileSync(join(root, 'shared/fixtures', f), 'utf8'), text, `${f} changed after regeneration`);
+  for (const [f, bytes] of Object.entries(before)) assert.ok(readFileSync(f).equals(bytes), `${f} changed after regeneration`);
 });
 
 test('registry slugs are unique and well formed', () => {

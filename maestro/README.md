@@ -21,3 +21,11 @@ tagged `offline` don't.
 | `run-banner.yaml` | M1 | `run=0` shows the Run banner |
 | `deep-link.yaml` | M2 | A `<own scheme>://a/<slug>` link opens the app |
 | `hashbin-mock.yaml` | M3 | Native Save against `tools/mock-hashbin.mjs` (start it first; Android also needs `adb reverse tcp:8787 tcp:8787`) |
+| `qr-show.yaml` | M4 | Send → QR code shows one QR for a small state, with Share and no multi-frame offer |
+| `qr-multi.yaml` | M4 | A too-long state offers Multi-frame QR, which cycles frames with an `i/n` counter |
+| `scan-image.yaml` | M4 | Scan from image (`addMedia` of `shared/fixtures/qr/link-python.png`) opens Python with the Run banner |
+
+`subflows/pick-latest-image.yaml` taps the newest photo in the system picker
+(per OS, shared by all ports). Live camera scanning and multi-frame receive
+can't run on simulators; they are covered by the `qr.json` scan-session
+fixtures and checked on real devices.
