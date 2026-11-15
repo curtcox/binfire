@@ -12,7 +12,7 @@ Legend: `[x]` done and verified · `[~]` partly done (see note) · `[ ]` not sta
 | --- | --- | --- | --- | --- | --- | --- |
 | M0 | Spec and scaffolding | [x] | [x] | [x] | [x] | [x] |
 | M1 | Browser core | [x] | [x] | [x] | [x] | [x] |
-| M2 | Links in | [~] | [~] | [~] | [~] | [~] |
+| M2 | Links in | [x] | [x] | [x] | [x] | [~] |
 | M3 | HashBin | [ ] | [ ] | [ ] | [ ] | [ ] |
 | M4 | QR and camera | [ ] | [ ] | [ ] | [ ] | [ ] |
 | M5 | Send and files | [ ] | [ ] | [ ] | [ ] | [ ] |
@@ -23,22 +23,34 @@ Legend: `[x]` done and verified · `[~]` partly done (see note) · `[ ]` not sta
 
 ## Latest verification
 
-Run on a quiet machine on 2026-11-14 (after M1):
+Run on 2026-11-14 after M2, one device at a time:
 
-- `node tools/check.mjs`: shared, iOS, Android, Flutter, RN unit tests all pass.
-- Maestro m1 suite (4 flows, all passing):
+- `node tools/check.mjs`: all unit tests pass (as of M1; each port re-ran its own after M2).
+- Maestro m1+m2 suite (5 flows: open-paste, unregistered, save-state, run-banner, deep-link):
 
 | Port | iOS simulator | Android emulator (Pixel_8_API_34) |
 | --- | --- | --- |
-| iOS | 4/4 (iPhone 17 Pro, 59 s) | – |
-| Android | – | 4/4 (1 m 15 s) |
-| Flutter | 4/4 (iPhone Air, 1 m 5 s) | 4/4 (1 m 22 s) |
-| React Native | 4/4 (iPhone 17, Release, 55 s) | 4/4 (Release, after fix b11fc4c) |
+| iOS | 5/5 (iPhone 17 Pro) | – |
+| Android | – | 5/5 |
+| Flutter | 5/5 (iPhone Air) | 5/5 |
+| React Native | 5/5 (iPhone 17, Release) | 5/5 twice in a row (Release) |
+
+- Android share-in (adb SEND with a binfire link inside text): opens the app in
+  all three Android-capable ports.
+- Not verified [d]: the iOS share extensions from the real share sheet
+  (needs signing / App Group for RN); Universal Links and App Links
+  verification (owner team ID and fingerprints); live `binfire.app`.
 
 ## Log
 
 Newest first. One line per meaningful step, with what was verified.
 
+- 2026-11-14: **M2 done in all four ports** (Shared stays [~] until
+  `binfire.app` is hosted). Private per-port schemes are adopted everywhere;
+  RN lists its own scheme first so expo-share-intent hands off in-port
+  (dd3a245). The Maestro launch step now relaunches once if Android kills
+  the fresh process after clear-data ("Destroy timeout of remove-task"). This
+  is a test-only race, and RN's slow activity teardown made it frequent.
 - 2026-11-14: RN M2 done on iPhone 17: deep links cold and warm (fixed a
   lost cold-start URL by reading expo-linking's kept URL at mount); share
   target via `expo-share-intent` 9.0.0. Its iOS extension needs an App Group,
@@ -128,8 +140,9 @@ Newest first. One line per meaningful step, with what was verified.
 
 ## Next up
 
-1. M2 (links in): Universal/App Links, custom scheme, share target, `/a /open /c /s` routing, `binfire.app` fallback hosting (needs owner input).
-2. Small carry-overs: iOS and Android tests should read the `links.json` `withoutRun` fixture.
+1. M3 (HashBin): verified CID load and `/c` routing by envelope type, native
+   OAuth Save (client ID placeholder → can't complete against hashbin.org),
+   Publish popup compatibility, oversize-state → HashBin offer.
 
 ## Open questions and owner inputs
 

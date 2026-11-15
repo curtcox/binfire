@@ -1,8 +1,7 @@
 appId: ${APP_ID}
 tags: [m1, offline]
 ---
-- launchApp:
-    clearState: true
+- runFlow: ../subflows/launch-clean.yaml
 - tapOn:
     id: open.input
 - inputText: "https://example.com/not-an-app"

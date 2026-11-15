@@ -1,8 +1,7 @@
 appId: ${APP_ID}
 tags: [m1]
 ---
-- launchApp:
-    clearState: true
+- runFlow: ../subflows/launch-clean.yaml
 - tapOn:
     id: open.input
 - inputText: "https://python.hashbin.page/?run=0#AAAAAAAFaGVsbG8"

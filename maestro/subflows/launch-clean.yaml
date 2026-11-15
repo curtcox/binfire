@@ -1,0 +1,23 @@
+# Launch the app with cleared state and wait for the library screen.
+# Android sometimes kills the freshly started process right after Maestro's
+# clear-data/force-stop ("Destroy timeout of remove-task"), leaving a blank
+# screen. That only happens in tests, so relaunch once (state is already clear).
+appId: ${APP_ID}
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: open.input
+    timeout: 10000
+    optional: true
+- runFlow:
+    when:
+      notVisible:
+        id: open.input
+    commands:
+      - launchApp
+      - extendedWaitUntil:
+          visible:
+            id: open.input
+          timeout: 15000

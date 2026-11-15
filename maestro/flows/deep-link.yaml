@@ -1,8 +1,7 @@
 appId: ${APP_ID}
 tags: [m2]
 ---
-- launchApp:
-    clearState: true
+- runFlow: ../subflows/launch-clean.yaml
 # Use the port's own scheme (its app ID, spec/links.md "Schemes"): several
 # ports installed on one device all claim the public binfire:// scheme, and
 # Android would show an "Open with" chooser.
