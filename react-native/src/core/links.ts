@@ -9,7 +9,13 @@ import { parseQuery, parseUrl, percentDecode, queryGet, queryHas, rawQuery, type
 /** The result of `route`. Fields that don't apply to an action are absent. */
 export type Route =
   | { action: 'open-app'; app: string; url: string; state: StateKind; run: boolean; view: string | null }
-  | { action: 'load-cid'; cid: string; app: string | null }
+  | {
+      action: 'load-cid';
+      cid: string;
+      app: string | null;
+      /** `false` for received content (`routeReceived`): open with `withRunZero`. Absent otherwise. */
+      run?: false;
+    }
   | { action: 'open-site'; cid: string }
   | { action: 'show-text'; text: string }
   | { action: 'error'; error: 'too-large' | 'unknown-app' | 'bad-link' | 'unknown-link' | 'invalid-cid' };
@@ -133,6 +139,22 @@ function routeText(input: string, ctx: BinfireContext, allowShare: boolean): Rou
 
   // 6. Anything else.
   return { action: 'show-text', text };
+}
+
+/**
+ * Routes text that arrived over QR, BLE, audio or a received bundle
+ * (spec/links.md). Received content never runs by itself: `open-app` URLs
+ * get `run=0` (unless they name `run`), and `load-cid` routes carry
+ * `run: false`.
+ */
+export function routeReceived(text: string, ctx: BinfireContext = defaultContext): Route {
+  const r = route(text, ctx);
+  if (r.action === 'open-app') {
+    const url = withRunZero(r.url);
+    return { ...r, url, run: classifyState(url).run };
+  }
+  if (r.action === 'load-cid') return { ...r, run: false };
+  return r;
 }
 
 const LEADING = /^[<([{"']+/;

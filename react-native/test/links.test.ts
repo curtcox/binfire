@@ -1,5 +1,5 @@
 import { defaultContext, type BinfireContext } from '../src/core/config';
-import { encodeUriComponent, makeCidLink, makeLink, makeSiteLink, route, routeShared, withoutRun, withRunZero } from '../src/core/links';
+import { encodeUriComponent, makeCidLink, makeLink, makeSiteLink, route, routeReceived, routeShared, withoutRun, withRunZero } from '../src/core/links';
 import { loadFixture } from './fixtures';
 
 const fx = loadFixture('links.json');
@@ -37,6 +37,14 @@ describe('links.json', () => {
     'routeShared $input',
     ({ input, expect: want }) => {
       const got = routeShared(input, ctx) as Record<string, unknown>;
+      expect(Object.fromEntries(Object.keys(want).map(k => [k, got[k]]))).toEqual(want);
+    },
+  );
+
+  test.each(fx.routeReceived as { input: string; expect: Record<string, unknown> }[])(
+    'routeReceived $input',
+    ({ input, expect: want }) => {
+      const got = routeReceived(input, ctx) as Record<string, unknown>;
       expect(Object.fromEntries(Object.keys(want).map(k => [k, got[k]]))).toEqual(want);
     },
   );

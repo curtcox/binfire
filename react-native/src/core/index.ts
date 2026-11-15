@@ -15,3 +15,4 @@ export * from './audio';
 export * from './library';
 export * from './navigation';
 export * from './hashbin';
+export * from './qr';
