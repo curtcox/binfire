@@ -36,6 +36,8 @@ import app.binfire.core.BinfireException
 import app.binfire.core.CidFetch
 import app.binfire.core.CidLoader
 import app.binfire.core.Envelope
+import app.binfire.core.Qr
+import app.binfire.core.QrPlan
 import app.binfire.core.HashBin
 import app.binfire.core.HashBinAuthRequest
 import app.binfire.core.HashBinClient
@@ -50,6 +52,13 @@ import app.binfire.core.SignInRequiredException
 import app.binfire.core.StateKind
 import app.binfire.core.UrlConnectionHttp
 import app.binfire.core.UrlState
+import app.binfire.android.qr.QrImage
+import app.binfire.transfer.Bundle
+import app.binfire.transfer.BundleKind
+import app.binfire.transfer.MultiFrameQr
+import app.binfire.transfer.ScanResult
+import app.binfire.transfer.ScanSession
+import androidx.core.content.FileProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -72,15 +81,30 @@ sealed interface Sheet {
     /** Fetching and verifying a CID (`loading.sheet`). */
     data class Loading(val cid: String) : Sheet
 
-    /** No single app for a loaded CID: pick one, copy the link, or open the raw content (`chooser.sheet`). */
-    data class Chooser(val cid: String, val apps: List<RegistryApp>, val link: String, val rawUrl: String) : Sheet
+    /**
+     * No single app for a loaded CID: pick one, copy the link, or open the raw content (`chooser.sheet`).
+     * [run] `false` (received content) opens the chosen app with `run=0`.
+     */
+    data class Chooser(val cid: String, val apps: List<RegistryApp>, val link: String, val rawUrl: String, val run: Boolean? = null) : Sheet
+
+    /** Send → QR code (`qr.sheet`): [text] is the link shown; [slug] and [url] are the state it came from. */
+    data class Qr(val slug: String, val url: String, val text: String, val plan: QrPlan) : Sheet
+
+    /** Multi-frame QR (`qr.frames`): the chunk frames, shown in turn at 5 fps. */
+    class QrFrames(val frames: List<ByteArray>) : Sheet
+
+    /** Scan (`scan.sheet`). One [session] lives as long as the sheet; [status] is `scan.status`. */
+    class Scan(val session: ScanSession) : Sheet {
+        var status by mutableStateOf<String?>(null)
+    }
 
     /** Send → Copy link made a link over 2000 bytes (`long.notice`). [canSave] when Native Save is configured. */
     data class LongLink(val slug: String, val url: String, val bytes: Long, val canSave: Boolean) : Sheet
 
     /**
      * Size and cost before uploading (`hashbin.confirm`). [estimateCents] only when `/api/config`
-     * has a price; otherwise the sheet shows "up to [maxCostCents]". [copyLink] copies the result.
+     * has a price; otherwise the sheet shows "up to [maxCostCents]". [copyLink] copies the result;
+     * [toQr] shows the result as a QR (the QR sheet's Save to HashBin).
      */
     class HashBinConfirm(
         val slug: String,
@@ -91,9 +115,11 @@ sealed interface Sheet {
         val configLoaded: Boolean = false,
         val estimateCents: Long? = null,
         val maxUploadBytes: Long? = null,
+        val toQr: Boolean = false,
+        val url: String = "",
     ) : Sheet {
         fun loaded(estimateCents: Long?, maxUploadBytes: Long?) =
-            HashBinConfirm(slug, bytes, contentType, copyLink, maxCostCents, true, estimateCents, maxUploadBytes)
+            HashBinConfirm(slug, bytes, contentType, copyLink, maxCostCents, true, estimateCents, maxUploadBytes, toQr, url)
     }
 
     /** Signing in or uploading. */
@@ -232,7 +258,7 @@ class BinfireViewModel(application: Application) : AndroidViewModel(application)
             is Route.OpenApp -> openApp(r.app, r.url)
             is Route.ShowText -> sheet = Sheet.Text(r.text)
             is Route.Error -> sheet = Sheet.Error(errorMessage(r.error))
-            is Route.LoadCid -> loadCid(r.cid, r.app)
+            is Route.LoadCid -> loadCid(r.cid, r.app, r.run)
             is Route.OpenSite -> sheet = Sheet.Error("Packaged sites are coming in M6.")
         }
     }
@@ -446,9 +472,16 @@ class BinfireViewModel(application: Application) : AndroidViewModel(application)
 
     // ---- CID loading (load-cid route) ----
 
-    /** `load-cid`: fetch and verify [cid], then open its app, or show the chooser. */
-    fun loadCid(cid: String, hint: String?) {
+    /**
+     * `load-cid`: fetch and verify [cid], then open its app, or show the chooser.
+     * [run] `false` (received content) opens the app with `run=0`.
+     */
+    fun loadCid(cid: String, hint: String?, run: Boolean? = null) {
         loadJob?.cancel()
+        cidCache.get(cid)?.let {
+            openLoaded(cid, it, hint, run)
+            return
+        }
         val loading = Sheet.Loading(cid)
         sheet = loading
         val fetch = CidFetch.http(config.hashbin.content, http)
@@ -461,7 +494,10 @@ class BinfireViewModel(application: Application) : AndroidViewModel(application)
             }
             if (sheet !== loading) return@launch // dismissed meanwhile
             result.fold(
-                onSuccess = { bytes -> openLoaded(cid, bytes, hint) },
+                onSuccess = { bytes ->
+                    cidCache.put(cid, bytes)
+                    openLoaded(cid, bytes, hint, run)
+                },
                 onFailure = { e -> sheet = Sheet.Error(cidErrorMessage((e as BinfireException).error), "Can't open this document") },
             )
         }
@@ -472,19 +508,25 @@ class BinfireViewModel(application: Application) : AndroidViewModel(application)
         sheet = null
     }
 
-    private fun openLoaded(cid: String, bytes: ByteArray, hint: String?) {
+    private fun openLoaded(cid: String, bytes: ByteArray, hint: String?, run: Boolean?) {
         val hinted = hint?.let { registry.app(it) }
         val apps = if (hinted != null) listOf(hinted) else Envelope.documentType(bytes)?.let { registry.appsForDocumentType(it) }.orEmpty()
         if (apps.size == 1) {
-            openApp(apps[0].slug, apps[0].canonicalOrigin + "#" + cid)
+            openApp(apps[0].slug, cidUrl(apps[0], cid, run))
         } else {
-            sheet = Sheet.Chooser(cid, apps.ifEmpty { registry.apps }, links.makeCidLink(cid), contentUrl(cid))
+            sheet = Sheet.Chooser(cid, apps.ifEmpty { registry.apps }, links.makeCidLink(cid), contentUrl(cid), run)
         }
+    }
+
+    /** `canonicalOrigin + "#" + cid`, with `run=0` for received content (`spec/links.md`, `routeReceived`). */
+    private fun cidUrl(app: RegistryApp, cid: String, run: Boolean?): String {
+        val url = app.canonicalOrigin + "#" + cid
+        return if (run == false) UrlState.withRunZero(url) else url
     }
 
     private fun contentUrl(cid: String) = config.hashbin.content.trimEnd('/') + "/" + cid
 
-    fun chooseApp(chooser: Sheet.Chooser, app: RegistryApp) = openApp(app.slug, app.canonicalOrigin + "#" + chooser.cid)
+    fun chooseApp(chooser: Sheet.Chooser, app: RegistryApp) = openApp(app.slug, cidUrl(app, chooser.cid, chooser.run))
 
     /** Open raw: the content URL in the system browser. */
     fun openRaw(chooser: Sheet.Chooser) {
@@ -531,7 +573,7 @@ class BinfireViewModel(application: Application) : AndroidViewModel(application)
     // ---- Native Save to HashBin ----
 
     /** Send → Save to HashBin (or the long-link notice's Save): decides what to upload (`saveBytes`). */
-    fun startHashBinSave(slug: String, url: String, copyLink: Boolean = false) {
+    fun startHashBinSave(slug: String, url: String, copyLink: Boolean = false, toQr: Boolean = false) {
         val app = registry.app(slug) ?: return
         val client = hashbin
         if (client == null) {
@@ -540,9 +582,9 @@ class BinfireViewModel(application: Application) : AndroidViewModel(application)
             return
         }
         when (val s = HashBin.saveBytes(url, config.limits.maxStateBytes)) {
-            is SaveBytes.Cid -> finishSave(links.makeCidLink(s.cid, slug), copyLink)
-            is SaveBytes.Text -> confirm(client, slug, s.bytes, SaveBytes.Text.CONTENT_TYPE, copyLink)
-            is SaveBytes.Json -> confirm(client, slug, s.bytes, SaveBytes.Json.CONTENT_TYPE, copyLink)
+            is SaveBytes.Cid -> finishSave(slug, url, links.makeCidLink(s.cid, slug), copyLink, toQr)
+            is SaveBytes.Text -> confirm(client, slug, url, s.bytes, SaveBytes.Text.CONTENT_TYPE, copyLink, toQr)
+            is SaveBytes.Json -> confirm(client, slug, url, s.bytes, SaveBytes.Json.CONTENT_TYPE, copyLink, toQr)
             is SaveBytes.None -> sheet = Sheet.PublishNote(
                 app.name,
                 if (s.error != null) "This page's state couldn't be read (${s.error!!.code})." else "binfire can't read this kind of state without the app.",
@@ -550,8 +592,8 @@ class BinfireViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    private fun confirm(client: HashBinClient, slug: String, bytes: ByteArray, type: String, copyLink: Boolean) {
-        val c = Sheet.HashBinConfirm(slug, bytes, type, copyLink, config.hashbin.maxCostCents)
+    private fun confirm(client: HashBinClient, slug: String, url: String, bytes: ByteArray, type: String, copyLink: Boolean, toQr: Boolean) {
+        val c = Sheet.HashBinConfirm(slug, bytes, type, copyLink, config.hashbin.maxCostCents, toQr = toQr, url = url)
         sheet = c
         viewModelScope.launch {
             val cfg = withContext(Dispatchers.IO) { client.fetchConfig() }
@@ -573,7 +615,7 @@ class BinfireViewModel(application: Application) : AndroidViewModel(application)
             try {
                 val r = withContext(Dispatchers.IO) { client.upload(c.bytes, c.contentType, maxCost) }
                 hashbinSignedIn = true
-                if (sheet === working) finishSave(links.makeCidLink(r.cid, c.slug), c.copyLink)
+                if (sheet === working) finishSave(c.slug, c.url, links.makeCidLink(r.cid, c.slug), c.copyLink, c.toQr)
             } catch (_: SignInRequiredException) {
                 hashbinSignedIn = false
                 if (allowSignIn && sheet === working) signIn(client) { upload(client, c, maxCost, allowSignIn = false) }
@@ -584,9 +626,10 @@ class BinfireViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    private fun finishSave(link: String, copyLink: Boolean) {
+    private fun finishSave(slug: String, url: String, link: String, copyLink: Boolean, toQr: Boolean) {
         if (copyLink) copy(link, "binfire link")
-        sheet = Sheet.HashBinResult(link, copyLink)
+        // From the QR sheet: show the QR of the short /c# link.
+        sheet = if (toQr) Sheet.Qr(slug, url, link, Qr.plan(link)) else Sheet.HashBinResult(link, copyLink)
     }
 
     /** Opens the authorize page in a Custom Tab. The redirect comes back through [onOAuthRedirect]. */
@@ -652,6 +695,102 @@ class BinfireViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    // ---- QR codes (spec/qr.md) ----
+
+    /** Send → QR code: the `makeLink` link of the tab's state, never the raw app URL. */
+    fun showQr(tab: BrowserTab) {
+        val link = linkFor(tab)
+        if (link == null) {
+            toast("No link for this page")
+            return
+        }
+        sheet = Sheet.Qr(tab.app.slug, tab.url, link, Qr.plan(link))
+    }
+
+    /** The QR sheet's Save to HashBin: like `long.save`, then the QR of the short link. */
+    fun saveQrToHashBin(s: Sheet.Qr) = startHashBinSave(s.slug, s.url, toQr = true)
+
+    /** Multi-frame QR: a `url` bundle of the raw app URL, in 512-byte frames with a random id. */
+    fun showQrFrames(s: Sheet.Qr) {
+        sheet = Sheet.QrFrames(MultiFrameQr.frames(MultiFrameQr.payload(s.url)))
+    }
+
+    /** Share the QR of [text] as a PNG through the system share sheet. */
+    fun exportQr(text: String) {
+        val ctx = getApplication<Application>()
+        val file = QrImage.writePng(text, File(ctx.cacheDir, "qr")) ?: return
+        val uri = FileProvider.getUriForFile(ctx, ctx.packageName + ".files", file)
+        val send = Intent(Intent.ACTION_SEND).setType("image/png").putExtra(Intent.EXTRA_STREAM, uri)
+            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        send.clipData = ClipData.newRawUri("binfire QR", uri)
+        val chooser = Intent.createChooser(send, "Share QR code")
+        val a = activity()
+        try {
+            if (a != null) a.startActivity(chooser) else ctx.startActivity(chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        } catch (_: ActivityNotFoundException) {
+            toast("No app can share this image.")
+        }
+    }
+
+    /** Library → Scan. */
+    fun openScan() {
+        sheet = Sheet.Scan(ScanSession(links, config.limits))
+    }
+
+    /** A text decoded from the camera or an image. Ignored once the sheet has closed (live scanners repeat). */
+    fun onScanned(scan: Sheet.Scan, text: String) {
+        if (sheet !== scan) return
+        when (val r = scan.session.accept(text)) {
+            is ScanResult.Progress -> scan.status = "Receiving ${r.received} of ${r.count}"
+            is ScanResult.FrameError -> scan.status = frameErrorMessage(r.error)
+            is ScanResult.RouteResult -> {
+                sheet = null
+                act(r.route)
+            }
+            is ScanResult.Bundle -> {
+                sheet = null
+                openReceivedBundle(r.payload)
+            }
+        }
+    }
+
+    /** A received bundle payload (`spec/qr.md`, "Received bundles"). */
+    private fun openReceivedBundle(payload: ByteArray) {
+        val b = try {
+            Bundle.decode(payload, config.limits)
+        } catch (e: BinfireException) {
+            sheet = Sheet.Error(bundleErrorMessage(e.error), "Can't open what was received")
+            return
+        }
+        when (b.kind) {
+            BundleKind.URL -> act(links.routeReceived(b.url!!))
+            BundleKind.CID -> {
+                // The entry is already verified: cache it, then open it like a received load-cid route.
+                val cid = b.cid!!
+                cidCache.put(cid, b.entries[0].bytes)
+                loadCid(cid, b.app, run = false)
+            }
+            BundleKind.SITE -> sheet = Sheet.Error("Packaged sites arrive in a later version.", "Can't open what was received")
+        }
+    }
+
+    private fun frameErrorMessage(error: BinfireError): String = when (error) {
+        BinfireError.TOO_LARGE -> "This transfer is too large."
+        BinfireError.MISMATCH -> "The received data failed verification. Scan again from the start."
+        BinfireError.INCONSISTENT -> "The frames don't belong together. Scan again from the start."
+        BinfireError.BAD_MAGIC, BinfireError.BAD_VERSION -> "This multi-frame code isn't one binfire can read (${error.code})."
+        else -> "Couldn't read this frame (${error.code})."
+    }
+
+    private fun bundleErrorMessage(error: BinfireError): String = when (error) {
+        BinfireError.TOO_LARGE -> "What was received is too large to open."
+        BinfireError.MISMATCH -> "What was received failed verification."
+        else -> "What was received can't be opened (${error.code})."
+    }
+
+    /** Verified document bytes by CID, for offline reopen (`spec/cid.md`). In memory only until M6. */
+    private val cidCache = CidCache(32L * 1024 * 1024)
+
     // ---- WebView file chooser (HashBin's file fallback: the user picks the saved file) ----
 
     private fun showFileChooser(callback: ValueCallback<Array<Uri>>, params: WebChromeClient.FileChooserParams): Boolean {
@@ -670,5 +809,28 @@ class BinfireViewModel(application: Application) : AndroidViewModel(application)
     fun onFileChosen(uris: Array<Uri>?) {
         fileCallback?.onReceiveValue(uris)
         fileCallback = null
+    }
+}
+
+/** A small LRU of verified document bytes, bounded by total size. */
+private class CidCache(private val maxBytes: Long) {
+    private val map = LinkedHashMap<String, ByteArray>(16, 0.75f, true)
+    private var bytes = 0L
+
+    @Synchronized
+    fun get(cid: String): ByteArray? = map[cid]
+
+    @Synchronized
+    fun put(cid: String, value: ByteArray) {
+        if (value.size > maxBytes) return
+        map.remove(cid)?.let { bytes -= it.size }
+        map[cid] = value
+        bytes += value.size
+        val it = map.entries.iterator()
+        while (bytes > maxBytes && it.hasNext()) {
+            val e = it.next()
+            bytes -= e.value.size
+            it.remove()
+        }
     }
 }

@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths>
     <cache-path name="downloads" path="downloads/" />
+    <!-- Send → QR code → Share: the QR as a PNG (spec/qr.md). -->
+    <cache-path name="qr" path="qr/" />
 </paths>

@@ -57,6 +57,14 @@ fun BrowserScreen(vm: BinfireViewModel, tab: BrowserTab) {
                         },
                         modifier = Modifier.testTag("send.copy"),
                     )
+                    DropdownMenuItem(
+                        text = { Text("QR code") },
+                        onClick = {
+                            menu = false
+                            vm.showQr(tab)
+                        },
+                        modifier = Modifier.testTag("send.qr"),
+                    )
                     if (vm.hashbin != null) {
                         DropdownMenuItem(
                             text = { Text("Save to HashBin") },

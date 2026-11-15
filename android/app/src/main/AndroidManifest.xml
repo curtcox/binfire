@@ -2,6 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Scan (spec/qr.md): "binfire uses the camera to scan QR codes." Optional: scan from image needs no camera. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera.any" android:required="false" />
 
     <!-- Custom Tabs (HashBin sign-in): see which browsers support them (Android 11+ package visibility). -->
     <queries>

@@ -140,6 +140,9 @@ fun Sheets(vm: BinfireViewModel) {
                 }, modifier = Modifier.testTag("hashbin.copy")) { Text("Copy link") }
             }
         }
+        is Sheet.Qr -> QrSheet(vm, s)
+        is Sheet.QrFrames -> QrFramesSheet(vm, s)
+        is Sheet.Scan -> ScanSheet(vm, s)
         is Sheet.PublishNote -> SheetFrame("hashbin.publishNote", onDismiss = { vm.sheet = null }) {
             Text("Use ${s.appName}'s Publish", style = MaterialTheme.typography.titleLarge)
             Text(
@@ -213,7 +216,7 @@ private fun TextSheet(text: String, onDismiss: () -> Unit) {
 }
 
 @Composable
-private fun SheetFrame(tag: String, onDismiss: () -> Unit, content: @Composable () -> Unit) {
+internal fun SheetFrame(tag: String, onDismiss: () -> Unit, content: @Composable () -> Unit) {
     Dialog(onDismissRequest = onDismiss) {
         Surface(shape = MaterialTheme.shapes.large, modifier = Modifier.uiTestRoot().testTag(tag)) {
             Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) { content() }

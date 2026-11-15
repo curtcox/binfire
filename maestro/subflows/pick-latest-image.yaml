@@ -14,13 +14,16 @@ appId: ${APP_ID}
           optional: true
       - tapOn:
           point: "17%,30%"
+# Android 14's photo picker opens as a half-height sheet ("Photos" / "Albums",
+# then a "Recent" grid, newest first), so a fixed point misses it. Each
+# thumbnail's accessibility label is "Photo taken on <date>": tap the first.
 - runFlow:
     when:
       platform: Android
     commands:
       - extendedWaitUntil:
-          visible: ".*(Photos|Recent|Images).*"
+          visible: "Photo taken on .*"
           timeout: 10000
-          optional: true
       - tapOn:
-          point: "17%,30%"
+          text: "Photo taken on .*"
+          index: 0

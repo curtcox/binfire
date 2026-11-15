@@ -76,7 +76,8 @@ fun LibraryScreen(vm: BinfireViewModel) {
             Spacer(Modifier.width(8.dp))
             Button(onClick = { go() }, modifier = Modifier.testTag("open.go")) { Text("Open") }
         }
-        Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), horizontalArrangement = Arrangement.End) {
+        Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
+            OutlinedButton(onClick = { vm.openScan() }, modifier = Modifier.testTag("open.scan")) { Text("Scan") }
             OutlinedButton(
                 onClick = {
                     val clip = (context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager).primaryClip
