@@ -67,9 +67,14 @@ clients.
   3. Any other state kind: binfire cannot extract the document without the
      app. It offers the app's own Publish instead, or (M8) asks the app through
      the bridge.
-- **Cost:** before uploading, show the size and HashBin's estimated cost (from
-  `GET {api}/api/config` when available), and ask for confirmation.
-  `max_cost_cents` caps the charge.
+- **Cost:** before uploading, show the size, and ask for confirmation.
+  - If `GET {api}/api/config` returns a price (`price_cents_per_mb_month`),
+    also show the estimate.
+  - Otherwise show "up to $X", where X is `config.hashbin.maxCostCents` (25
+    by default). Never invent a price. The real hashbin.org config has no
+    price field today.
+  - Always send `max_cost_cents = config.hashbin.maxCostCents`, so HashBin
+    refuses anything dearer (`cost-exceeded`).
 
 ### Long-link offer
 
@@ -78,10 +83,10 @@ When **Send → Copy link** (or the share sheet, from M5) produces a
 and mail clients start truncating around there), binfire also shows a
 notice that offers **Save to HashBin for a short link**:
 
-- With a client ID configured, this runs Native Save and then copies the
-  `/c#` link.
-- Without one, it explains that the app's own Publish button makes a short
-  link.
+- `long.save` is always shown. With a client ID configured, it runs Native
+  Save and then copies the `/c#` link.
+- Without a client ID, `long.save` shows `hashbin.publishNote`, which explains
+  that the app's own Publish button makes a short link.
 
 The long link is still copied either way. UI IDs: `long.notice`, `long.save`.
 

@@ -1,4 +1,5 @@
-# M3: native Save to HashBin against tools/mock-hashbin.mjs.
+# M3: native Save to HashBin against tools/mock-hashbin.mjs. The test document
+# is longer than 64 bytes, so its CID is hashed and loading it really fetches.
 # Needs: `node tools/mock-hashbin.mjs 8787` on the host; on Android also
 # `adb reverse tcp:8787 tcp:8787`. iOS/Android read the overrides from these
 # launch arguments (debug builds only); Flutter and React Native builds must be
@@ -6,19 +7,10 @@
 appId: ${APP_ID}
 tags: [m3]
 ---
-- launchApp:
-    clearState: true
-    arguments:
-      hashbinApi: "http://localhost:8787"
-      hashbinContent: "http://localhost:8787"
-      hashbinClientId: "app_mock"
-- extendedWaitUntil:
-    visible:
-      id: open.input
-    timeout: 20000
+- runFlow: ../subflows/launch-clean-mock.yaml
 - tapOn:
     id: open.input
-- inputText: "https://python.hashbin.page/#v1.EQBwTglgdgLgFAHWAZwIYDcCmATABAIwE8DoAzCMTJASmCA"
+- inputText: "https://python.hashbin.page/#v1.EQBwTglgdgLgFAHWAZwIYDcCmATABAIwE8DoAzCMTAGlwBsB7KAc10ynoFcmALXGb1DFwQYyXAGEAkgBFhYgcm44a7IdFrRMSAJTAgA"
 - tapOn:
     id: open.go
 - assertVisible:
@@ -31,16 +23,20 @@ tags: [m3]
     id: hashbin.confirm
 - tapOn:
     id: hashbin.ok
-# iOS asks before ASWebAuthenticationSession opens ("… Wants to Use … to Sign In").
-- runFlow:
-    when:
-      visible: "Continue"
+# iOS asks before ASWebAuthenticationSession opens ("… Wants to Use … to Sign
+# In"), and the prompt can appear late, so keep checking until the result shows.
+# (Android: the Custom Tab must not be stuck on Chrome's first-run screen.)
+- repeat:
+    while:
+      notVisible:
+        id: hashbin.result
+    times: 10
     commands:
-      - tapOn: "Continue"
-- extendedWaitUntil:
-    visible:
-      id: hashbin.result
-    timeout: 30000
+      - tapOn:
+          text: "Continue"
+          optional: true
+- assertVisible:
+    id: hashbin.result
 - assertVisible:
     id: hashbin.link
     text: ".*binfire.app/c.*"

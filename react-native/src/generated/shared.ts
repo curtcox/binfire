@@ -7,7 +7,8 @@ export const config = {
   "hashbin": {
     "api": "https://hashbin.org",
     "content": "https://256t.us",
-    "clientId": ""
+    "clientId": "",
+    "maxCostCents": 25
   },
   "ble": {
     "serviceUuid": "6b1f0001-5b6e-4d1a-9f2e-62696e666972",

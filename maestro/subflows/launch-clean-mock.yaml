@@ -1,0 +1,29 @@
+# Like launch-clean.yaml, but with the debug overrides that point iOS/Android
+# debug builds at tools/mock-hashbin.mjs (spec/hashbin.md "Development").
+appId: ${APP_ID}
+---
+- launchApp:
+    clearState: true
+    arguments:
+      hashbinApi: "http://localhost:8787"
+      hashbinContent: "http://localhost:8787"
+      hashbinClientId: "app_mock"
+- extendedWaitUntil:
+    visible:
+      id: open.input
+    timeout: 10000
+    optional: true
+- runFlow:
+    when:
+      notVisible:
+        id: open.input
+    commands:
+      - launchApp:
+          arguments:
+            hashbinApi: "http://localhost:8787"
+            hashbinContent: "http://localhost:8787"
+            hashbinClientId: "app_mock"
+      - extendedWaitUntil:
+          visible:
+            id: open.input
+          timeout: 15000

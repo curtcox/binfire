@@ -6,7 +6,8 @@
   "hashbin": {
     "api": "https://hashbin.org",
     "content": "https://256t.us",
-    "clientId": ""
+    "clientId": "",
+    "maxCostCents": 25
   },
   "ids": {
     "ios": "app.binfire.ios",
