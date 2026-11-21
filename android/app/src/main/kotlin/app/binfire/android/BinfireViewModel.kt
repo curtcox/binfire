@@ -37,7 +37,6 @@ import app.binfire.core.CidFetch
 import app.binfire.core.CidLoader
 import app.binfire.core.Envelope
 import app.binfire.core.Qr
-import app.binfire.core.QrPlan
 import app.binfire.core.HashBin
 import app.binfire.core.HashBinAuthRequest
 import app.binfire.core.HashBinClient
@@ -64,79 +63,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
-
-/** Which top-level screen is showing. */
-sealed interface Screen {
-    data object Library : Screen
-    data class Browser(val slug: String) : Screen
-}
-
-/** The sheet (dialog) on top of the current screen, if any. */
-sealed interface Sheet {
-    /** Unregistered input: show it, offer Open in browser (http/https) and Copy. Never navigate. */
-    data class Text(val text: String) : Sheet
-    data class Error(val message: String, val title: String = "Can't open this") : Sheet
-    data class Save(val slug: String, val url: String, val suggestedName: String) : Sheet
-
-    /** Fetching and verifying a CID (`loading.sheet`). */
-    data class Loading(val cid: String) : Sheet
-
-    /**
-     * No single app for a loaded CID: pick one, copy the link, or open the raw content (`chooser.sheet`).
-     * [run] `false` (received content) opens the chosen app with `run=0`.
-     */
-    data class Chooser(val cid: String, val apps: List<RegistryApp>, val link: String, val rawUrl: String, val run: Boolean? = null) : Sheet
-
-    /** Send → QR code (`qr.sheet`): [text] is the link shown; [slug] and [url] are the state it came from. */
-    data class Qr(val slug: String, val url: String, val text: String, val plan: QrPlan) : Sheet
-
-    /** Multi-frame QR (`qr.frames`): the chunk frames, shown in turn at 5 fps. */
-    class QrFrames(val frames: List<ByteArray>) : Sheet
-
-    /** Scan (`scan.sheet`). One [session] lives as long as the sheet; [status] is `scan.status`. */
-    class Scan(val session: ScanSession) : Sheet {
-        var status by mutableStateOf<String?>(null)
-    }
-
-    /** Send → Copy link made a link over 2000 bytes (`long.notice`). [canSave] when Native Save is configured. */
-    data class LongLink(val slug: String, val url: String, val bytes: Long, val canSave: Boolean) : Sheet
-
-    /**
-     * Size and cost before uploading (`hashbin.confirm`). [estimateCents] only when `/api/config`
-     * has a price; otherwise the sheet shows "up to [maxCostCents]". [copyLink] copies the result;
-     * [toQr] shows the result as a QR (the QR sheet's Save to HashBin).
-     */
-    class HashBinConfirm(
-        val slug: String,
-        val bytes: ByteArray,
-        val contentType: String,
-        val copyLink: Boolean,
-        val maxCostCents: Long,
-        val configLoaded: Boolean = false,
-        val estimateCents: Long? = null,
-        val maxUploadBytes: Long? = null,
-        val toQr: Boolean = false,
-        val url: String = "",
-    ) : Sheet {
-        fun loaded(estimateCents: Long?, maxUploadBytes: Long?) =
-            HashBinConfirm(slug, bytes, contentType, copyLink, maxCostCents, true, estimateCents, maxUploadBytes, toQr, url)
-    }
-
-    /** Signing in or uploading. */
-    data class HashBinWorking(val message: String) : Sheet
-
-    /** The `/c#` link (`hashbin.result`). */
-    data class HashBinResult(val link: String, val copied: Boolean) : Sheet
-
-    /** binfire can't extract this state: use the app's own Publish (`hashbin.publishNote`). */
-    data class PublishNote(val appName: String, val reason: String) : Sheet
-}
-
-/** One registered app's live WebView. Kept for the life of the process so app storage and drafts persist. */
-class BrowserTab(val app: RegistryApp, val webView: WebView) {
-    /** The current main-frame app URL (updated on every history change, including `replaceState`). */
-    var url by mutableStateOf("")
-}
 
 /**
  * Holds the app state that must survive configuration changes: the library, the
@@ -434,40 +360,6 @@ class BinfireViewModel(application: Application) : AndroidViewModel(application)
         closePopup()
         tabs.values.forEach { destroy(it.webView) }
         tabs.clear()
-    }
-
-    private fun errorMessage(error: BinfireError): String = when (error) {
-        BinfireError.UNKNOWN_APP -> "This link is for an app binfire doesn't know."
-        BinfireError.BAD_LINK -> "This binfire link is malformed."
-        BinfireError.UNKNOWN_LINK -> "This binfire link isn't one binfire understands."
-        BinfireError.INVALID_CID -> "This link doesn't contain a valid document ID."
-        BinfireError.TOO_LARGE -> "This text is too large to open."
-        else -> "This link can't be opened (${error.code})."
-    }
-
-    /** Human messages for `loadCID` errors (`spec/cid.md`, "Opening a loaded document"). */
-    private fun cidErrorMessage(error: BinfireError): String = when (error) {
-        BinfireError.NETWORK -> "Couldn't reach HashBin. Check your connection and try again."
-        BinfireError.NOT_FOUND -> "This document wasn't found. It may have expired."
-        BinfireError.UNAVAILABLE -> "This document is unavailable for legal reasons."
-        BinfireError.RATE_LIMITED -> "HashBin is busy (rate limited). Try again in a minute."
-        BinfireError.TOO_LARGE -> "This document is too large to open."
-        BinfireError.MISMATCH -> "This document failed verification: its content doesn't match its ID."
-        BinfireError.INVALID_CID -> "This link doesn't contain a valid document ID."
-        BinfireError.HTTP_ERROR -> "HashBin returned an error. Try again later."
-        else -> "This document can't be opened (${error.code})."
-    }
-
-    /** Human messages for Native Save errors (`spec/hashbin.md`). */
-    private fun saveErrorMessage(error: BinfireError): String = when (error) {
-        BinfireError.INSUFFICIENT_BALANCE -> "Your HashBin balance is too low. Add funds on HashBin, then try again."
-        BinfireError.COST_EXCEEDED -> "HashBin would charge more than binfire's limit, so nothing was saved."
-        BinfireError.TOO_LARGE -> "This document is too large for HashBin."
-        BinfireError.MISMATCH -> "HashBin returned an ID that doesn't match the document, so the link wasn't used."
-        BinfireError.NETWORK -> "Couldn't reach HashBin. Check your connection and try again."
-        BinfireError.FAILED -> "Signing in to HashBin didn't work. Try again."
-        BinfireError.HTTP_ERROR -> "HashBin returned an error. Try again later."
-        else -> "Saving to HashBin failed (${error.code})."
     }
 
     // ---- CID loading (load-cid route) ----
@@ -774,20 +666,6 @@ class BinfireViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    private fun frameErrorMessage(error: BinfireError): String = when (error) {
-        BinfireError.TOO_LARGE -> "This transfer is too large."
-        BinfireError.MISMATCH -> "The received data failed verification. Scan again from the start."
-        BinfireError.INCONSISTENT -> "The frames don't belong together. Scan again from the start."
-        BinfireError.BAD_MAGIC, BinfireError.BAD_VERSION -> "This multi-frame code isn't one binfire can read (${error.code})."
-        else -> "Couldn't read this frame (${error.code})."
-    }
-
-    private fun bundleErrorMessage(error: BinfireError): String = when (error) {
-        BinfireError.TOO_LARGE -> "What was received is too large to open."
-        BinfireError.MISMATCH -> "What was received failed verification."
-        else -> "What was received can't be opened (${error.code})."
-    }
-
     /** Verified document bytes by CID, for offline reopen (`spec/cid.md`). In memory only until M6. */
     private val cidCache = CidCache(32L * 1024 * 1024)
 
@@ -809,28 +687,5 @@ class BinfireViewModel(application: Application) : AndroidViewModel(application)
     fun onFileChosen(uris: Array<Uri>?) {
         fileCallback?.onReceiveValue(uris)
         fileCallback = null
-    }
-}
-
-/** A small LRU of verified document bytes, bounded by total size. */
-private class CidCache(private val maxBytes: Long) {
-    private val map = LinkedHashMap<String, ByteArray>(16, 0.75f, true)
-    private var bytes = 0L
-
-    @Synchronized
-    fun get(cid: String): ByteArray? = map[cid]
-
-    @Synchronized
-    fun put(cid: String, value: ByteArray) {
-        if (value.size > maxBytes) return
-        map.remove(cid)?.let { bytes -= it.size }
-        map[cid] = value
-        bytes += value.size
-        val it = map.entries.iterator()
-        while (bytes > maxBytes && it.hasNext()) {
-            val e = it.next()
-            bytes -= e.value.size
-            it.remove()
-        }
     }
 }

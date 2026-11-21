@@ -69,7 +69,8 @@ Android Gradle needs JDK 17:
 ## Rules
 
 - **Spec first.** Change behaviour by editing `spec/`, then the generator
-  (`tools/gen-fixtures.mjs`), then regenerating fixtures, then all four ports.
+  (`tools/gen-fixtures.mjs`, one module per fixture file in `tools/fixtures/`),
+  then regenerating fixtures, then all four ports.
   A milestone counts as done only when all four ports pass.
 - **Every port reads `shared/fixtures/*.json` directly** from its unit tests,
   by relative path from the repo root. Don't copy fixtures into ports.

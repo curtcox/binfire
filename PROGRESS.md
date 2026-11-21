@@ -52,6 +52,13 @@ Run on 2026-11-15 after M3, one device at a time, against
 
 Newest first. One line per meaningful step, with what was verified.
 
+- 2026-11-21: File size ratchet worked down to empty. `tools/gen-fixtures.mjs`
+  is split into one module per fixture file (`tools/fixtures/`, PNG writer in
+  `tools/lib/qr-png.mjs`); regenerated fixtures are byte-identical. Android:
+  `Screen`/`Sheet`/`BrowserTab` moved to `Sheets.kt`, error messages to
+  `Messages.kt`, `CidCache` to its own file (`:app:assembleDebug` passes; no
+  emulator run). RN `assets/icon.png` (Expo placeholder) re-encoded as a
+  256-colour PNG, 384 → 138 KiB.
 - 2026-11-21: File size limits per type (`tools/file-sizes.json`), checked by
   `tools/check-file-sizes.mjs` in CI (`shared.yml`) and the `.githooks/pre-push`
   hook. A ratchet baseline holds the 3 files that are already over their limit:

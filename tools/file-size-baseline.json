@@ -1,8 +1,4 @@
 {
   "_comment": "Ratchet for tools/check-file-sizes.mjs: files that were over their limit in tools/file-sizes.json, with the largest size each may have. Lower entries with --update-baseline as files shrink; add one only deliberately with --accept.",
-  "files": {
-    "android/app/src/main/kotlin/app/binfire/android/BinfireViewModel.kt": 36105,
-    "react-native/assets/icon.png": 393493,
-    "tools/gen-fixtures.mjs": 49612
-  }
+  "files": {}
 }
