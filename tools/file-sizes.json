@@ -1,0 +1,28 @@
+{
+  "_comment": "Per-type file size limits, read by tools/check-file-sizes.mjs. A file matches a rule by exact name first, then by extension (case-insensitive); anything else gets the default. Sizes are bytes or strings like \"32 KiB\". Files that are already over their limit are listed in tools/file-size-baseline.json and may only shrink.",
+  "rules": [
+    { "kind": "lock file", "max": "1 MiB",
+      "names": ["package-lock.json", "npm-shrinkwrap.json", "yarn.lock", "pnpm-lock.yaml", "pubspec.lock", "Podfile.lock", "Gemfile.lock", "Package.resolved", "gradle.lockfile"] },
+    { "kind": "source code", "max": "32 KiB",
+      "extensions": ["swift", "kt", "kts", "java", "dart", "ts", "tsx", "js", "jsx", "mjs", "cjs", "py", "rb", "sh", "bash", "zsh", "bat", "c", "h", "m", "mm", "cc", "cpp", "hpp", "gradle", "html", "css", "scss"] },
+    { "kind": "doc", "max": "64 KiB",
+      "extensions": ["md", "markdown", "txt", "rst", "adoc"] },
+    { "kind": "data/config", "max": "256 KiB",
+      "extensions": ["json", "jsonc", "yaml", "yml", "xml", "plist", "toml", "properties", "ini", "cfg", "xcconfig", "entitlements", "strings", "arb", "csv", "tsv"] },
+    { "kind": "Xcode project file", "max": "128 KiB",
+      "extensions": ["pbxproj", "xcscheme", "storyboard", "xib", "xcworkspacedata", "xcsettings"] },
+    { "kind": "raster image", "max": "256 KiB",
+      "extensions": ["png", "jpg", "jpeg", "gif", "webp", "ico", "bmp", "heic", "tif", "tiff"] },
+    { "kind": "SVG", "max": "64 KiB",
+      "extensions": ["svg"] },
+    { "kind": "audio", "max": "1 MiB",
+      "extensions": ["wav", "mp3", "ogg", "m4a", "aac", "flac", "opus"] },
+    { "kind": "font", "max": "512 KiB",
+      "extensions": ["ttf", "otf", "woff", "woff2"] },
+    { "kind": "archive/binary", "max": "256 KiB",
+      "extensions": ["jar", "aar", "zip", "gz", "tgz", "tar", "7z", "apk", "aab", "ipa", "so", "dylib", "a", "dll", "exe", "bin", "wasm", "binfire"] },
+    { "kind": "video/PDF", "max": "1 MiB",
+      "extensions": ["mp4", "mov", "m4v", "webm", "pdf"] }
+  ],
+  "default": { "kind": "other", "max": "128 KiB" }
+}

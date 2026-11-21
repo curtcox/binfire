@@ -52,6 +52,12 @@ Run on 2026-11-15 after M3, one device at a time, against
 
 Newest first. One line per meaningful step, with what was verified.
 
+- 2026-11-21: File size limits per type (`tools/file-sizes.json`), checked by
+  `tools/check-file-sizes.mjs` in CI (`shared.yml`) and the `.githooks/pre-push`
+  hook. A ratchet baseline holds the 3 files that are already over their limit:
+  `BinfireViewModel.kt` (35.3 KiB) and `gen-fixtures.mjs` (48.4 KiB) against
+  32 KiB for source, and `react-native/assets/icon.png` (384 KiB) against
+  256 KiB for images. Tools tests 22 (5 new, incl. pre-push against a scratch repo).
 - 2026-11-15: **M3 done in all four ports** (table above). RN Android:
   Release builds blocked cleartext to the mock ("Couldn't reach HashBin"
   after the redirect); `react-native/plugins/with-mock-cleartext.js` adds a

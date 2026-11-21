@@ -1,0 +1,8 @@
+#!/bin/sh
+# Rejects pushes that add files over the size limits in tools/file-sizes.json.
+# Enable once per clone: git config core.hooksPath .githooks
+if ! command -v node >/dev/null 2>&1; then
+  echo "pre-push: node not found, skipping the file size check (CI still runs it)" >&2
+  exit 0
+fi
+exec node "$(git rev-parse --show-toplevel)/tools/check-file-sizes.mjs" --pre-push "$@"

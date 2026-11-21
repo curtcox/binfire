@@ -38,7 +38,17 @@ node tools/configure.mjs --check  # CI: fail if generated outputs are stale
 node tools/gen-fixtures.mjs       # regenerate shared/fixtures (reads sibling FK and 256t.org checkouts if present)
 node tools/serve-web.mjs 8080     # preview shared/web locally (the "web" entry in .claude/launch.json)
 node tools/check.mjs              # run every port's unit tests that this machine can run
+node tools/check-file-sizes.mjs   # CI: fail on files over the per-type size limits
 ```
+
+File size limits per type are in `tools/file-sizes.json`. Files that were
+already too big are in `tools/file-size-baseline.json` (a ratchet): each may
+shrink but not grow, and when one shrinks,
+`node tools/check-file-sizes.mjs --update-baseline` must lock in the new size.
+`--accept <path>` adds a deliberate exception. Enable the pre-push hook once
+per clone with `git config core.hooksPath .githooks`. The hook also rejects
+oversize files that are deleted again before the push, since they would stay
+in history.
 
 `configure.mjs` rewrites only the lines between
 `>>> binfire:configure <name>` and `<<< binfire:configure <name>` markers in
